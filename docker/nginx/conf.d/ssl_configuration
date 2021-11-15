@@ -1,6 +1,8 @@
 # NOTE: Production config (also make any relevant changes to default.conf in
 # the 'development' nginx-dev/conf.d/default.conf file)
 
+# NOTE: replace default.conf for this file in production after enabling SSL.
+
 # markdewijk.nl is a stand in for openpoen.nl
 
 # Redirect www to non-www
@@ -19,7 +21,7 @@ server {
 }
 
 server {
-  listen 443;
+  listen 443 ssl;
   server_name markdewijk.nl;
 
   location / { try_files $uri @app; }
@@ -28,6 +30,12 @@ server {
     uwsgi_pass app:5000;
     uwsgi_read_timeout 1200;
   }
+
+  ssl_certificate /etc/letsencrypt/live/markdewijk.nl/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/markdewijk.nl/privkey.pem;
+
+  include /etc/letsencrypt/options-ssl-nginx.conf;
+  ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 
   location /static/dist/ {
     root /usr/share/nginx/html/;
