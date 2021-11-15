@@ -4,6 +4,11 @@ Notes on getting Open Poen online.
 ## Initialize and prepare a VM for production
 Edit paths and variable names to suit your own environment.
 
+TODO:
+1. Bunq API.
+2. Restore backup.
+
+Steps:
 1. Create a Ubuntu (20.04) VM in Azure. Download the SSH key.
 2. If permissions for the key are too open:
     `sudo chmod 600 ~/.ssh/OpenPoenVM_key.pem`
@@ -34,7 +39,9 @@ Edit paths and variable names to suit your own environment.
     `cd /home/azureuser/open-poen/nginx/conf.d`
     `sudo rm default.conf`
     `sudo mv ssl_configuration default.conf`
-12. Start Open Poen. Make sure a new container is built for nginx.
+12. Setup SMTP for mail while we are at it.
+    Edit `config.py` and fill in MAIL_SERVER, MAIL_PORT, MAIL_USE_TLS, MAIL_USERNAME and MAIL_PASSWORD.
+13. Start Open Poen. Make sure a new container is built for nginx.
     `cd /home/azureuser/open-poen/docker`
     `sudo docker-compose up`
-13. Open Poen should be running properly now.
+14. Open Poen should be running properly now.
