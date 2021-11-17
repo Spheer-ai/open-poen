@@ -2,8 +2,10 @@
 
 import unittest
 
-from app import app, db
-from app.models import User, Project, Subproject, DebitCard
+from app import app, db, util
+from app.models import User, Project, Payment, Subproject, DebitCard
+from decimal import *
+import pandas as pd
 
 
 class TestDatabase(unittest.TestCase):
@@ -20,6 +22,30 @@ class TestDatabase(unittest.TestCase):
         u.set_password('testpassword')
         self.assertFalse(u.check_password('notthetestpassword'))
         self.assertTrue(u.check_password('testpassword'))
+
+    def test_business_rules_scenario_1(self):
+        project = Project(name="Scenario 1", budget=10000, contains_subprojects=False)
+        payments = pd.read_csv("tests/payments_1.csv")
+        payments = payments[["route", "amount_value", "short_user_description", "long_user_description"]].to_dict(orient="records")
+        payments = [Payment(**x) for x in payments]
+        project.payments.extend(payments)
+        db.session.add(project)
+        db.session.commit()
+
+        project_amounts = util.calculate_project_amounts(project.id)
+
+        self.assertTrue(project_amounts["awarded"] == 10000)
+        self.assertTrue(project_amounts["spent"] == 5145.6)
+        self.assertTrue(project_amounts["left_str"] == "€ 4.854")
+
+    def test_business_rules_scenario_2(self):
+        self.assertTrue(True)
+
+    def test_business_rules_scenario_3(self):
+        self.assertTrue(True)
+
+    def test_business_rules_scenario_4(self):
+        self.assertTrue(True)
 
     def test_user_project_subproject(self):
         # Add data

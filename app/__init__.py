@@ -64,6 +64,8 @@ if not app.debug:
 # Log info messages and up to file
 if not os.path.exists('log'):
     os.mkdir('log')
+# Disable this when running tests locally, or fix file permission for the
+# files.
 file_handler = RotatingFileHandler(
     'log/open_poen.log',
     maxBytes=1000000,
