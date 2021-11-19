@@ -15,3 +15,8 @@ app/.cache-loader/*
 
 config.py
 bunq-*.conf
+
+docker/letsencrypt/
+notes.md
+.vscode/
+.python-version

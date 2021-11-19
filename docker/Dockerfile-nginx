@@ -1,6 +1,9 @@
 FROM nginx:1.19.9-alpine
 MAINTAINER Open State Foundation <developers@openstate.eu>
 
+RUN apk add certbot certbot-nginx
+RUN mkdir /etc/letsencrypt
+
 WORKDIR /usr/share/nginx/html
 
 # Debug: use the nginx binary which was compiled with '--with-debug'
