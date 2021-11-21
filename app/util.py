@@ -16,6 +16,7 @@ from app import app, db
 from app.email import send_invite
 from app.models import Payment, Project, Subproject, IBAN, User
 
+from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 from bunq.sdk.context.bunq_context import ApiContext
 from bunq.sdk.context.api_environment_type import ApiEnvironmentType
@@ -326,69 +327,30 @@ def format_currency(num, currency_symbol='€ '):
 
 def calculate_project_amounts(project_id):
     project = Project.query.get(project_id)
+    subprojects = Subproject.query.filter_by(project_id=project_id).all()
+    payments = Payment.query.filter(or_(
+        Payment.project_id == project_id,
+        Payment.subproject_id.in_([x.id for x in subprojects])
+    )).all()
 
-    # Calculate amounts awarded
-    subproject_ibans = [s.iban for s in project.subprojects]
-    project_awarded = 0
-    # If the project has payments then add the incoming/positive
-    # payments, but skip the incoming/positive payments from
-    # subprojects as we don't want to count them double
-    if len(list(project.payments)) > 0:
-        for payment in project.payments:
-            if payment.amount_value > 0:
-                if payment.counterparty_alias_value in subproject_ibans:
-                    continue
-                else:
-                    project_awarded += payment.amount_value
-
-    # Also add any incoming/positive payments for all subprojects, which
-    # can come from external IBANs or by manually adding transactions
-    if project.contains_subprojects:
-        subprojects = Subproject.query.filter_by(project_id=project_id).all()
-        for subproject in subprojects:
-            if len(list(subproject.payments)) > 0:
-                for payment in subproject.payments:
-                    if payment.amount_value > 0:
-                        # If there is a project IBAN then only add
-                        # payments if they don't come from the project
-                        # IBAN to make sure that they aren't counted
-                        # double
-                        if project.iban:
-                            if payment.counterparty_alias_value != project.iban:
-                                project_awarded += payment.amount_value
-                        # If there is no project IBAN simply add all
-                        # incoming/positive payments
-                        else:
-                            project_awarded += payment.amount_value
+    project_awarded, aanbesteding, inbesteding = 0, 0, 0
+    project_awarded += sum([x.amount_value for x in payments if x.route == "subsidie"])
+    # Make spent a positive number to make the output of this function consistent with
+    # previous versions.
+    aanbesteding += -sum([x.amount_value for x in payments if x.route == "aanbesteding"])
+    inbesteding += -sum([x.amount_value for x in payments if x.route == "inbesteding"])
+    
+    if project.budget:
+        spent = aanbesteding + inbesteding
+    else:
+        spent = aanbesteding
 
     amounts = {
         'id': project.id,
         'awarded': project_awarded,
         'awarded_str': format_currency(project_awarded),
-        'spent': 0
+        'spent': spent
     }
-
-    # Calculate amounts spent
-    if project.contains_subprojects:
-        subprojects = Subproject.query.filter_by(project_id=project_id).all()
-        for subproject in subprojects:
-            subproject_spent = 0
-            for payment in subproject.payments:
-                if payment.amount_value < 0:
-                    # If there is a project IBAN then only add payments
-                    # if they don't go to the project IBAN to make sure
-                    # that they aren't counted double
-                    if subproject.project.iban:
-                        if payment.counterparty_alias_value != subproject.project.iban:
-                            amounts['spent']+= abs(payment.amount_value)
-                    # If there is no project IBAN simply add all
-                    # outgoing/negative payments
-                    else:
-                        amounts['spent']+= abs(payment.amount_value)
-    else:
-        for payment in project.payments:
-            if payment.amount_value < 0:
-                amounts['spent'] += abs(payment.amount_value)
 
     # Calculate percentage spent
     denominator = amounts['awarded']
@@ -409,11 +371,11 @@ def calculate_project_amounts(project_id):
     amounts['spent_str'] = format_currency(amounts['spent'])
 
     amounts['left_str'] = format_currency(
-        round(amounts['awarded']) - round(amounts['spent'])
+        round(amounts['awarded'] - amounts['spent'])
     )
     if project.budget:
         amounts['left_str'] = format_currency(
-            round(project.budget) - round(amounts['spent'])
+            round(project.budget - amounts['spent'])
         )
 
     return amounts
@@ -421,62 +383,53 @@ def calculate_project_amounts(project_id):
 
 def calculate_subproject_amounts(subproject_id):
     subproject = Subproject.query.get(subproject_id)
+    payments = Payment.query.filter(
+        Payment.subproject_id == subproject.id
+    ).all()
 
-    # Calculate amounts awarded
-    subproject_awarded = 0
-    if len(list(subproject.payments)) > 0:
-        for payment in subproject.payments:
-            if payment.amount_value > 0:
-                subproject_awarded += payment.amount_value
+    subproject_awarded, aanbesteding, inbesteding = 0, 0, 0
+    subproject_awarded += sum([x.amount_value for x in payments if x.route == "subsidie"])
+    # Make spent a positive number to make the output of this function consistent with
+    # previous versions.
+    aanbesteding += -sum([x.amount_value for x in payments if x.route == "aanbesteding"])
+    inbesteding += -sum([x.amount_value for x in payments if x.route == "inbesteding"])
+    
+    if subproject.budget:
+        spent = aanbesteding + inbesteding
+    else:
+        spent = aanbesteding
 
     amounts = {
         'id': subproject.id,
         'awarded': subproject_awarded,
         'awarded_str': format_currency(subproject_awarded),
-        'spent': 0
+        'spent': spent
     }
 
-    # Calculate amounts spent
-    subproject_spent = 0
-    for payment in subproject.payments:
-        if payment.amount_value < 0:
-            # If there is a project IBAN then only add payments
-            # if they don't go to the project IBAN to make sure
-            # that they aren't counted double
-            if subproject.project.iban:
-                if payment.counterparty_alias_value != subproject.project.iban:
-                    amounts['spent']+= abs(payment.amount_value)
-            # If there is no project IBAN simply add all
-            # outgoing/negative payments
-            else:
-                amounts['spent']+= abs(payment.amount_value)
-
     # Calculate percentage spent
-    if amounts['awarded'] == 0:
+    denominator = amounts['awarded']
+    if subproject.budget:
+        denominator = subproject.budget
+
+    if denominator == 0:
         amounts['percentage_spent_str'] = (
             format_percent(0)
         )
     else:
         amounts['percentage_spent_str'] = (
             format_percent(
-                amounts['spent'] / amounts['awarded']
+                amounts['spent'] / denominator
             )
         )
-        if subproject.budget:
-            amounts['percentage_spent_str'] = (
-                format_percent(
-                    amounts['spent'] / subproject.budget
-                )
-            )
 
     amounts['spent_str'] = format_currency(amounts['spent'])
 
     amounts['left_str'] = format_currency(
-        round(amounts['awarded']) - round(amounts['spent'])
+        round(amounts['awarded'] - amounts['spent'])
     )
     if subproject.budget:
         amounts['left_str'] = format_currency(
-            round(subproject.budget) - round(amounts['spent'])
+            round(subproject.budget - amounts['spent'])
         )
 
     return amounts
