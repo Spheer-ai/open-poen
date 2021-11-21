@@ -79,7 +79,7 @@ class TestDatabase(unittest.TestCase):
 
         self.assertTrue(subproject_1_amounts["awarded"] == 0)
         self.assertTrue(subproject_1_amounts["spent"] == 5012.5)
-        self.assertTrue(subproject_1_amounts["left_str"] == "€ 4.987")
+        self.assertTrue(subproject_1_amounts["left_str"] == "€ 4.988")
 
         self.assertTrue(subproject_2_amounts["awarded"] == 5500)
         self.assertTrue(subproject_2_amounts["spent"] == 133.1)
@@ -139,7 +139,7 @@ class TestDatabase(unittest.TestCase):
 
         self.assertTrue(subproject_1_amounts["awarded"] == 6000)
         self.assertTrue(subproject_1_amounts["spent"] == 5012.5)
-        self.assertTrue(subproject_1_amounts["left_str"] == "€ 4.987")
+        self.assertTrue(subproject_1_amounts["left_str"] == "€ 4.988")
 
         self.assertTrue(subproject_2_amounts["awarded"] == 5000)
         self.assertTrue(subproject_2_amounts["spent"] == 133.1)
