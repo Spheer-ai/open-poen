@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
 {% block head %}
   <title>Open Poen - {{ project.name }}</title>
   <meta property="og:title" content="Open Poen - {{ project.name }}" />
@@ -418,12 +419,12 @@
             <div id="toolbar">
               {% if project_owner %}
                 <!-- Button trigger modal -->
-                <button type="button" class="btn button-poen-small button-toolbar bg-grey-blue mx-auto" data-toggle="modal" data-target="#transactie-toevoegen">
+                <button type="button" class="btn button-poen-small button-toolbar bg-grey-blue mx-auto" data-toggle="modal" data-target="#modal-transactie-toevoegen">
                   + transactie
                 </button>
 
                 <!-- Modal -->
-                <div class="modal fade" id="transactie-toevoegen" tabindex="-1" role="dialog" aria-labelledby="transactieToevoegenLabel" aria-hidden="true">
+                <div class="modal fade" id="modal-transactie-toevoegen" tabindex="-1" role="dialog" aria-labelledby="transactieToevoegenLabel" aria-hidden="true">
                   <div class="modal-dialog" role="document">
                     <div class="modal-content">
                       <form method="POST">
@@ -439,9 +440,7 @@
                           {% for f in new_payment_form %}
                             {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' %}
                               <div>
-                                {{ f.label }}
-                                <br>
-                                {{ f }}
+                                {{ wtf.form_field(f, class="form-control") }}
                                 <br>
                                 <br>
                               </div>
@@ -1095,6 +1094,11 @@
 {% endblock %}
 
 {% block scripts %}
-  <script>var categories_dict = {{ categories_dict|tojson }};</script>
+  <script>var categories_dict = "{{ categories_dict|tojson }}";</script>
+  {% if modal_id is not none %}
+    <script>
+      window.modal_id = "{{ modal_id }}";
+    </script>
+  {% endif %}
   {{ super() }}
 {% endblock %}

@@ -428,7 +428,12 @@ def project(project_id):
     # Process/create new payment form (added manually by a project owner)
     if project_owner:
         # Process filled in new payment form
-        new_payment_form = NewPaymentForm(prefix="new_payment_form")
+        modal_id = None
+        if request.method == "GET":
+            new_payment_form = NewPaymentForm(prefix="new_payment_form")
+        elif request.method == "POST":
+            new_payment_form = NewPaymentForm(request.form, prefix="new_payment_form")
+            modal_id = "#modal-transactie-toevoegen"
         # Add subprojects that the user has access to
         if project.contains_subprojects:
             initialized_first_subproject_categories = False
@@ -491,8 +496,6 @@ def project(project_id):
 
             # redirect back to clear form data
             return redirect(url_for('project', project_id=project_id))
-        else:
-            util.flash_form_errors(new_payment_form, request)
 
     # Process/create (filled in) payment form
     payment_forms = {}
@@ -899,7 +902,8 @@ def project(project_id):
         timestamp=util.get_export_timestamp(),
         server_name=app.config['SERVER_NAME'],
         bunq_client_id=app.config['BUNQ_CLIENT_ID'],
-        base_url_auth=base_url_auth
+        base_url_auth=base_url_auth,
+        modal_id=modal_id
     )
 
 
