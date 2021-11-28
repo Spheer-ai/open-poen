@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
 {% set active_page = "Home" %}
 {% block head %}
   <title>Open Poen</title>
@@ -181,13 +182,13 @@
 
                 <div class="col-12">
                   <!-- Button trigger modal -->
-                  <button type="button" class="btn amounts-half-card w-100 bg-green-light text-white" data-toggle="modal" data-target="#project-toevoegen">
+                  <button type="button" class="btn amounts-half-card w-100 bg-green-light text-white" data-toggle="modal" data-target="#modal-project-toevoegen">
                     <h1>project toevoegen</h1>
                     <h5>+</h5>
                   </button>
 
                   <!-- Modal -->
-                  <div class="modal fade" id="project-toevoegen" tabindex="-1" role="dialog" aria-labelledby="projectToevoegenLabel" aria-hidden="true">
+                  <div class="modal fade" id="modal-project-toevoegen" tabindex="-1" role="dialog" aria-labelledby="projectToevoegenLabel" aria-hidden="true">
                     <div class="modal-dialog" role="document">
                       <div class="modal-content">
                         <form method="POST">
@@ -204,9 +205,7 @@
                               {% for f in project_form %}
                                 {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' and f.label.text != 'IBAN' %}
                                   <div>
-                                    {{ f.label }}
-                                    <br>
-                                    {{ f }}
+                                    {{ wtf.form_field(f, class="form-control") }}
                                     <br>
                                     <br>
                                   </div>
@@ -279,4 +278,12 @@
       </div>
     </div>
   </div>
+{% endblock %}
+{% block scripts %}
+  {% if modal_id is not none %}
+    <script>
+      window.modal_id = "{{ modal_id }}";
+    </script>
+  {% endif %}
+  {{ super() }}
 {% endblock %}

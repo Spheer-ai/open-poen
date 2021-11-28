@@ -165,3 +165,19 @@ window.createDonuts = function() {
 }
 
 createDonuts();
+
+// We render a template with a modal_id if if we want the modal to
+// pop up at the loading of the page, such as when we load a page
+// with a form with validation errors.
+$(window).on('load', function() {
+  if (typeof window.modal_id !== "undefined") {
+    $(window.modal_id).removeClass("fade");
+    $(window.modal_id).modal('show');
+    $(window.modal_id).addClass("fade");
+  }
+});
+
+// Prevents sending the form again when reloading the page.
+if ( window.history.replaceState ) {
+  window.history.replaceState( null, null, window.location.href );
+}

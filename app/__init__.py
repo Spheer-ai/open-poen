@@ -11,6 +11,7 @@ from flask_sqlalchemy import SQLAlchemy as _BaseSQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_mail import Mail
+from flask_bootstrap import Bootstrap
 
 
 # Set pool_pre_ping in SQLAlchemy to True to prevent closed psycopg2
@@ -24,6 +25,8 @@ class SQLAlchemy(_BaseSQLAlchemy):
 app = Flask(__name__, static_url_path='/static/dist')
 app.config.from_object(Config)
 
+
+Bootstrap(app)
 db = SQLAlchemy(app)
 migrate = Migrate(app, db, compare_type=True)
 

@@ -135,8 +135,15 @@ def index():
     else:
         util.flash_form_errors(add_user_form, request)
 
-    # Process filled in project form
-    project_form = ProjectForm(prefix="project_form")
+    # Create an empty form, or fill it with a submitted form so that we can
+    # return the validated version. modal_id is used to pop open the modal
+    # on loading the page, if it contains a validated form.
+    modal_id = None
+    if request.method == "GET":
+        project_form = ProjectForm(prefix="project_form")
+    elif request.method == "POST":
+        project_form = ProjectForm(request.form, prefix="project_form")
+        modal_id = "#modal-project-toevoegen"
 
     # Save (i.e. create) project
     if project_form.validate_on_submit():
@@ -169,8 +176,6 @@ def index():
             )
         # redirect back to clear form data
         return redirect(url_for('index'))
-    else:
-        util.flash_form_errors(project_form, request)
 
     # Calculate amounts awarded and spent
     # total_awarded = all current project balances
@@ -229,7 +234,9 @@ def index():
         project_form=project_form,
         add_user_form=AddUserForm(prefix='add_user_form'),
         edit_admin_forms=edit_admin_forms,
-        user_stories=UserStory.query.all()
+        user_stories=UserStory.query.all(),
+        modal_id=modal_id  # Does nothing if None. Loads the modal
+        # on page load if supplied.
     )
 
 
