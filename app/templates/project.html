@@ -447,36 +447,21 @@
                             {% endif %}
                             {% if f.name == 'new_payment_form-created' and not f.errors %}
                               <div>
-                                <div class="form-group">
+                                <div class="form-group {{ 'has_error' if f.errors|length > 0 }}">
                                   <label class="control-label" for="datepick">Datum (notatie: 31-12-2020)</label>
                                   <div class="input-group date" id="datepick" data-target-input="nearest">
-                                      <input type="text" class="form-control datetimepicker-input" id="datepick" data-target="#datepick" value="" name="new_payment_form-created"/>
+                                      <input type="text" class="form-control datetimepicker-input" id="datepick" data-target="#datepick" value="{{ '' if f.raw_data is none else f.raw_data }}" name="new_payment_form-created"/>
                                       <div class="input-group-append" data-target="#datepick" data-toggle="datetimepicker">
                                           <div class="input-group-text"><i class="fa fa-calendar"></i></div>
                                       </div>
                                   </div>
+                                  {% for error in f.errors %}
+                                    <p class="help-block">{{ error }}</p>
+                                  {% endfor %}  
                                 </div>
                                 <br>
                                 <br>
                               </div>
-                            {% endif %}
-                            {% if f.name == 'new_payment_form-created' and f.errors %}
-                            <div>
-                              <div class="form-group has-error">
-                                <label class="control-label" for="datepick">Datum (notatie: 31-12-2020)</label>
-                                <div class="input-group date" id="datepick" data-target-input="nearest">
-                                    <input type="text" class="form-control datetimepicker-input" id="datepick" data-target="#datepick" value="{{ f.raw_data }}" name="new_payment_form-created"/>
-                                    <div class="input-group-append" data-target="#datepick" data-toggle="datetimepicker">
-                                        <div class="input-group-text"><i class="fa fa-calendar"></i></div>
-                                    </div>
-                                </div>
-                                {% for error in f.errors %}
-                                  <p class="help-block">{{ error }}</p>
-                                {% endfor %}
-                              </div>
-                              <br>
-                              <br>
-                            </div>
                             {% endif %}
                           {% endfor %}
                         </div>
