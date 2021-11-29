@@ -25,6 +25,7 @@ import transaction from './routes/transaction';
 import { config, library, dom } from '@fortawesome/fontawesome-svg-core';
 // Import required icons
 import { faBars, faChevronDown, faFile, faCamera, faDownload, faReceipt } from '@fortawesome/free-solid-svg-icons';
+import moment from 'moment';
 
 // Add the imported icons to the library
 library.add(faBars, faChevronDown, faFile, faCamera, faDownload, faReceipt);
@@ -187,6 +188,7 @@ if ( window.history.replaceState ) {
 $(function () {
   $('#datepick').datetimepicker({
     locale: "nl",
-    format: "L"
+    format: "L",
+    defaultDate: moment()
   });
 });

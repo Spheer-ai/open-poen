@@ -139,10 +139,8 @@ def index():
     # return the validated version. modal_id is used to pop open the modal
     # on loading the page, if it contains a validated form.
     modal_id = None
-    if request.method == "GET":
-        project_form = ProjectForm(prefix="project_form")
-    elif request.method == "POST":
-        project_form = ProjectForm(request.form, prefix="project_form")
+    project_form = ProjectForm(prefix="project_form")
+    if request.method == "POST":
         modal_id = "#modal-project-toevoegen"
 
     # Save (i.e. create) project
@@ -429,10 +427,8 @@ def project(project_id):
     if project_owner:
         # Process filled in new payment form
         modal_id = None
-        if request.method == "GET":
-            new_payment_form = NewPaymentForm(prefix="new_payment_form")
-        elif request.method == "POST":
-            new_payment_form = NewPaymentForm(request.form, prefix="new_payment_form")
+        new_payment_form = NewPaymentForm(prefix="new_payment_form")
+        if request.method == "POST":
             modal_id = "#modal-transactie-toevoegen"
         # Add subprojects that the user has access to
         if project.contains_subprojects:
