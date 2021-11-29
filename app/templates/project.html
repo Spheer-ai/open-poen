@@ -438,12 +438,45 @@
                           {{ new_payment_form.csrf_token }}
 
                           {% for f in new_payment_form %}
-                            {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' %}
+                            {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' and f.name != 'new_payment_form-created'%}
                               <div>
                                 {{ wtf.form_field(f, class="form-control") }}
                                 <br>
                                 <br>
                               </div>
+                            {% endif %}
+                            {% if f.name == 'new_payment_form-created' and not f.errors %}
+                              <div>
+                                <div class="form-group">
+                                  <label class="control-label" for="datepick">Datum (notatie: 31-12-2020)</label>
+                                  <div class="input-group date" id="datepick" data-target-input="nearest">
+                                      <input type="text" class="form-control datetimepicker-input" id="datepick" data-target="#datepick" value="" name="new_payment_form-created"/>
+                                      <div class="input-group-append" data-target="#datepick" data-toggle="datetimepicker">
+                                          <div class="input-group-text"><i class="fa fa-calendar"></i></div>
+                                      </div>
+                                  </div>
+                                </div>
+                                <br>
+                                <br>
+                              </div>
+                            {% endif %}
+                            {% if f.name == 'new_payment_form-created' and f.errors %}
+                            <div>
+                              <div class="form-group has-error">
+                                <label class="control-label" for="datepick">Datum (notatie: 31-12-2020)</label>
+                                <div class="input-group date" id="datepick" data-target-input="nearest">
+                                    <input type="text" class="form-control datetimepicker-input" id="datepick" data-target="#datepick" value="{{ f.raw_data }}" name="new_payment_form-created"/>
+                                    <div class="input-group-append" data-target="#datepick" data-toggle="datetimepicker">
+                                        <div class="input-group-text"><i class="fa fa-calendar"></i></div>
+                                    </div>
+                                </div>
+                                {% for error in f.errors %}
+                                  <p class="help-block">{{ error }}</p>
+                                {% endfor %}
+                              </div>
+                              <br>
+                              <br>
+                            </div>
                             {% endif %}
                           {% endfor %}
                         </div>

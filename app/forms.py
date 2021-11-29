@@ -163,7 +163,7 @@ class NewPaymentForm(FlaskForm):
 
     amount_value = FlexibleDecimalField('Bedrag (begin met een "-" als het een uitgave is)')
 
-    created = DateField('Datum (notatie: 2020-12-31)')
+    created = DateField('Datum (notatie: 31-12-2021)', id="datepick", format="%d-%m-%Y")
 
     alias_name = StringField(
         'Verstuurder naam', validators=[Length(max=120)]

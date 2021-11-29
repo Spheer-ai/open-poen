@@ -11,7 +11,9 @@ import 'tableexport.jquery.plugin/tableExport.min.js';
 import 'bootstrap-table/dist/extensions/export/bootstrap-table-export.min.js';
 import 'bootstrap-table/dist/extensions/cookie/bootstrap-table-cookie.min.js';
 import naturalSort from 'javascript-natural-sort';
-import moment from 'moment';
+global.moment = require('moment');
+require('tempusdominus-bootstrap-4');
+import '@fortawesome/fontawesome-free/js/solid';
 
 // Import local dependencies
 import Router from './util/Router';
@@ -181,3 +183,10 @@ $(window).on('load', function() {
 if ( window.history.replaceState ) {
   window.history.replaceState( null, null, window.location.href );
 }
+
+$(function () {
+  $('#datepick').datetimepicker({
+    locale: "nl",
+    format: "L"
+  });
+});
