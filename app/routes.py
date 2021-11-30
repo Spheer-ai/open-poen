@@ -241,6 +241,7 @@ def index():
 @app.route("/project/<project_id>", methods=['GET', 'POST'])
 def project(project_id):
     project = Project.query.get(project_id)
+    modal_id = None
 
     if not project:
         return render_template(
@@ -426,10 +427,7 @@ def project(project_id):
     # Process/create new payment form (added manually by a project owner)
     if project_owner:
         # Process filled in new payment form
-        modal_id = None
         new_payment_form = NewPaymentForm(prefix="new_payment_form")
-        if request.method == "POST":
-            modal_id = "#modal-transactie-toevoegen"
         # Add subprojects that the user has access to
         if project.contains_subprojects:
             initialized_first_subproject_categories = False
@@ -457,41 +455,60 @@ def project(project_id):
         else:
             new_payment_form.category_id.choices = project.make_category_select_options()
 
-
         # Save new payment
-        if new_payment_form.validate_on_submit():
-            new_payment_data = {}
-            for f in new_payment_form:
-                if f.type != 'SubmitField' and f.type != 'CSRFTokenField':
-                    # If the category is edited to be empty again, make
-                    # sure to set it to None instead of ''
-                    if f.short_name == 'category_id':
-                        if f.data == '':
-                            new_payment_data[f.short_name] = None
+        if util.form_in_request(new_payment_form, request):
+            if new_payment_form.validate_on_submit():
+                new_payment_data = {}
+                for f in new_payment_form:
+                    if f.type != 'SubmitField' and f.type != 'CSRFTokenField':
+                        # If the category is edited to be empty again, make
+                        # sure to set it to None instead of ''
+                        if f.short_name == 'category_id':
+                            if f.data == '':
+                                new_payment_data[f.short_name] = None
+                            else:
+                                new_payment_data[f.short_name] = f.data
                         else:
                             new_payment_data[f.short_name] = f.data
-                    else:
-                        new_payment_data[f.short_name] = f.data
 
-            new_payment = Payment(**new_payment_data)
+                new_attachment = {
+                    "mediatype": new_payment_data.pop("mediatype"),
+                    "data_file": new_payment_data.pop("data_file")
+                }
 
-            # A payment can only be linked to a project or a subproject,
-            # so only add a project_id if this project doesn't contain
-            # subprojects
-            if not project.contains_subprojects:
-                new_payment.project_id = project_id
+                new_payment = Payment(**new_payment_data)
 
-            new_payment.amount_currency = 'EUR'
-            new_payment.type = 'MANUAL'
-            new_payment.updated = datetime.now()
-            db.session.add(new_payment)
-            db.session.commit()
-            flash(
-                '<span class="text-default-green">Transactie is toegevoegd</span>'
-            )
+                # A payment can only be linked to a project or a subproject,
+                # so only add a project_id if this project doesn't contain
+                # subprojects
+                if not project.contains_subprojects:
+                    new_payment.project_id = project_id
 
-            # redirect back to clear form data
-            return redirect(url_for('project', project_id=project_id))
+                new_payment.amount_currency = 'EUR'
+                new_payment.type = 'MANUAL'
+                new_payment.updated = datetime.now()
+                db.session.add(new_payment)
+                db.session.commit()
+                flash(
+                    '<span class="text-default-green">Transactie is toegevoegd</span>'
+                )
+
+                if new_attachment["data_file"] is not None:
+                    save_attachment(
+                        new_attachment["data_file"],
+                        new_attachment["mediatype"],
+                        new_payment,
+                        'transaction-attachment'
+                    )
+
+                # redirect back to clear form data
+                return redirect(url_for('project', project_id=project_id))
+        
+        # Open up again the adding a payment modal in case of errors after validation.
+        # NOTE: This works as intended because we only validate if the request contains
+        # the new_payment_form form.
+        if len(new_payment_form.errors):
+            modal_id = "#modal-transactie-toevoegen"
 
     # Process/create (filled in) payment form
     payment_forms = {}

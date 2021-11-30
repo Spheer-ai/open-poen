@@ -7,7 +7,7 @@ import os
 from app import app, db
 from app.forms import CategoryForm, PaymentForm, EditAttachmentForm
 from app.models import Category, Payment, File, User
-from app.util import flash_form_errors
+from app.util import flash_form_errors, form_in_request
 
 
 def return_redirect(project_id, subproject_id):
@@ -289,37 +289,38 @@ def save_attachment(f, mediatype, db_object, folder):
 
 # Process filled in transaction attachment form
 def process_transaction_attachment_form(request, transaction_attachment_form, project_owner, user_subproject_ids, project_id=0, subproject_id=0):
-    if transaction_attachment_form.validate_on_submit():
-        payment = Payment.query.get(
-            transaction_attachment_form.payment_id.data
-        )
-        # Make sure the user is allowed to edit this payment
-        # (especially needed when a normal users edits a subproject
-        # payment on a project page)
-        if not project_owner and not payment.subproject.id in user_subproject_ids:
-            return
+    if form_in_request(transaction_attachment_form, request):
+        if transaction_attachment_form.validate_on_submit():
+            payment = Payment.query.get(
+                transaction_attachment_form.payment_id.data
+            )
+            # Make sure the user is allowed to edit this payment
+            # (especially needed when a normal users edits a subproject
+            # payment on a project page)
+            if not project_owner and not payment.subproject.id in user_subproject_ids:
+                return
 
-        save_attachment(transaction_attachment_form.data_file.data, transaction_attachment_form.mediatype.data, payment, 'transaction-attachment')
+            save_attachment(transaction_attachment_form.data_file.data, transaction_attachment_form.mediatype.data, payment, 'transaction-attachment')
 
-        # Redirect back to clear form data
-        if subproject_id:
             # Redirect back to clear form data
+            if subproject_id:
+                # Redirect back to clear form data
+                return redirect(
+                    url_for(
+                        'subproject',
+                        project_id=project_id,
+                        subproject_id=subproject_id
+                    )
+                )
+
             return redirect(
                 url_for(
-                    'subproject',
+                    'project',
                     project_id=project_id,
-                    subproject_id=subproject_id
                 )
             )
-
-        return redirect(
-            url_for(
-                'project',
-                project_id=project_id,
-            )
-        )
-    else:
-        flash_form_errors(transaction_attachment_form, request)
+        else:
+            flash_form_errors(transaction_attachment_form, request)
 
 # Populate the edit attachment forms which allows the user to edit it
 def create_edit_attachment_forms(attachments):

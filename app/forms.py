@@ -11,6 +11,10 @@ from wtforms import (
 )
 from wtforms.fields.html5 import EmailField
 
+allowed_extensions = [
+    'jpg', 'jpeg', 'png', 'txt', 'pdf', 'ods', 'xls', 'xlsx', 'odt', 'doc',
+    'docx'
+]
 
 class ResetPasswordRequestForm(FlaskForm):
     email = StringField(
@@ -188,6 +192,31 @@ class NewPaymentForm(FlaskForm):
 
     hidden = BooleanField('Transactie verbergen')
 
+    data_file = FileField(
+        'Bestand',
+        validators=[
+            FileAllowed(
+                allowed_extensions,
+                (
+                    'bestandstype niet toegstaan. Enkel de volgende '
+                    'bestandstypen worden geaccepteerd: %s' % ', '.join(
+                        allowed_extensions
+                    )
+                )
+            ),
+            Optional()
+        ]
+    )
+    mediatype = RadioField(
+        'Media type',
+        choices=[
+            ('media', 'media'),
+            ('bon', 'bon')
+        ],
+        default="bon",
+        validators=[Optional()]
+    )
+
     submit = SubmitField(
         'Opslaan',
         render_kw={
@@ -227,10 +256,6 @@ class PaymentForm(FlaskForm):
 
 
 class TransactionAttachmentForm(FlaskForm):
-    allowed_extensions = [
-        'jpg', 'jpeg', 'png', 'txt', 'pdf', 'ods', 'xls', 'xlsx', 'odt', 'doc',
-        'docx'
-    ]
     data_file = FileField(
         'Bestand',
         validators=[
@@ -252,6 +277,7 @@ class TransactionAttachmentForm(FlaskForm):
             ('media', 'media'),
             ('bon', 'bon')
         ],
+        default="bon",
         validators=[DataRequired()]
     )
     payment_id = IntegerField(widget=HiddenInput())
