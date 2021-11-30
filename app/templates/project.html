@@ -696,28 +696,39 @@
                             <br>
 
                             {% if 'created' in payment_forms[payment.id] %}
-                              <b>Datum</b>
-                              <br>
-                              {{ payment_forms[payment.id]['created'] }}
-                              <br>
-                              <br>
+                            <!-- {{ wtf.form_field(payment_forms[payment.id]['created'], class="form-control") }} -->
+                            <div class="form-group {{ 'has_error' if payment_forms[payment.id].errors|length > 0 }}">
+                              <label class="control-label" for="datepick1">Datum (notatie: 31-12-2020)</label>
+                              <div class="input-group date" id="datepick1" data-target-input="nearest">
+                                <input type="text" class="form-control datetimepicker-input" id="datepick1" data-target="#datepick1"
+                                  value="{{ payment_forms[payment.id].created.data.strftime('%d-%m-%Y') }}" name="payment_form-created" />
+                                <div class="input-group-append" data-target="#datepick1" data-toggle="datetimepicker">
+                                  <div class="input-group-text"><i class="fa fa-calendar"></i></div>
+                                </div>
+                              </div>
+                              {% for error in payment_forms[payment.id].errors %}
+                              <p class="help-block">{{ error }}</p>
+                              {% endfor %}
+                            </div>
+                            <br>
+                            <br>
                             {% endif %}
 
-                            <b>Route</b>
-                            <br>
                             {% if payment.id in payment_forms %}
-                              {{ payment_forms[payment.id]['route'] }}
+                              {{ wtf.form_field(payment_forms[payment.id]['route'], class="form-control") }}
                             {% else %}
+                              <b>Route</b>
+                              <br>
                               {{ payment.route }}
                             {% endif %}
                             <br>
                             <br>
 
-                            <b>Categorie</b>
-                            <br>
                             {% if payment.id in payment_forms %}
-                              {{ payment_forms[payment.id]['category_id'] }}
+                              {{ wtf.form_field(payment_forms[payment.id]['category_id'], class="form-control") }}
                             {% else %}
+                              <b>Categorie</b>
+                              <br>
                               {{ payment.category.name }}
                             {% endif %}
                             <br>
@@ -733,15 +744,11 @@
 
                             {# Show either the short or long description to not logged in visitors, otherwise allow a logger in user with access to this payment to edit the short and long descriptions #}
                             {% if payment.id in payment_forms %}
-                              <b>Korte omschrijving</b>
-                              <br>
-                              {{ payment_forms[payment.id]['short_user_description'] }}
+                              {{ wtf.form_field(payment_forms[payment.id]['short_user_description'], class="form-control") }}
                               <br>
                               <br>
 
-                              <b>Lange omschrijving</b>
-                              <br>
-                              {{ payment_forms[payment.id]['long_user_description'] }}
+                              {{ wtf.form_field(payment_forms[payment.id]['long_user_description'], class="form-control") }}
                               <br>
                               <br>
                             {% else %}
@@ -760,8 +767,7 @@
 
                             {% if payment.id in payment_forms %}
                               {% if project_owner %}
-                                {{ payment_forms[payment.id]['hidden'].label }}
-                                {{ payment_forms[payment.id]['hidden'] }}
+                                {{ wtf.form_field(payment_forms[payment.id]['hidden'], class="form-control") }}
                                 <br>
                               {% endif %}
 

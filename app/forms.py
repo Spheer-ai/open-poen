@@ -233,7 +233,7 @@ class PaymentForm(FlaskForm):
     long_user_description = TextAreaField(
         'Lange beschrijving', validators=[Length(max=2000)]
     )
-    created = DateField('Datum (notatie: 2020-12-31)')
+    created = DateField('Datum (notatie: 31-12-2020)', id="datepick", format="%d-%m-%Y")
     hidden = BooleanField('Transactie verbergen')
     category_id = SelectField('Categorie', validators=[Optional()], choices=[])
     route = SelectField('Route', choices=['inbesteding', 'aanbesteding', 'subsidie'])
