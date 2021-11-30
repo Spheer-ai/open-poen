@@ -652,7 +652,11 @@
                           <div class="col-5">
                             <b>Initiatiefnemer</b>
                             <br>
-                            {{ payment.alias_name }}
+                            {% if payment.alias_name %}
+                              {{ payment.alias_name }}
+                            {% else %}
+                              <i>Niet ingevuld.</i>
+                            {% endif %}
                             <br>
                             <br>
                             {% if payment.type != 'MANUAL' %}
@@ -672,10 +676,12 @@
                               <br>
                             {% endif %}
                             {% if not (payment.id in payment_forms and 'created' in payment_forms[payment.id]) %}
+                              <b>Transactiedatum</b>
+                              <br>
                               {{ payment.created.strftime('%d-%m-\'%y') }}
-                            {% endif %}
-                            <br>
-                            <br>
+                              <br>
+                              <br>
+                            {% endif %}                            
                             {% if payment.amount_value >= 0 %}
                               <h6 class="text-blue">+{{ payment.get_formatted_currency() }}</h6>
                             {% else %}
@@ -691,27 +697,16 @@
 
                             <b>Ontvanger</b>
                             <br>
-                            {{ payment.counterparty_alias_name }}
+                            {% if payment.counterparty_alias_name %}
+                              {{ payment.counterparty_alias_name }}
+                            {% else %}
+                                <i>Niet ingevuld.</i>
+                            {% endif %}
                             <br>
                             <br>
 
                             {% if 'created' in payment_forms[payment.id] %}
-                            <!-- {{ wtf.form_field(payment_forms[payment.id]['created'], class="form-control") }} -->
-                            <div class="form-group {{ 'has_error' if payment_forms[payment.id].errors|length > 0 }}">
-                              <label class="control-label" for="datepick1">Datum (notatie: 31-12-2020)</label>
-                              <div class="input-group date" id="datepick1" data-target-input="nearest">
-                                <input type="text" class="form-control datetimepicker-input" id="datepick1" data-target="#datepick1"
-                                  value="{{ payment_forms[payment.id].created.data.strftime('%d-%m-%Y') }}" name="payment_form-created" />
-                                <div class="input-group-append" data-target="#datepick1" data-toggle="datetimepicker">
-                                  <div class="input-group-text"><i class="fa fa-calendar"></i></div>
-                                </div>
-                              </div>
-                              {% for error in payment_forms[payment.id].errors %}
-                              <p class="help-block">{{ error }}</p>
-                              {% endfor %}
-                            </div>
-                            <br>
-                            <br>
+                            {{ wtf.form_field(payment_forms[payment.id]['created'], class="form-control") }}
                             {% endif %}
 
                             {% if payment.id in payment_forms %}
@@ -720,19 +715,23 @@
                               <b>Route</b>
                               <br>
                               {{ payment.route }}
+                              <br>
+                              <br>
                             {% endif %}
-                            <br>
-                            <br>
 
                             {% if payment.id in payment_forms %}
                               {{ wtf.form_field(payment_forms[payment.id]['category_id'], class="form-control") }}
                             {% else %}
                               <b>Categorie</b>
                               <br>
-                              {{ payment.category.name }}
+                              {% if payment.category %}
+                                {{ payment.category.name }}
+                              {% else %}
+                                <i>Niet ingevuld.</i>
+                              {% endif %}
+                              <br>
+                              <br>
                             {% endif %}
-                            <br>
-                            <br>
 
                             {% if project.contains_subprojects %}
                               <b>Waarvoor</b>
@@ -745,12 +744,7 @@
                             {# Show either the short or long description to not logged in visitors, otherwise allow a logger in user with access to this payment to edit the short and long descriptions #}
                             {% if payment.id in payment_forms %}
                               {{ wtf.form_field(payment_forms[payment.id]['short_user_description'], class="form-control") }}
-                              <br>
-                              <br>
-
                               {{ wtf.form_field(payment_forms[payment.id]['long_user_description'], class="form-control") }}
-                              <br>
-                              <br>
                             {% else %}
                               <b>Omschrijving</b>
                               <br>
@@ -759,7 +753,7 @@
                               {% elif payment.short_user_description %}
                                 {{ payment.short_user_description }}
                               {% else %}
-                                <i>er is door de initiatiefnemer nog geen beschrijving van deze transactie toegevoegd</i>
+                                <i>Er is door de initiatiefnemer nog geen beschrijving van deze transactie toegevoegd.</i>
                               {% endif %}
                               <br>
                               <br>
@@ -768,7 +762,6 @@
                             {% if payment.id in payment_forms %}
                               {% if project_owner %}
                                 {{ wtf.form_field(payment_forms[payment.id]['hidden'], class="form-control") }}
-                                <br>
                               {% endif %}
 
                               {{ payment_forms[payment.id].submit }}
