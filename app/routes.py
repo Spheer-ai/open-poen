@@ -10,7 +10,7 @@ from app.forms import (
     SubprojectForm, TransactionAttachmentForm,
     EditAttachmentForm, FunderForm, AddUserForm, EditAdminForm,
     EditProjectOwnerForm, EditUserForm, EditProfileForm, CategoryForm,
-    NewPaymentForm
+    NewPaymentForm, PaymentForm
 )
 from app.email import send_password_reset_email
 from app.models import (
@@ -518,7 +518,7 @@ def project(project_id):
     if project_owner or user_subproject_ids:
         # Process filled in payment form
         payment_form_return = process_payment_form(request, project, project_owner, user_subproject_ids, is_subproject=False)
-        if payment_form_return:
+        if payment_form_return and type(payment_form_return) != PaymentForm:
             return payment_form_return
 
         # Populate the payment forms which allows the user to edit it
@@ -541,11 +541,17 @@ def project(project_id):
             editable_payments = project.payments
             for payment in project.payments:
                 editable_attachments += payment.attachments
+        
+        if type(payment_form_return) == PaymentForm:
+            editable_payments = [x for x in editable_payments if x.id != payment_form_return.id.data]
 
         payment_forms = create_payment_forms(
             editable_payments,
             project_owner
         )
+
+        if type(payment_form_return) == PaymentForm:
+            payment_forms[payment_form_return.id.data] = payment_form_return
 
         # Process new transaction attachment form
         transaction_attachment_form = TransactionAttachmentForm(

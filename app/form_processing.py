@@ -94,7 +94,14 @@ def process_category_form(request):
 
 # Process filled in payment form
 def process_payment_form(request, project_or_subproject, project_owner, user_subproject_ids, is_subproject):
-    payment_form = PaymentForm(prefix="payment_form")
+    form_keys = list(request.form.keys())
+    if len(form_keys) > 0 and form_keys[0].startswith("payment_form_"):
+        id_key = [x for x in list(request.form.keys()) if "-id" in x][0]
+        id_key = id_key.split("-")[0]
+    else:
+        return
+
+    payment_form = PaymentForm(prefix=id_key)
     # Somehow we need to repopulate the category_id.choices with the same
     # values as used when the form was generated. Probably to validate
     # if the selected value is valid. We don't know the subproject in the
@@ -200,7 +207,8 @@ def process_payment_form(request, project_or_subproject, project_owner, user_sub
             )
         )
     else:
-        flash_form_errors(payment_form, request)
+        # flash_form_errors(payment_form, request)
+        return payment_form
 
 
 # Populate the payment forms which allows the user to edit it
@@ -212,7 +220,7 @@ def create_payment_forms(payments, project_owner):
         selected_category = ''
         if payment.category:
             selected_category = payment.category.id
-        payment_form = PaymentForm(prefix='payment_form', **{
+        payment_form = PaymentForm(prefix=f'payment_form_{payment.id}', **{
             'short_user_description': payment.short_user_description,
             'long_user_description': payment.long_user_description,
             'created': payment.created,
