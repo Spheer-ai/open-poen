@@ -70,13 +70,14 @@
 
                                     {% for f in new_funder_form %}
                                       {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' %}
-                                        <div>
+                                        <!-- <div>
                                           {{ f.label }}
                                           <br>
                                           {{ f }}
                                           <br>
                                           <br>
-                                        </div>
+                                        </div> -->
+                                        {{ wtf.form_field(f, class="form-control") }}
                                       {% endif %}
                                     {% endfor %}
                                   </div>
@@ -117,13 +118,7 @@
 
                                         {% for f in funder_form %}
                                           {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' %}
-                                            <div>
-                                              {{ f.label }}
-                                              <br>
-                                              {{ f }}
-                                              <br>
-                                              <br>
-                                            </div>
+                                            {{ wtf.form_field(f, class="form-control")}}
                                           {% endif %}
                                         {% endfor %}
                                         {{ funder_form.id }}
@@ -381,13 +376,7 @@
 
                             {% for f in subproject_form %}
                               {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' %}
-                                <div>
-                                  {{ f.label }}
-                                  <br>
-                                  {{ f }}
-                                  <br>
-                                  <br>
-                                </div>
+                                {{ wtf.form_field(f, class="form-control") }}
                               {% endif %}
                             {% endfor %}
                             {{ subproject_form.project_id }}
@@ -439,15 +428,10 @@
 
                           {% for f in new_payment_form %}
                             {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' and f.name != 'new_payment_form-created'%}
-                              <div>
                                 {{ wtf.form_field(f, class="form-control") }}
-                                <br>
-                                <br>
-                              </div>
                             {% endif %}
                             {% if f.name == 'new_payment_form-created' and not f.errors %}
                             {# The datepicker requires special formatting. #}
-                              <div>
                                 <div class="form-group {{ 'has_error' if f.errors|length > 0 }}">
                                   <label class="control-label" for="datepick">Datum (notatie: 31-12-2020)</label>
                                   <div class="input-group date" id="datepick" data-target-input="nearest">
@@ -460,9 +444,6 @@
                                     <p class="help-block">{{ error }}</p>
                                   {% endfor %}  
                                 </div>
-                                <br>
-                                <br>
-                              </div>
                             {% endif %}
                           {% endfor %}
                         </div>
