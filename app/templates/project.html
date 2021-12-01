@@ -70,13 +70,6 @@
 
                                     {% for f in new_funder_form %}
                                       {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' %}
-                                        <!-- <div>
-                                          {{ f.label }}
-                                          <br>
-                                          {{ f }}
-                                          <br>
-                                          <br>
-                                        </div> -->
                                         {{ wtf.form_field(f, class="form-control") }}
                                       {% endif %}
                                     {% endfor %}
@@ -267,13 +260,7 @@
 
                                   {% for f in project_data['form'] %}
                                     {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' %}
-                                      <div>
-                                        {{ f.label }}
-                                        <br>
-                                        {{ f }}
-                                        <br>
-                                        <br>
-                                      </div>
+                                      {{ wtf.form_field(f, class="form-control") }}
                                     {% endif %}
                                   {% endfor %}
 
@@ -427,24 +414,25 @@
                           {{ new_payment_form.csrf_token }}
 
                           {% for f in new_payment_form %}
-                            {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' and f.name != 'new_payment_form-created'%}
-                                {{ wtf.form_field(f, class="form-control") }}
-                            {% endif %}
-                            {% if f.name == 'new_payment_form-created' and not f.errors %}
-                            {# The datepicker requires special formatting. #}
-                                <div class="form-group {{ 'has_error' if f.errors|length > 0 }}">
-                                  <label class="control-label" for="datepick">Datum (notatie: 31-12-2020)</label>
-                                  <div class="input-group date" id="datepick" data-target-input="nearest">
-                                      <input type="text" class="form-control datetimepicker-input" id="datepick" data-target="#datepick" value="" name="new_payment_form-created"/>
-                                      <div class="input-group-append" data-target="#datepick" data-toggle="datetimepicker">
-                                          <div class="input-group-text"><i class="fa fa-calendar"></i></div>
-                                      </div>
-                                  </div>
-                                  {% for error in f.errors %}
-                                    <p class="help-block">{{ error }}</p>
-                                  {% endfor %}  
-                                </div>
-                            {% endif %}
+                          {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' and f.name != 'new_payment_form-created'%}
+                          {{ wtf.form_field(f, class="form-control") }}
+                          {% endif %}
+                          {% if f.name == 'new_payment_form-created' and not f.errors %}
+                          {# The datepicker requires special formatting. #}
+                          <div class="form-group {{ 'has_error' if f.errors|length > 0 }}">
+                            <label class="control-label" for="datepick">Datum (notatie: 31-12-2020)</label>
+                            <div class="input-group date" id="datepick" data-target-input="nearest">
+                              <input type="text" class="form-control datetimepicker-input" id="datepick" data-target="#datepick" value=""
+                                name="new_payment_form-created" />
+                              <div class="input-group-append" data-target="#datepick" data-toggle="datetimepicker">
+                                <div class="input-group-text"><i class="fa fa-calendar"></i></div>
+                              </div>
+                            </div>
+                            {% for error in f.errors %}
+                            <p class="help-block">{{ error }}</p>
+                            {% endfor %}
+                          </div>
+                          {% endif %}
                           {% endfor %}
                         </div>
                         <div class="modal-footer">
@@ -687,7 +675,7 @@
                             <br>
 
                             {% if 'created' in payment_forms[payment.id] %}
-                            {{ wtf.form_field(payment_forms[payment.id]['created'], class="form-control") }}
+                            {{ wtf.form_field(payment_forms[payment.id]["created"], class="form-control") }}
                             {% endif %}
 
                             {% if 'amount_value' in payment_forms[payment.id] %}
@@ -942,7 +930,7 @@
               <div>
                 {{ add_user_form.csrf_token }}
 
-                {{ add_user_form.email }}
+                {{ wtf.form_field(add_user_form.email, class="form-control") }}
                 {{ add_user_form.project_id(**{'value': project_data.id}) }}
               </div>
             </div>
@@ -973,10 +961,7 @@
 
                   {% for f in edit_project_owner_form %}
                     {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' %}
-                      <div>
-                        {{ f }}
-                        {{ f.label }}
-                      </div>
+                      {{ wtf.form_field(f, class="form-control") }}
                     {% endif %}
                   {% endfor %}
                 </div>

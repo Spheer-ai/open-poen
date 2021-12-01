@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
 {% block head %}
   <title>Open Poen - {{ subproject.name }}</title>
   <meta property="og:title" content="Open Poen - {{ subproject.name }}" />
@@ -102,13 +103,7 @@
 
                             {% for f in subproject_form %}
                               {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' %}
-                                <div>
-                                  {{ f.label }}
-                                  <br>
-                                  {{ f }}
-                                  <br>
-                                  <br>
-                                </div>
+                                {{ wtf.form_field(f, class="form-control") }}
                               {% endif %}
                             {% endfor %}
                             {{ subproject_form.project_id }}
@@ -207,7 +202,7 @@
                                   <div>
                                     {{ add_user_form.csrf_token }}
 
-                                    {{ add_user_form.email }}
+                                    {{ wtf.form_field(add_user_form.email, class="form-control") }}
                                     {{ add_user_form.subproject_id(**{'value': subproject.id}) }}
                                   </div>
                                 </div>
@@ -247,10 +242,7 @@
 
                                         {% for f in edit_user_form %}
                                           {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' %}
-                                            <div>
-                                              {{ f }}
-                                              {{ f.label }}
-                                            </div>
+                                            {{ wtf.form_field(f, class="form-control") }}
                                           {% endif %}
                                         {% endfor %}
                                       </div>
@@ -312,14 +304,23 @@
                           {{ new_payment_form.csrf_token }}
 
                           {% for f in new_payment_form %}
-                            {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' %}
-                              <div>
-                                {{ f.label }}
-                                <br>
-                                {{ f }}
-                                <br>
-                                <br>
-                              </div>
+                            {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' and f.name != 'new_payment_form-created'%}
+                                {{ wtf.form_field(f, class="form-control") }}
+                            {% endif %}
+                            {% if f.name == 'new_payment_form-created' and not f.errors %}
+                            {# The datepicker requires special formatting. #}
+                                <div class="form-group {{ 'has_error' if f.errors|length > 0 }}">
+                                  <label class="control-label" for="datepick">Datum (notatie: 31-12-2020)</label>
+                                  <div class="input-group date" id="datepick" data-target-input="nearest">
+                                      <input type="text" class="form-control datetimepicker-input" id="datepick" data-target="#datepick" value="" name="new_payment_form-created"/>
+                                      <div class="input-group-append" data-target="#datepick" data-toggle="datetimepicker">
+                                          <div class="input-group-text"><i class="fa fa-calendar"></i></div>
+                                      </div>
+                                  </div>
+                                  {% for error in f.errors %}
+                                    <p class="help-block">{{ error }}</p>
+                                  {% endfor %}  
+                                </div>
                             {% endif %}
                           {% endfor %}
                         </div>
@@ -499,7 +500,11 @@
                               <div class="col-5">
                                 <b>Initiatiefnemer</b>
                                 <br>
-                                {{ payment.alias_name }}
+                                {% if payment.alias_name %}
+                                  {{ payment.alias_name }}
+                                {% else %}
+                                  <i>Niet ingevuld.</i>
+                                {% endif %}
                                 <br>
                                 <br>
                                 {% if payment.type != 'MANUAL' %}
@@ -538,51 +543,50 @@
 
                                 <b>Ontvanger</b>
                                 <br>
-                                {{ payment.counterparty_alias_name }}
+                                {% if payment.counterparty_alias_name %}
+                                  {{ payment.counterparty_alias_name }}
+                                {% else %}
+                                    <i>Niet ingevuld.</i>
+                                {% endif %}
                                 <br>
                                 <br>
 
                                 {% if 'created' in payment_forms[payment.id] %}
-                                  <b>Datum</b>
-                                  <br>
-                                  {{ payment_forms[payment.id]['created'] }}
-                                  <br>
-                                  <br>
+                                {{ wtf.form_field(payment_forms[payment.id]['created'], class="form-control") }}
                                 {% endif %}
 
+                                {% if 'amount_value' in payment_forms[payment.id] %}
+                                {{ wtf.form_field(payment_forms[payment.id]['amount_value'], class="form-control") }}
+                                {% endif %}
+
+                                {% if payment.id in payment_forms %}
+                                  {{ wtf.form_field(payment_forms[payment.id]['route'], class="form-control") }}
+                                {% else %}
                                 <b>Route</b>
                                 <br>
-                                {% if payment.id in payment_forms %}
-                                  {{ payment_forms[payment.id]['route'] }}
-                                {% else %}
-                                  {{ payment.route }}
+                                {{ payment.route }}
+                                <br>
+                                <br>
                                 {% endif %}
-                                <br>
-                                <br>
 
-                                <b>Categorie</b>
-                                <br>
                                 {% if payment_forms %}
-                                  {{ payment_forms[payment.id]['category_id'] }}
+                                  {{ wtf.form_field(payment_forms[payment.id]['category_id'], class="form-control") }}
                                 {% else %}
-                                  {{ payment.category.name }}
+                                  <b>Categorie</b>
+                                  <br>
+                                  {% if payment.category %}
+                                    {{ payment.category.name }}
+                                  {% else %}
+                                    <i>Niet ingevuld.</i>
+                                  {% endif %}
+                                  <br>
+                                  <br>
                                 {% endif %}
-                                <br>
-                                <br>
 
                                 {# Show either the short or long description to not logged in visitors, otherwise allow a logger in user with access to this payment to edit the short and long descriptions #}
-                                {% if payment_forms %}
-                                  <b>Korte omschrijving</b>
-                                  <br>
-                                  {{ payment_forms[payment.id]['short_user_description'] }}
-                                  <br>
-                                  <br>
-
-                                  <b>Lange omschrijving</b>
-                                  <br>
-                                  {{ payment_forms[payment.id]['long_user_description'] }}
-                                  <br>
-                                  <br>
+                                {% if payment.id in payment_forms %}
+                                  {{ wtf.form_field(payment_forms[payment.id]['short_user_description'], class="form-control") }}
+                                  {{ wtf.form_field(payment_forms[payment.id]['long_user_description'], class="form-control") }}
                                 {% else %}
                                   <b>Omschrijving</b>
                                   <br>
@@ -591,7 +595,7 @@
                                   {% elif payment.short_user_description %}
                                     {{ payment.short_user_description }}
                                   {% else %}
-                                    <i>er is door de initiatiefnemer nog geen beschrijving van deze transactie toegevoegd</i>
+                                    <i>Er is door de initiatiefnemer nog geen beschrijving van deze transactie toegevoegd.</i>
                                   {% endif %}
                                   <br>
                                   <br>
@@ -599,9 +603,7 @@
 
                                 {% if payment_forms %}
                                   {% if project_owner %}
-                                    {{ payment_forms[payment.id]['hidden'].label }}
-                                    {{ payment_forms[payment.id]['hidden'] }}
-                                    <br>
+                                  {{ wtf.form_field(payment_forms[payment.id]['hidden'], class="form-control") }}
                                   {% endif %}
 
                                   {{ payment_forms[payment.id].submit }}
@@ -644,7 +646,7 @@
                                                 <form method="post">
                                                   {{ edit_attachment_forms[attachment.id]['csrf_token'] }}
                                                   {{ edit_attachment_forms[attachment.id]['id'] }}
-                                                  {{ edit_attachment_forms[attachment.id]['mediatype'] }}
+                                                  {{ wtf.form_field(edit_attachment_forms[attachment.id]['mediatype'], class="form-control") }}
                                                   {{ edit_attachment_forms[attachment.id]['submit'] }}
                                                 </form>
                                                 <br>
@@ -684,7 +686,7 @@
                                                 <form method="post">
                                                   {{ edit_attachment_forms[attachment.id]['csrf_token'] }}
                                                   {{ edit_attachment_forms[attachment.id]['id'] }}
-                                                  {{ edit_attachment_forms[attachment.id]['mediatype'] }}
+                                                  {{ wtf.form_field(edit_attachment_forms[attachment.id]['mediatype'], class="form-control") }}
                                                   {{ edit_attachment_forms[attachment.id]['submit'] }}
                                                 </form>
                                                 <br>
@@ -709,11 +711,7 @@
                                     {% for f in transaction_attachment_form %}
                                       {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' %}
                                         <div>
-                                          {{ f.label }}
-                                          {{ f }}
-                                          {% for error in f.errors %}
-                                            <span style="color: red;">- {{ error }}</span>
-                                          {% endfor %}
+                                          {{ wtf.form_field(f, class="form-control") }}
                                         </div>
                                       {% endif %}
                                     {% endfor %}
@@ -755,7 +753,7 @@
               <div>
                 {{ category_form.csrf_token }}
 
-                {{ category_form.name }}
+                {{ wtf.form_field(category_form.name, class="form-control") }}
               </div>
             </div>
             <div class="modal-footer">
@@ -785,10 +783,7 @@
 
                   {% for f in category_form %}
                     {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' %}
-                      <div>
-                        {{ f }}
-                        {{ f.label }}
-                      </div>
+                      {{ wtf.form_field(f, class="form-control") }}
                     {% endif %}
                   {% endfor %}
                 </div>
