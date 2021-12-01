@@ -709,6 +709,10 @@
                             {{ wtf.form_field(payment_forms[payment.id]['created'], class="form-control") }}
                             {% endif %}
 
+                            {% if 'amount_value' in payment_forms[payment.id] %}
+                            {{ wtf.form_field(payment_forms[payment.id]['amount_value'], class="form-control") }}
+                            {% endif %}
+
                             {% if payment.id in payment_forms %}
                               {{ wtf.form_field(payment_forms[payment.id]['route'], class="form-control") }}
                             {% else %}
@@ -734,7 +738,7 @@
                             {% endif %}
 
                             {% if project.contains_subprojects %}
-                              <b>Waarvoor</b>
+                              <b>Initiatief</b>
                               <br>
                               <a href="{{ url_for('subproject', project_id=project.id, subproject_id=payment.subproject.id) }}"><i>{{ payment.subproject.name }}</i></a>
                               <br>
@@ -804,7 +808,7 @@
                                             <form method="post">
                                               {{ edit_attachment_forms[attachment.id]['csrf_token'] }}
                                               {{ edit_attachment_forms[attachment.id]['id'] }}
-                                              {{ edit_attachment_forms[attachment.id]['mediatype'] }}
+                                              {{ wtf.form_field(edit_attachment_forms[attachment.id]["mediatype"], class="form-control") }}
                                               {{ edit_attachment_forms[attachment.id]['submit'] }}
                                             </form>
                                             <br>
@@ -844,7 +848,7 @@
                                             <form method="post">
                                               {{ edit_attachment_forms[attachment.id]['csrf_token'] }}
                                               {{ edit_attachment_forms[attachment.id]['id'] }}
-                                              {{ edit_attachment_forms[attachment.id]['mediatype'] }}
+                                              {{ wtf.form_field(edit_attachment_forms[attachment.id]["mediatype"], class="form-control") }}
                                               {{ edit_attachment_forms[attachment.id]['submit'] }}
                                             </form>
                                             <br>
@@ -871,11 +875,7 @@
                                   {% for f in transaction_attachment_form %}
                                     {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' %}
                                       <div>
-                                        {{ f.label }}
-                                        {{ f }}
-                                        {% for error in f.errors %}
-                                          <span style="color: red;">- {{ error }}</span>
-                                        {% endfor %}
+                                        {{ wtf.form_field(f, class="form-control") }}
                                       </div>
                                     {% endif %}
                                   {% endfor %}

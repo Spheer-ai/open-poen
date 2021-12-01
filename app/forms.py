@@ -233,6 +233,7 @@ class PaymentForm(FlaskForm):
     long_user_description = TextAreaField(
         'Lange beschrijving', validators=[Length(max=2000)]
     )
+    amount_value = FlexibleDecimalField('Bedrag (begin met een "-" als het een uitgave is)')
     created = DateField('Datum (notatie: 31-12-2020)', id="datepick", format="%d-%m-%Y")
     hidden = BooleanField('Transactie verbergen')
     category_id = SelectField('Categorie', validators=[Optional()], choices=[])

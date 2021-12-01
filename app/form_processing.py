@@ -207,7 +207,7 @@ def process_payment_form(request, project_or_subproject, project_owner, user_sub
             )
         )
     else:
-        # flash_form_errors(payment_form, request)
+        flash('<span class="text-default-red">Er ging iets fout bij het aanpassen van de betaling. Ga hiernaartoe terug en volg de aanwijzingen op.</span>')
         return payment_form
 
 
