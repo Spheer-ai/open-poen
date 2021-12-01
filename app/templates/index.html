@@ -150,10 +150,7 @@
 
                                             {% for f in edit_admin_form %}
                                               {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' %}
-                                                <div>
-                                                  {{ f }}
-                                                  {{ f.label }}
-                                                </div>
+                                                {{ wtf.form_field(f, class="form-control") }}
                                               {% endif %}
                                             {% endfor %}
                                           </div>
