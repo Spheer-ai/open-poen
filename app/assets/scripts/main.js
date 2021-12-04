@@ -11,9 +11,7 @@ import 'tableexport.jquery.plugin/tableExport.min.js';
 import 'bootstrap-table/dist/extensions/export/bootstrap-table-export.min.js';
 import 'bootstrap-table/dist/extensions/cookie/bootstrap-table-cookie.min.js';
 import naturalSort from 'javascript-natural-sort';
-global.moment = require('moment');
-require('tempusdominus-bootstrap-4');
-import '@fortawesome/fontawesome-free/js/solid';
+import datepicker from 'js-datepicker';
 
 // Import local dependencies
 import Router from './util/Router';
@@ -24,7 +22,7 @@ import transaction from './routes/transaction';
 // Import the needed Font Awesome functionality
 import { config, library, dom } from '@fortawesome/fontawesome-svg-core';
 // Import required icons
-import { faBars, faChevronDown, faFile, faCamera, faDownload, faReceipt } from '@fortawesome/free-solid-svg-icons';
+import { faBars, faChevronDown, faFile, faCamera, faDownload, faReceipt, faWindowRestore } from '@fortawesome/free-solid-svg-icons';
 import moment from 'moment';
 
 // Add the imported icons to the library
@@ -174,9 +172,7 @@ createDonuts();
 // with a form with validation errors.
 $(window).on('load', function() {
   if (typeof window.modal_id !== "undefined") {
-    $(window.modal_id).removeClass("fade");
     $(window.modal_id).modal('show');
-    $(window.modal_id).addClass("fade");
   }
 });
 
@@ -185,10 +181,65 @@ if ( window.history.replaceState ) {
   window.history.replaceState( null, null, window.location.href );
 }
 
-$(function () {
-  $('#datepick').datetimepicker({
-    locale: "nl",
-    format: "L",
-    defaultDate: moment()
-  });
+var datepickerConfig = {
+  startDay: 1,
+  customDays: ["ma", "di", "wo", "do", "vr", "za", "zo"],
+  customMonths: ["januari", "februari", "maart", "april", "mei", "juni", "juli", "augustus", "september", "oktober", "november", "december"],
+  overlayButton: "Invoeren",
+  overlayPlaceholder: "Voer een jaar in",
+  formatter: (input, date, instance) => {
+    const value = date.toLocaleDateString("nl-NL");
+    input.value = value;
+  }
+}
+
+// Simpelest case of setting a datepicker.
+if ($(".datepicker").length > 0) {
+  var picker = datepicker(".datepicker", datepickerConfig);
+}
+
+// Setting datepickers for the detail views of the bootstrap tables.
+// The ordinary way is impossible, because of the way the page loads.
+// We therefore have to dynamically assign and remove these date pickers
+// on expanding and collapsing detail views respectively. Nevertheless,
+// there is surely a better way of doing this.
+window.datepicker = datepicker;
+window.tableDatePickers = {};
+
+$('.payment-table').bootstrapTable({
+  onExpandRow: function (index, row, detailView) {
+    var dateInput = $(detailView).find(".table-datepicker");
+    if (dateInput.length > 0) {
+      var className = "active-table-datepicker" + index;
+      dateInput.addClass(className)
+      window.tableDatePickers[className] = window.datepicker("." + className, datepickerConfig);
+    }
+  },
+  onCollapseRow: function (index, row, detailView) {
+    var className = "active-table-datepicker" + index;
+    if (className in window.tableDatePickers) {
+      window.tableDatePickers[className].remove();
+      delete window.tableDatePickers[className];
+    }
+  },
+  // Sorting changes the indices of the table rows and collapses all
+  // of them. To ensure window.tableDatePickers stays in sync, we
+  // delete all datepickers previously instantiated.
+  onSort: function (name, order) {
+    for (var key in window.tableDatePickers) {
+      window.tableDatePickers[key].remove();
+      delete window.tableDatePickers[key];
+    }
+  }
 });
+
+// This is used to guide back the user to the payment that failed to
+// be updated in the payments table because of for example invalid input.
+window.scrollToPayment = function(paymentId) {
+  var row = $("#payment_row_" + paymentId);
+  var dataIndex = row.attr("data-index");
+  $('.payment-table').bootstrapTable("toggleDetailView", parseInt(dataIndex));
+  $([document.documentElement, document.body]).animate({
+    scrollTop: $("#payment_row_" + paymentId).offset().top
+  }, 400);
+}

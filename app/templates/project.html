@@ -414,24 +414,11 @@
                           {{ new_payment_form.csrf_token }}
 
                           {% for f in new_payment_form %}
-                          {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' and f.name != 'new_payment_form-created'%}
+                          {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' and f.name != "new_payment_form-created" %}
                           {{ wtf.form_field(f, class="form-control") }}
                           {% endif %}
-                          {% if f.name == 'new_payment_form-created' and not f.errors %}
-                          {# The datepicker requires special formatting. #}
-                          <div class="form-group {{ 'has_error' if f.errors|length > 0 }}">
-                            <label class="control-label" for="datepick">Datum (notatie: 31-12-2020)</label>
-                            <div class="input-group date" id="datepick" data-target-input="nearest">
-                              <input type="text" class="form-control datetimepicker-input" id="datepick" data-target="#datepick" value=""
-                                name="new_payment_form-created" />
-                              <div class="input-group-append" data-target="#datepick" data-toggle="datetimepicker">
-                                <div class="input-group-text"><i class="fa fa-calendar"></i></div>
-                              </div>
-                            </div>
-                            {% for error in f.errors %}
-                            <p class="help-block">{{ error }}</p>
-                            {% endfor %}
-                          </div>
+                          {% if f.name == "new_payment_form-created" %}
+                          {{ wtf.form_field(f, class="form-control datepicker") }}
                           {% endif %}
                           {% endfor %}
                         </div>
@@ -527,7 +514,8 @@
                   {% endfor %}
 
                   {% if not payment.hidden or (project_owner or payment.subproject.id in user_subproject_ids) %}
-                  <tr{% if payment.type == 'MANUAL' %} class="manual-payment"{% endif %}>
+                  <tr{% if payment.type == 'MANUAL' %} class="manual-payment"{% endif %} id="payment_row_{{ payment.id }}">
+                    <!-- <tr class="payment_row_{{ payment.id }} {% if payment.type == 'MANUAL' %} manual-payment {% endif %}"> -->
                     <td>
                       <div class="cell">
                         {{ payment.id }}
@@ -675,7 +663,8 @@
                             <br>
 
                             {% if 'created' in payment_forms[payment.id] %}
-                            {{ wtf.form_field(payment_forms[payment.id]["created"], class="form-control") }}
+                            <!-- {{ wtf.form_field(payment_forms[payment.id]["created"], class="form-control") }} -->
+                            {{ wtf.form_field(payment_forms[payment.id]["created"], class="form-control table-datepicker") }}
                             {% endif %}
 
                             {% if 'amount_value' in payment_forms[payment.id] %}
