@@ -31,7 +31,7 @@ from time import time
 from werkzeug.utils import secure_filename
 import os
 import jwt
-import re
+import json
 
 
 # Add 'Cache-Control': 'private' header if users are logged in
@@ -71,6 +71,8 @@ def before_request():
 
 @app.route("/", methods=['GET', 'POST'])
 def index():
+    modal_id = None
+
     # Process Bunq OAuth callback (this will redirect to the project page)
     if request.args.get('state'):
         return util.process_bunq_oauth_callback(request, current_user)
@@ -79,7 +81,7 @@ def index():
     edit_admin_form = EditAdminForm(prefix="edit_admin_form")
 
     # Update admin
-    if edit_admin_form.validate_on_submit():
+    if util.validate_on_submit(edit_admin_form, request):
         admins = User.query.filter_by(id=edit_admin_form.id.data)
         new_admin_data = {}
         for f in edit_admin_form:
@@ -112,7 +114,7 @@ def index():
     add_user_form = AddUserForm(prefix="add_user_form")
 
     # Add user (either admin or project owner)
-    if add_user_form.validate_on_submit():
+    if util.validate_on_submit(add_user_form, request):
         new_user_data = {}
         for f in add_user_form:
             if f.type != 'SubmitField' and f.type != 'CSRFTokenField':
@@ -138,13 +140,9 @@ def index():
     # Create an empty form, or fill it with a submitted form so that we can
     # return the validated version. modal_id is used to pop open the modal
     # on loading the page, if it contains a validated form.
-    modal_id = None
     project_form = ProjectForm(prefix="project_form")
-    if request.method == "POST":
-        modal_id = "#modal-project-toevoegen"
-
     # Save (i.e. create) project
-    if project_form.validate_on_submit():
+    if util.validate_on_submit(project_form, request):
         new_project_data = {}
         for f in project_form:
             if f.type != 'SubmitField' and f.type != 'CSRFTokenField':
@@ -174,6 +172,9 @@ def index():
             )
         # redirect back to clear form data
         return redirect(url_for('index'))
+    else:
+        if len(project_form.errors) > 0:
+            modal_id = ["#modal-project-toevoegen"]
 
     # Calculate amounts awarded and spent
     # total_awarded = all current project balances
@@ -233,15 +234,17 @@ def index():
         add_user_form=AddUserForm(prefix='add_user_form'),
         edit_admin_forms=edit_admin_forms,
         user_stories=UserStory.query.all(),
-        modal_id=modal_id  # Does nothing if None. Loads the modal
+        modal_id=json.dumps(modal_id)  # Does nothing if None. Loads the modal
         # on page load if supplied.
     )
 
 
 @app.route("/project/<project_id>", methods=['GET', 'POST'])
 def project(project_id):
-    project = Project.query.get(project_id)
     modal_id = None
+    payment_id = None
+
+    project = Project.query.get(project_id)
 
     if not project:
         return render_template(
@@ -265,7 +268,7 @@ def project(project_id):
             footer=app.config['FOOTER']
         )
 
-    # Process filled in funder form
+    # Process filled in funder form.
     funder_form = FunderForm(prefix="funder_form")
 
     # Remove funder
@@ -281,7 +284,7 @@ def project(project_id):
         return redirect(url_for('project', project_id=project_id))
 
     # Save or update funder
-    if funder_form.validate_on_submit():
+    if util.validate_on_submit(funder_form, request):
         funders = Funder.query.filter_by(id=funder_form.id.data)
         new_funder_data = {}
         for f in funder_form:
@@ -321,7 +324,7 @@ def project(project_id):
     funder_forms = []
     for funder in project.funders:
         funder_forms.append(
-            FunderForm(prefix="funder_form", **{
+            FunderForm(prefix=f"funder_form", **{
                 'name': funder.name,
                 'url': funder.url,
                 'id': funder.id
@@ -339,7 +342,7 @@ def project(project_id):
         if request.method == 'POST' and subproject_form.name.data:
             subproject_form.iban.choices = project.make_select_options()
 
-    if subproject_form.validate_on_submit():
+    if util.validate_on_submit(subproject_form, request):
         # Get data from the form
         new_subproject_data = {}
         for f in subproject_form:
@@ -400,17 +403,21 @@ def project(project_id):
         # redirect back to clear form data
         return redirect(url_for('project', project_id=project_id))
     else:
-        util.flash_form_errors(subproject_form, request)
+        if len(subproject_form.errors) > 0:
+            modal_id = ["#subproject-toevoegen"]
 
-    # Populate the the new subproject form with its project's ID
-    subproject_form = SubprojectForm(prefix="subproject_form", **{
-        'project_id': project.id
-    })
+    # We don't want to edit the form if it was validated but has errors. How do we
+    # code this logically and orderly, because this is becoming spaghetti.
+    if len(subproject_form.errors) == 0:
+        # Populate the the new subproject form with its project's ID
+        subproject_form = SubprojectForm(prefix="subproject_form", **{
+            'project_id': project.id
+        })
 
-    # If a bunq account is available, allow the user to select
-    # an IBAN
-    if project.bunq_access_token:
-        subproject_form.iban.choices = project.make_select_options()
+        # If a bunq account is available, allow the user to select
+        # an IBAN
+        if project.bunq_access_token:
+            subproject_form.iban.choices = project.make_select_options()
 
     # Retrieve any subprojects a normal logged in user is part of
     user_subproject_ids = []
@@ -456,59 +463,59 @@ def project(project_id):
             new_payment_form.category_id.choices = project.make_category_select_options()
 
         # Save new payment
-        if util.form_in_request(new_payment_form, request):
-            if new_payment_form.validate_on_submit():
-                new_payment_data = {}
-                for f in new_payment_form:
-                    if f.type != 'SubmitField' and f.type != 'CSRFTokenField':
-                        # If the category is edited to be empty again, make
-                        # sure to set it to None instead of ''
-                        if f.short_name == 'category_id':
-                            if f.data == '':
-                                new_payment_data[f.short_name] = None
-                            else:
-                                new_payment_data[f.short_name] = f.data
+        if util.validate_on_submit(new_payment_form, request):
+            new_payment_data = {}
+            for f in new_payment_form:
+                if f.type != 'SubmitField' and f.type != 'CSRFTokenField':
+                    # If the category is edited to be empty again, make
+                    # sure to set it to None instead of ''
+                    if f.short_name == 'category_id':
+                        if f.data == '':
+                            new_payment_data[f.short_name] = None
                         else:
                             new_payment_data[f.short_name] = f.data
+                    else:
+                        new_payment_data[f.short_name] = f.data
 
-                new_attachment = {
-                    "mediatype": new_payment_data.pop("mediatype"),
-                    "data_file": new_payment_data.pop("data_file")
-                }
+            new_attachment = {
+                "mediatype": new_payment_data.pop("mediatype"),
+                "data_file": new_payment_data.pop("data_file")
+            }
 
-                new_payment = Payment(**new_payment_data)
+            new_payment = Payment(**new_payment_data)
 
-                # A payment can only be linked to a project or a subproject,
-                # so only add a project_id if this project doesn't contain
-                # subprojects
-                if not project.contains_subprojects:
-                    new_payment.project_id = project_id
+            # A payment can only be linked to a project or a subproject,
+            # so only add a project_id if this project doesn't contain
+            # subprojects
+            if not project.contains_subprojects:
+                new_payment.project_id = project_id
 
-                new_payment.amount_currency = 'EUR'
-                new_payment.type = 'MANUAL'
-                new_payment.updated = datetime.now()
-                db.session.add(new_payment)
-                db.session.commit()
-                flash(
-                    '<span class="text-default-green">Transactie is toegevoegd</span>'
+            new_payment.amount_currency = 'EUR'
+            new_payment.type = 'MANUAL'
+            new_payment.updated = datetime.now()
+            db.session.add(new_payment)
+            db.session.commit()
+            flash(
+                '<span class="text-default-green">Transactie is toegevoegd</span>'
+            )
+
+            if new_attachment["data_file"] is not None:
+                save_attachment(
+                    new_attachment["data_file"],
+                    new_attachment["mediatype"],
+                    new_payment,
+                    'transaction-attachment'
                 )
 
-                if new_attachment["data_file"] is not None:
-                    save_attachment(
-                        new_attachment["data_file"],
-                        new_attachment["mediatype"],
-                        new_payment,
-                        'transaction-attachment'
-                    )
-
-                # redirect back to clear form data
-                return redirect(url_for('project', project_id=project_id))
+            # redirect back to clear form data
+            return redirect(url_for('project', project_id=project_id))
         
         # Open up again the adding a payment modal in case of errors after validation.
         # NOTE: This works as intended because we only validate if the request contains
         # the new_payment_form form.
-        if len(new_payment_form.errors):
-            modal_id = "#modal-transactie-toevoegen"
+        else:
+            if len(new_payment_form.errors) > 0:
+                modal_id = ["#modal-transactie-toevoegen"]
 
     # Process/create (filled in) payment form
     payment_forms = {}
@@ -543,6 +550,7 @@ def project(project_id):
                 editable_attachments += payment.attachments
         
         if type(payment_form_return) == PaymentForm:
+            payment_id = payment_form_return.id.data
             editable_payments = [x for x in editable_payments if x.id != payment_form_return.id.data]
 
         payment_forms = create_payment_forms(
@@ -595,7 +603,7 @@ def project(project_id):
     )
 
     # Update project owner
-    if edit_project_owner_form.validate_on_submit():
+    if util.validate_on_submit(edit_project_owner_form, request):
         edited_project_owner = User.query.filter_by(
             id=edit_project_owner_form.id.data
         )
@@ -628,7 +636,8 @@ def project(project_id):
         # redirect back to clear form data
         return redirect(url_for('project', project_id=project.id))
     else:
-        util.flash_form_errors(edit_project_owner_form, request)
+        if len(edit_project_owner_form.errors) > 0:
+            modal_id = ["#project-bewerken", "#project-owner-toevoegen"]
 
     # Populate the edit project owner forms which allows the user to
     # edit it
@@ -651,7 +660,7 @@ def project(project_id):
     add_user_form = AddUserForm(prefix="add_user_form")
 
     # Add user (either admin or project owner)
-    if add_user_form.validate_on_submit():
+    if util.validate_on_submit(add_user_form, request):
         new_user_data = {}
         for f in add_user_form:
             if f.type != 'SubmitField' and f.type != 'CSRFTokenField':
@@ -672,7 +681,8 @@ def project(project_id):
         # redirect back to clear form data
         return redirect(url_for('project', project_id=project.id))
     else:
-        util.flash_form_errors(add_user_form, request)
+        if len(add_user_form.errors) > 0:
+            modal_id = ["#project-bewerken", "#project-owner-toevoegen"]
 
     # Process filled in project form
     project_form = ProjectForm(prefix="project_form")
@@ -701,7 +711,7 @@ def project(project_id):
                     projects.first().make_select_options()
                 )
 
-    if project_form.validate_on_submit():
+    if util.validate_on_submit(project_form, request):
         new_project_data = {}
         for f in project_form:
             if f.type != 'SubmitField' and f.type != 'CSRFTokenField':
@@ -789,7 +799,8 @@ def project(project_id):
         # redirect back to clear form data
         return redirect(url_for('project', project_id=project.id))
     else:
-        util.flash_form_errors(project_form, request)
+        if len(project_form.errors) > 0:
+            modal_id = ["#project-bewerken"]
 
     # Process filled in category form
     category_form = ''
@@ -828,15 +839,18 @@ def project(project_id):
 
         # Populate the project's form which allows the user to edit
         # it
-        form = ProjectForm(prefix="project_form", **{
-            'name': project.name,
-            'description': project.description,
-            'hidden': project.hidden,
-            'hidden_sponsors': project.hidden_sponsors,
-            'budget': project.budget,
-            'id': project.id,
-            'contains_subprojects': project.contains_subprojects
-        })
+        if len(project_form.errors) > 0:
+            form = project_form
+        else:
+            form = ProjectForm(prefix="project_form", **{
+                'name': project.name,
+                'description': project.description,
+                'hidden': project.hidden,
+                'hidden_sponsors': project.hidden_sponsors,
+                'budget': project.budget,
+                'id': project.id,
+                'contains_subprojects': project.contains_subprojects
+            })
         # We don't allow editing of the 'contains_subprojects'
         # value after a project is created, but we do need to pass the
         # value in the form, so simply disable it
@@ -907,7 +921,7 @@ def project(project_id):
         payments=payments,
         project_form=project_form,
         edit_project_owner_forms=edit_project_owner_forms,
-        add_user_form=AddUserForm(prefix='add_user_form'),
+        add_user_form=add_user_form,
         subproject_form=subproject_form,
         new_payment_form=new_payment_form,
         categories_dict=categories_dict,
@@ -915,14 +929,15 @@ def project(project_id):
         transaction_attachment_form=transaction_attachment_form,
         edit_attachment_forms=edit_attachment_forms,
         funder_forms=funder_forms,
-        new_funder_form=FunderForm(prefix="funder_form"),
+        new_funder_form=funder_form,
         project_owner=project_owner,
         user_subproject_ids=user_subproject_ids,
         timestamp=util.get_export_timestamp(),
         server_name=app.config['SERVER_NAME'],
         bunq_client_id=app.config['BUNQ_CLIENT_ID'],
         base_url_auth=base_url_auth,
-        modal_id=modal_id
+        modal_id=json.dumps(modal_id),
+        payment_id=json.dumps(payment_id)
     )
 
 

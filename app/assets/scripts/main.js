@@ -171,8 +171,10 @@ createDonuts();
 // pop up at the loading of the page, such as when we load a page
 // with a form with validation errors.
 $(window).on('load', function() {
-  if (typeof window.modal_id !== "undefined") {
-    $(window.modal_id).modal('show');
+  if (window.modal_id !== null) {
+    for (var i = 0; i < window.modal_id.length; i++) {
+      $(window.modal_id[i]).modal('show');
+    }
   }
 });
 
@@ -233,13 +235,13 @@ $('.payment-table').bootstrapTable({
   }
 });
 
-// This is used to guide back the user to the payment that failed to
-// be updated in the payments table because of for example invalid input.
-window.scrollToPayment = function(paymentId) {
-  var row = $("#payment_row_" + paymentId);
-  var dataIndex = row.attr("data-index");
-  $('.payment-table').bootstrapTable("toggleDetailView", parseInt(dataIndex));
-  $([document.documentElement, document.body]).animate({
-    scrollTop: $("#payment_row_" + paymentId).offset().top
-  }, 400);
-}
+$(window).on('load', function() {
+  if (window.paymentId !== null) {
+    var row = $("#payment_row_" + window.paymentId);
+    var dataIndex = row.attr("data-index");
+    $('.payment-table').bootstrapTable("toggleDetailView", parseInt(dataIndex));
+    $([document.documentElement, document.body]).animate({
+      scrollTop: $("#payment_row_" + window.paymentId).offset().top
+    }, 400);
+  }
+});

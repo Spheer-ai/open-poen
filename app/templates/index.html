@@ -110,7 +110,7 @@
                                       <div>
                                         {{ add_user_form.csrf_token }}
 
-                                        {{ add_user_form.email }}
+                                        {{ wtf.form_field(add_user_form.email, class="form-control") }}
                                         {{ add_user_form.admin(**{'value': 1}) }}
                                       </div>
                                     </div>
@@ -279,7 +279,7 @@
 {% block scripts %}
   {% if modal_id is not none %}
     <script>
-      window.modal_id = "{{ modal_id }}";
+      window.modal_id = {{ modal_id|safe }};
     </script>
   {% endif %}
   {{ super() }}

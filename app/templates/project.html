@@ -186,12 +186,12 @@
                       {% endif %}
 
                       <!-- Button trigger modal -->
-                      <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#project-bewerken-{{ project_data['id'] }}">
+                      <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#project-bewerken">
                         project bewerken
                       </button>
 
                       <!-- Modal -->
-                      <div class="modal fade" id="project-bewerken-{{ project_data['id'] }}" tabindex="-1" role="dialog" aria-labelledby="projectBewerkenLabel" aria-hidden="true">
+                      <div class="modal fade" id="project-bewerken" tabindex="-1" role="dialog" aria-labelledby="projectBewerkenLabel" aria-hidden="true">
                         <div class="modal-dialog" role="document">
                           <div class="modal-content">
                             <form method="POST">
@@ -206,7 +206,7 @@
                                 <br>
                                 <br>
                                 <!-- Button trigger modal -->
-                                <button type="button" class="btn button-poen-small bg-grey" data-toggle="modal" data-target="#project-owner-toevoegen-{{ project_data['id'] }}">
+                                <button type="button" class="btn button-poen-small bg-grey" data-toggle="modal" data-target="#project-owner-toevoegen">
                                   project owner toevoegen
                                 </button>
 
@@ -902,7 +902,7 @@
 
   {% if project_data and project_owner %}
     <!-- Modal for 'Project owner toevoegen' -->
-    <div class="modal fade" id="project-owner-toevoegen-{{ project_data.id }}" tabindex="-1" role="dialog" aria-labelledby="projectOwnerToevoegenLabel" aria-hidden="true">
+    <div class="modal fade" id="project-owner-toevoegen" tabindex="-1" role="dialog" aria-labelledby="projectOwnerToevoegenLabel" aria-hidden="true">
       <div class="modal-dialog" role="document">
         <div class="modal-content">
           <form method="POST">
@@ -1068,7 +1068,12 @@
   <script>var categories_dict = "{{ categories_dict|tojson }}";</script>
   {% if modal_id is not none %}
     <script>
-      window.modal_id = "{{ modal_id }}";
+      window.modal_id = {{ modal_id|safe }};
+    </script>
+  {% endif %}\
+  {% if payment_id is not none %}
+    <script>
+      window.paymentId = {{ payment_id|safe }};
     </script>
   {% endif %}
   {{ super() }}

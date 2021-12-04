@@ -462,6 +462,13 @@ def flash_form_errors(form, request):
             )
 
 
+def validate_on_submit(form, request):
+    if form_in_request(form, request):
+        return form.validate_on_submit()
+    else:
+        return False
+
+
 def _set_user_role(user, admin=False, project_id=0, subproject_id=0):
     if admin:
         user.admin = True

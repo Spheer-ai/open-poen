@@ -207,7 +207,6 @@ def process_payment_form(request, project_or_subproject, project_owner, user_sub
             )
         )
     else:
-        flash('<span class="text-default-red">Er ging iets fout bij het aanpassen van de betaling. Ga hiernaartoe terug en volg de aanwijzingen op.</span>')
         return payment_form
 
 
@@ -224,6 +223,7 @@ def create_payment_forms(payments, project_owner):
             'short_user_description': payment.short_user_description,
             'long_user_description': payment.long_user_description,
             'created': payment.created,
+            'amount_value': payment.amount_value,
             'id': payment.id,
             'hidden': payment.hidden,
             'category_id': selected_category,
