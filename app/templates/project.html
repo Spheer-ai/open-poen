@@ -515,7 +515,6 @@
 
                   {% if not payment.hidden or (project_owner or payment.subproject.id in user_subproject_ids) %}
                   <tr{% if payment.type == 'MANUAL' %} class="manual-payment"{% endif %} id="payment_row_{{ payment.id }}">
-                    <!-- <tr class="payment_row_{{ payment.id }} {% if payment.type == 'MANUAL' %} manual-payment {% endif %}"> -->
                     <td>
                       <div class="cell">
                         {{ payment.id }}
@@ -663,7 +662,6 @@
                             <br>
 
                             {% if 'created' in payment_forms[payment.id] %}
-                            <!-- {{ wtf.form_field(payment_forms[payment.id]["created"], class="form-control") }} -->
                             {{ wtf.form_field(payment_forms[payment.id]["created"], class="form-control table-datepicker") }}
                             {% endif %}
 
