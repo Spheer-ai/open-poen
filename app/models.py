@@ -383,6 +383,12 @@ class Payment(db.Model):
                 monetary=True
             )
         return return_value
+    
+    def get_export_currency(self):
+        return self.get_formatted_currency().replace(" ", "")
+
+    def get_export_balance(self):
+        return self.get_formatted_balance().replace(" ", "")
 
 
 class Funder(db.Model):

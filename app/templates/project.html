@@ -477,7 +477,7 @@
                 </div>
               </div>
             </div>
-            <table class="payment-table" data-pagination="true" data-locale="nl-NL" data-toolbar="#toolbar" data-cookie="true" data-cookie-id-table="project-{{ project.id }}" data-detail-view="true" data-detail-view-by-click="true" data-detail-view-icon="false" data-detail-formatter="detailFormatter" data-show-export="true" data-export-data-type="all" data-export-types="['csv', 'txt', 'json', 'xml', 'sql']" data-export-options='{"fileName": "{{ timestamp }}-{{ project.name | replace(' ', '_') }}"}'>
+            <table class="payment-table" data-pagination="true" data-locale="nl-NL" data-toolbar="#toolbar" data-cookie="true" data-cookie-id-table="project-{{ project.id }}" data-detail-view="true" data-detail-view-by-click="true" data-detail-view-icon="false" data-detail-formatter="detailFormatter" data-show-export="true" data-export-data-type="all" data-export-types="['csv', 'txt', 'json', 'xml', 'sql']" data-export-options='{"fileName": "{{ timestamp }}-{{ project.name | replace(' ', '_') }}", "preventInjection": false}'>
               <thead>
                 <tr>
                   {# Hidden field required to make search work with the detailed view; NOTE: the id should always be the first column of the table #}
@@ -485,7 +485,7 @@
                   {% if project.contains_subprojects %}
                     <th data-sortable="true" data-field="initiatief">initiatief</th>
                   {% endif %}
-                  <th data-sortable="true" data-field="bedrag" data-sorter="customSort">bedrag €</th>
+                  <th data-force-hide="true" data-sortable="true" data-field="bedrag" data-sorter="customSort">bedrag €</th>
                   <th data-sortable="true" data-field="verborgen">verborgen</th>
                   <th data-sortable="true" data-field="verzender" class="d-none d-sm-table-cell">verzender</th>
                   <th data-sortable="true" data-field="ontvanger" class="d-none d-md-table-cell">ontvanger</th>
@@ -496,6 +496,7 @@
                   {# The columns below are hidden, but need to be included to make their content exportable #}
                   <th class="d-none">betaalomschrijving</th>
                   <th class="d-none">lange omschrijving</th>
+                  <th class="d-none">bedrag €</th>
                   <th class="d-none">saldo na boeking €</th>
                   <th class="d-none">categorie</th>
                   {# Hidden column used to generate the detailed view #}
@@ -531,7 +532,7 @@
                     <td>
                       <div class="cell justify-content-end">
                         {% if payment.amount_value >= 0 %}
-                          <h1 class="text-blue text-right">+{{ payment.get_formatted_currency() }}</h1>
+                          <h1 class="text-blue text-right">{{ payment.get_formatted_currency() }}</h1>
                         {% else %}
                           <h1 class="text-red text-right">{{ payment.get_formatted_currency() }}</h1>
                         {% endif %}
@@ -598,7 +599,12 @@
                     </td>
                     <td>
                       <div class="cell">
-                        {{ payment.get_formatted_balance() }}
+                        {{ payment.get_export_currency() }}
+                      </div>
+                    </td>
+                    <td>
+                      <div class="cell">
+                        {{ payment.get_export_balance() }}
                       </div>
                     </td>
                     <td>
