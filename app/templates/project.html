@@ -486,8 +486,8 @@
                     <th data-sortable="true" data-field="initiatief">initiatief</th>
                   {% endif %}
                   <th data-sortable="true" data-field="bedrag" data-sorter="customSort">bedrag €</th>
-                  <th data-sortable="true" data-field="ontvanger" class="d-none d-sm-table-cell">ontvanger</th>
-                  <th data-sortable="true" data-field="initiatiefnemer" class="d-none d-md-table-cell">initiatiefnemer</th>
+                  <th data-sortable="true" data-field="verzender" class="d-none d-sm-table-cell">verzender</th>
+                  <th data-sortable="true" data-field="ontvanger" class="d-none d-md-table-cell">ontvanger</th>
                   <th data-sortable="true" data-field="omschrijving" class="d-none d-sm-table-cell">omschrijving</th>
                   <th data-sortable="true" data-field="datum" data-sorter="sortByDate" class="d-none d-xl-table-cell">datum</th>
                   <th data-sortable="true" data-field="media" data-force-hide="true" class="d-none d-xl-table-cell">media</th>
@@ -541,12 +541,12 @@
                     </td>
                     <td>
                       <div class="cell">
-                        {{ payment.counterparty_alias_name }}
+                        {{ payment.alias_name }}
                       </div>
                     </td>
                     <td>
                       <div class="cell">
-                        {{ payment.alias_name }}
+                        {{ payment.counterparty_alias_name }}
                       </div>
                     </td>
                     <td>
@@ -606,12 +606,21 @@
                       <div class="detail-row">
                         <div class="row">
                           <div class="col-5">
-                            <b>Initiatiefnemer</b>
+                            <b>Verzender</b>
                             <br>
                             {% if payment.alias_name %}
                               {{ payment.alias_name }}
                             {% else %}
                               <i>Niet ingevuld.</i>
+                            {% endif %}
+                            <br>
+                            <br>
+                            <b>Ontvanger</b>
+                            <br>
+                            {% if payment.counterparty_alias_name %}
+                              {{ payment.counterparty_alias_name }}
+                            {% else %}
+                                <i>Niet ingevuld.</i>
                             {% endif %}
                             <br>
                             <br>
@@ -637,7 +646,8 @@
                               {{ payment.created.strftime('%d-%m-\'%y') }}
                               <br>
                               <br>
-                            {% endif %}                            
+                            {% endif %}
+                            <b>bedrag €</b>
                             {% if payment.amount_value >= 0 %}
                               <h6 class="text-blue">+{{ payment.get_formatted_currency() }}</h6>
                             {% else %}
@@ -736,21 +746,11 @@
                               {{ payment_forms[payment.id].id }}
                             {% endif %}
 
-                            <b>Ontvanger</b>
-                            <br>
-                            {% if payment.counterparty_alias_name %}
-                              {{ payment.counterparty_alias_name }}
-                            {% else %}
-                                <i>Niet ingevuld.</i>
-                            {% endif %}
-                            <br>
-                            <br>
-
                             {% if 'created' in payment_forms[payment.id] %}
                             {{ wtf.form_field(payment_forms[payment.id]["created"], class="form-control table-datepicker") }}
                             {% endif %}
 
-                            {% if 'amount_value' in payment_forms[payment.id] %}
+                            {% if 'amount_value' in payment_forms[payment.id] and payment.type == "MANUAL" %}
                             {{ wtf.form_field(payment_forms[payment.id]['amount_value'], class="form-control") }}
                             {% endif %}
 

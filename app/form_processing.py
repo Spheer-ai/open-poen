@@ -121,6 +121,9 @@ def process_payment_form(request, project_or_subproject, project_owner, user_sub
         # payment on a project page)
         if not project_owner and not temppayment.subproject.id in user_subproject_ids:
             return
+        # Make sure the transaction amount can't be changed if the transaction is not manual.
+        if temppayment.type != "MANUAL":
+            payment_form.amount_value.data = temppayment.amount_value
     else:
         return
 

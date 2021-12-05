@@ -171,9 +171,11 @@ createDonuts();
 // pop up at the loading of the page, such as when we load a page
 // with a form with validation errors.
 $(window).on('load', function() {
-  if (window.modal_id !== null) {
-    for (var i = 0; i < window.modal_id.length; i++) {
-      $(window.modal_id[i]).modal('show');
+  if (window.modal_id !== undefined) {
+    if (window.modal_id !== null) {
+      for (var i = 0; i < window.modal_id.length; i++) {
+        $(window.modal_id[i]).modal('show');
+      }
     }
   }
 });
@@ -236,12 +238,14 @@ $('.payment-table').bootstrapTable({
 });
 
 $(window).on('load', function() {
-  if (window.paymentId !== null) {
-    var row = $("#payment_row_" + window.paymentId);
-    var dataIndex = row.attr("data-index");
-    $('.payment-table').bootstrapTable("toggleDetailView", parseInt(dataIndex));
-    $([document.documentElement, document.body]).animate({
-      scrollTop: $("#payment_row_" + window.paymentId).offset().top
-    }, 400);
+  if (window.paymentId !== undefined) {
+    if (window.paymentId !== null) {
+      var row = $("#payment_row_" + window.paymentId);
+      var dataIndex = row.attr("data-index");
+      $('.payment-table').bootstrapTable("toggleDetailView", parseInt(dataIndex));
+      $([document.documentElement, document.body]).animate({
+        scrollTop: $("#payment_row_" + window.paymentId).offset().top
+      }, 400);
+    }
   }
 });
