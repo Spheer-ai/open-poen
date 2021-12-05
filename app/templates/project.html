@@ -477,7 +477,7 @@
                 </div>
               </div>
             </div>
-            <table class="payment-table" data-locale="nl-NL" data-toolbar="#toolbar" data-cookie="true" data-cookie-id-table="project-{{ project.id }}" data-detail-view="true" data-detail-view-by-click="true" data-detail-view-icon="false" data-detail-formatter="detailFormatter" data-show-export="true" data-export-data-type="all" data-export-types="['csv', 'txt', 'json', 'xml', 'sql']" data-export-options='{"fileName": "{{ timestamp }}-{{ project.name | replace(' ', '_') }}"}'>
+            <table class="payment-table" data-pagination="true" data-locale="nl-NL" data-toolbar="#toolbar" data-cookie="true" data-cookie-id-table="project-{{ project.id }}" data-detail-view="true" data-detail-view-by-click="true" data-detail-view-icon="false" data-detail-formatter="detailFormatter" data-show-export="true" data-export-data-type="all" data-export-types="['csv', 'txt', 'json', 'xml', 'sql']" data-export-options='{"fileName": "{{ timestamp }}-{{ project.name | replace(' ', '_') }}"}'>
               <thead>
                 <tr>
                   {# Hidden field required to make search work with the detailed view; NOTE: the id should always be the first column of the table #}
@@ -486,6 +486,7 @@
                     <th data-sortable="true" data-field="initiatief">initiatief</th>
                   {% endif %}
                   <th data-sortable="true" data-field="bedrag" data-sorter="customSort">bedrag €</th>
+                  <th data-sortable="true" data-field="verborgen">verborgen</th>
                   <th data-sortable="true" data-field="verzender" class="d-none d-sm-table-cell">verzender</th>
                   <th data-sortable="true" data-field="ontvanger" class="d-none d-md-table-cell">ontvanger</th>
                   <th data-sortable="true" data-field="omschrijving" class="d-none d-sm-table-cell">omschrijving</th>
@@ -529,13 +530,17 @@
                     {% endif %}
                     <td>
                       <div class="cell justify-content-end">
-                        {% if payment.hidden %}
-                          <i>Deze transactie is verborgen&nbsp;&nbsp;</i>
-                        {% endif %}
                         {% if payment.amount_value >= 0 %}
                           <h1 class="text-blue text-right">+{{ payment.get_formatted_currency() }}</h1>
                         {% else %}
                           <h1 class="text-red text-right">{{ payment.get_formatted_currency() }}</h1>
+                        {% endif %}
+                      </div>
+                    </td>
+                    <td>
+                      <div class="cell">
+                        {% if payment.hidden %}
+                          <i>verborgen</i>
                         {% endif %}
                       </div>
                     </td>
