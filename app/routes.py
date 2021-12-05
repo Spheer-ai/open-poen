@@ -945,6 +945,8 @@ def project(project_id):
     "/project/<project_id>/subproject/<subproject_id>", methods=['GET', 'POST']
 )
 def subproject(project_id, subproject_id):
+    modal_id = None
+    payment_id = None
     subproject = Subproject.query.get(subproject_id)
 
     if not subproject:
@@ -1004,7 +1006,7 @@ def subproject(project_id, subproject_id):
             )
         )
 
-    if subproject_form.validate_on_submit():
+    if util.validate_on_submit(subproject_form, request):
         # Get data from the form
         new_subproject_data = {}
         for f in subproject_form:
@@ -1081,17 +1083,19 @@ def subproject(project_id, subproject_id):
             )
         )
     else:
-        util.flash_form_errors(subproject_form, request)
+        if len(subproject_form.errors) > 0:
+            modal_id = ["#subproject-bewerken"]
 
-    # Populate the subproject's form which allows the user to edit it
-    subproject_form = SubprojectForm(prefix='subproject_form', **{
-        'name': subproject.name,
-        'description': subproject.description,
-        'hidden': subproject.hidden,
-        'budget': subproject.budget,
-        'project_id': subproject.project.id,
-        'id': subproject.id
-    })
+    if len(subproject_form.errors) == 0:
+        # Populate the subproject's form which allows the user to edit it
+        subproject_form = SubprojectForm(prefix='subproject_form', **{
+            'name': subproject.name,
+            'description': subproject.description,
+            'hidden': subproject.hidden,
+            'budget': subproject.budget,
+            'project_id': subproject.project.id,
+            'id': subproject.id
+        })
 
     # If a bunq account is available, allow the user to select
     # an IBAN
@@ -1125,7 +1129,7 @@ def subproject(project_id, subproject_id):
         new_payment_form.category_id.choices = subproject.make_category_select_options()
 
         # Save new payment
-        if new_payment_form.validate_on_submit():
+        if util.validate_on_submit(new_payment_form, request):
             new_payment_data = {}
             for f in new_payment_form:
                 if f.type != 'SubmitField' and f.type != 'CSRFTokenField':
@@ -1139,6 +1143,11 @@ def subproject(project_id, subproject_id):
                     else:
                         new_payment_data[f.short_name] = f.data
 
+            new_attachment = {
+                "mediatype": new_payment_data.pop("mediatype"),
+                "data_file": new_payment_data.pop("data_file")
+            }
+
             new_payment = Payment(**new_payment_data)
             new_payment.subproject_id = subproject.id
             new_payment.amount_currency = 'EUR'
@@ -1150,15 +1159,30 @@ def subproject(project_id, subproject_id):
                 '<span class="text-default-green">Transactie is toegevoegd</span>'
             )
 
+            if new_attachment["data_file"] is not None:
+                save_attachment(
+                    new_attachment["data_file"],
+                    new_attachment["mediatype"],
+                    new_payment,
+                    'transaction-attachment'
+                )
+
             # redirect back to clear form data
             return redirect(url_for('subproject', project_id=subproject.project.id, subproject_id=subproject_id))
         else:
-            util.flash_form_errors(new_payment_form, request)
+            if len(new_payment_form.errors) > 0:
+                modal_id = ["#transactie-toevoegen"]
 
     # Process filled in payment form
     payment_form_return = process_payment_form(request, subproject, project_owner, user_subproject_ids, is_subproject=True)
-    if payment_form_return:
+    if payment_form_return and type(payment_form_return) != PaymentForm:
         return payment_form_return
+
+    editable_payments = subproject.payments
+
+    if type(payment_form_return) == PaymentForm:
+        payment_id = payment_form_return.id.data
+        editable_payments = [x for x in editable_payments if x.id != payment_form_return.id.data]
 
     # Populate the payment forms which allows the user to edit it
     payment_forms = {}
@@ -1167,6 +1191,9 @@ def subproject(project_id, subproject_id):
             subproject.payments,
             project_owner
         )
+
+    if type(payment_form_return) == PaymentForm:
+        payment_forms[payment_form_return.id.data] = payment_form_return
 
     # Process filled in category form
     category_form_return = process_category_form(request)
@@ -1254,7 +1281,7 @@ def subproject(project_id, subproject_id):
     add_user_form = AddUserForm(prefix="add_user_form")
 
     # Add user
-    if add_user_form.validate_on_submit():
+    if util.validate_on_submit(add_user_form, request):
         new_user_data = {}
         for f in add_user_form:
             if f.type != 'SubmitField' and f.type != 'CSRFTokenField':
@@ -1351,7 +1378,9 @@ def subproject(project_id, subproject_id):
                 'subproject_id': subproject.id,
                 'project_id': subproject.project.id
             }
-        )
+        ),
+        modal_id=json.dumps(modal_id),
+        payment_id=json.dumps(payment_id)
     )
 
 @app.route("/over", methods=['GET'])
