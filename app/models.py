@@ -385,10 +385,10 @@ class Payment(db.Model):
         return return_value
     
     def get_export_currency(self):
-        return self.get_formatted_currency().replace(" ", "")
+        return self.get_formatted_currency().replace("\u202f", "")
 
     def get_export_balance(self):
-        return self.get_formatted_balance().replace(" ", "")
+        return self.get_formatted_balance().replace("\u202f", "")
 
 
 class Funder(db.Model):
