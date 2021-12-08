@@ -155,9 +155,9 @@ class NewPaymentForm(FlaskForm):
     route = SelectField(
         'Route',
         choices=[
-            ('subsidie', 'subsidie'),
+            ('inkomsten', 'inkomsten'),
             ('inbesteding', 'inbesteding'),
-            ('aanbesteding', 'aanbesteding')
+            ('uitgaven', 'uitgaven')
         ]
     )
 
@@ -207,7 +207,7 @@ class PaymentForm(FlaskForm):
     created = DateField('Datum (notatie: 2020-12-31)')
     hidden = BooleanField('Transactie verbergen')
     category_id = SelectField('Categorie', validators=[Optional()], choices=[])
-    route = SelectField('Route', choices=['inbesteding', 'aanbesteding', 'subsidie'])
+    route = SelectField('Route', choices=['inbesteding', 'uitgaven', 'inkomsten'])
     id = IntegerField(widget=HiddenInput())
 
     submit = SubmitField(

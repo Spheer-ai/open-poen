@@ -118,16 +118,16 @@ def process_payment_form(request, project_or_subproject, project_owner, user_sub
         return
 
     payment_form.route.choices = [
-        ('subsidie', 'subsidie'),
+        ('inkomsten', 'inkomsten'),
         ('inbesteding', 'inbesteding'),
-        ('aanbesteding', 'aanbesteding')
+        ('uitgaven', 'uitgaven')
     ]
 
     # When the user removes a manually added payment, the route selection
     # field will have no value and validate_on_submit will fail, so add a
     # default value
     if payment_form.route.data == 'None':
-        payment_form.route.data = 'subsidie'
+        payment_form.route.data = 'inkomsten'
 
     if payment_form.validate_on_submit():
         # Remove payment
@@ -236,9 +236,9 @@ def create_payment_forms(payments, project_owner):
             payment_form.category_id.choices = payment.project.make_category_select_options()
 
         payment_form.route.choices = [
-            ('subsidie', 'subsidie'),
+            ('inkomsten', 'inkomsten'),
             ('inbesteding', 'inbesteding'),
-            ('aanbesteding', 'aanbesteding')
+            ('uitgaven', 'uitgaven')
         ]
 
         # Only allow manually added payments to be removed

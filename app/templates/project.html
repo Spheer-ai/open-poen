@@ -179,7 +179,7 @@
                 <h3 class="text-center totaal">budget {{ budget }}</h3>
                 <p class="text-center">waarvan reeds ontvangen {{ amounts.awarded_str }}</p>
               {% else %}
-                <h3 class="text-center totaal">ontvangen subsidie {{ amounts.awarded_str }}</h3>
+                <h3 class="text-center totaal">ontvangen inkomsten {{ amounts.awarded_str }}</h3>
               {% endif %}
 
                   {% if project_owner %}
@@ -549,7 +549,11 @@
                     {% if project.contains_subprojects %}
                       <td>
                         <div class="cell">
-                          <a href="{{ url_for('subproject', project_id=project.id, subproject_id=payment.subproject.id) }}">{{ payment.subproject.name }}</a>
+                          <!-- {% if payment.subproject is not none %} -->
+                            <a href="{{ url_for('subproject', project_id=project.id, subproject_id=payment.subproject.id) }}">{{ payment.subproject.name }}</a>
+                          <!-- {% else %} -->
+                            <!-- <a>Hoofdproject</a> -->
+                          <!-- {% endif %} -->
                         </div>
                       </td>
                     {% endif %}
