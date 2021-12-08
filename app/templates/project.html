@@ -494,10 +494,15 @@
                   <th data-sortable="true" data-field="media" data-force-hide="true" class="d-none d-xl-table-cell">media</th>
                   <th data-force-hide="true">details</th>
                   {# The columns below are hidden, but need to be included to make their content exportable #}
+                  <th class="d-none">betaalomschrijving</th>
                   <th class="d-none">lange omschrijving</th>
                   <th class="d-none">bedrag €</th>
                   <th class="d-none">saldo na boeking €</th>
                   <th class="d-none">categorie</th>
+                  <th class="d-none">bankrekening verzender</th>
+                  <th class="d-none">bankrekening ontvanger</th>
+                  <th class="d-none">route</th>
+                  <th class="d-none">type</th>
                   {# Hidden column used to generate the detailed view #}
                   <th data-force-hide="true" class="d-none">detail-view</th>
                 </tr>
@@ -613,6 +618,30 @@
                     <td>
                       <div class="cell">
                         {{ payment.category.name }}
+                      </div>
+                    </td>
+                    <td>
+                      <div class="cell">
+                        {{ payment.alias_value }}
+                      </div>
+                    </td>
+                    <td>
+                      <div class="cell">
+                        {{ payment.counterparty_alias_value }}
+                      </div>
+                    </td>
+                    <td>
+                      <div class="cell">
+                        {{ payment.route }}
+                      </div>
+                    </td>
+                    <td>
+                      <div class="cell">
+                        {% if payment.type == "MANUAL" %}
+                          handmatig
+                        {% else %}
+                          bunq
+                        {% endif %}
                       </div>
                     </td>
                     <td>
