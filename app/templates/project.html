@@ -630,12 +630,30 @@
                             {% endif %}
                             <br>
                             <br>
+                            <b>Bankrekening verzender</b>
+                            <br>
+                            {% if payment.alias_value %}
+                              {{ payment.alias_value }}
+                            {% else %}
+                              <i>Niet ingevuld.</i>
+                            {% endif %}
+                            <br>
+                            <br>
                             <b>Ontvanger</b>
                             <br>
                             {% if payment.counterparty_alias_name %}
                               {{ payment.counterparty_alias_name }}
                             {% else %}
                                 <i>Niet ingevuld.</i>
+                            {% endif %}
+                            <br>
+                            <br>
+                            <b>Bankrekening ontvanger</b>
+                            <br>
+                            {% if payment.counterparty_alias_value %}
+                              {{ payment.counterparty_alias_value }}
+                            {% else %}
+                              <i>Niet ingevuld.</i>
                             {% endif %}
                             <br>
                             <br>
