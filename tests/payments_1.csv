@@ -1,6 +1,0 @@
-﻿user_id,subproject_id,project_id,id,bank_payment_id,alias_name,alias_type,alias_value,amount_currency,amount_value,balance_after_mutation_currency,balance_after_mutation_value,counterparty_alias_name,counterparty_alias_type,counterparty_alias_value,description,created,updated,monetary_account_id,sub_type,type,short_user_description,long_user_description,hidden,flag_suspicious_count,category_id,route
-,,6,7,,Mark de Wijk,,1234,EUR,10000,,,Mark Boer,,1234,,2020-12-31 00:00:00+00,2021-11-16 13:27:05.530814+00,,,MANUAL,Subsidie,Subsidie,,,,subsidie
-,,6,8,,Mark de Wijk,,1234,EUR,-5000,,,Mark Boer,,1234,,2021-11-16 00:00:00+00,2021-11-16 13:38:24.085113+00,,,MANUAL,Workshop,Workshop,,,,aanbesteding
-,,6,10,,Mark de Wijk,,1234,EUR,-133.1,,,Mark Boer,,1234,,2021-11-16 00:00:00+00,2021-11-16 13:40:03.388411+00,,,MANUAL,Tekenmateriaal,Tekenmateriaal,,,,subsidie
-,,6,9,,Mark de Wijk,,1234,EUR,10,,,Mark Boer,,1234,,2021-11-16 00:00:00+00,2021-11-16 13:40:15.104903+00,,,MANUAL,Correctie metro,Correctie metro,,,,aanbesteding
-,,6,11,,Mark de Wijk,,1234,EUR,-22.5,,,Mark Boer,,1234,,2021-11-16 00:00:00+00,2021-11-16 13:40:58.933382+00,,,MANUAL,Metro,Metro,,,,aanbesteding
