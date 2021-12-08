@@ -276,7 +276,7 @@ def get_new_payments(project_id):
                             del payment['batch_id']
 
                         p = Payment(**payment)
-                        if p.amount_value > 0:
+                        if float(p.amount_value.replace(",", ".")) > 0:
                             p.route = 'inkomsten'
                         else:
                             p.route = 'uitgaven'
