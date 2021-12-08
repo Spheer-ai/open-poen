@@ -549,11 +549,11 @@
                     {% if project.contains_subprojects %}
                       <td>
                         <div class="cell">
-                          <!-- {% if payment.subproject is not none %} -->
+                          {% if payment.subproject is not none %}
                             <a href="{{ url_for('subproject', project_id=project.id, subproject_id=payment.subproject.id) }}">{{ payment.subproject.name }}</a>
-                          <!-- {% else %} -->
-                            <!-- <a>Hoofdproject</a> -->
-                          <!-- {% endif %} -->
+                          {% else %}
+                            Hoofdproject
+                          {% endif %}
                         </div>
                       </td>
                     {% endif %}
