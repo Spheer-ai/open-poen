@@ -374,11 +374,11 @@
                   {# Hidden column used to make search work with the detailed view; NOTE: the id should always be the first column of the table #}
                   <th data-force-hide="true" class="d-none">id</th>
                   <th data-force-hide="true" data-sortable="true" data-field="bedrag" data-sorter="customSort">bedrag €</th>
-                  <th data-sortable="true" data-field="verborgen">verborgen</th>
+                  <th data-sortable="true" data-field="verborgen" class="d-none d-xl-table-cell">verborgen</th>
                   <th data-sortable="true" data-field="verzender" class="d-none d-sm-table-cell">verzender</th>
-                  <th data-sortable="true" data-field="ontvanger" class="d-none d-sm-table-cell">ontvanger</th>
-                  <th data-sortable="true" data-field="omschrijving">omschrijving</th>
-                  <th data-sortable="true" data-field="datum" data-sorter="sortByDate" class="d-none d-md-table-cell">datum</th>
+                  <th data-sortable="true" data-field="ontvanger" class="d-none d-md-table-cell">ontvanger</th>
+                  <th data-sortable="true" data-field="omschrijving" class="d-none d-sm-table-cell">omschrijving</th>
+                  <th data-sortable="true" data-field="datum" data-sorter="sortByDate" class="d-none d-xl-table-cell">datum</th>
                   <th data-sortable="true" data-field="media" data-force-hide="true" class="d-none d-xl-table-cell">media</th>
                   <th data-force-hide="true">details</th>
                   {# The columns below are hidden, but need to be included to make their content exportable #}
@@ -507,12 +507,30 @@
                                 {% endif %}
                                 <br>
                                 <br>
+                                <b>Bankrekening verzender</b>
+                                <br>
+                                {% if payment.alias_value %}
+                                  {{ payment.alias_value }}
+                                {% else %}
+                                  <i>Niet ingevuld.</i>
+                                {% endif %}
+                                <br>
+                                <br>
                                 <b>Ontvanger</b>
                                 <br>
                                 {% if payment.counterparty_alias_name %}
                                   {{ payment.counterparty_alias_name }}
                                 {% else %}
                                     <i>Niet ingevuld.</i>
+                                {% endif %}
+                                <br>
+                                <br>
+                                <b>Bankrekening ontvanger</b>
+                                <br>
+                                {% if payment.counterparty_alias_value %}
+                                  {{ payment.counterparty_alias_value }}
+                                {% else %}
+                                  <i>Niet ingevuld.</i>
                                 {% endif %}
                                 <br>
                                 <br>

@@ -486,7 +486,7 @@
                     <th data-sortable="true" data-field="initiatief">initiatief</th>
                   {% endif %}
                   <th data-force-hide="true" data-sortable="true" data-field="bedrag" data-sorter="customSort">bedrag €</th>
-                  <th data-sortable="true" data-field="verborgen">verborgen</th>
+                  <th data-sortable="true" data-field="verborgen" class="d-none d-xl-table-cell">verborgen</th>
                   <th data-sortable="true" data-field="verzender" class="d-none d-sm-table-cell">verzender</th>
                   <th data-sortable="true" data-field="ontvanger" class="d-none d-md-table-cell">ontvanger</th>
                   <th data-sortable="true" data-field="omschrijving" class="d-none d-sm-table-cell">omschrijving</th>
@@ -494,7 +494,6 @@
                   <th data-sortable="true" data-field="media" data-force-hide="true" class="d-none d-xl-table-cell">media</th>
                   <th data-force-hide="true">details</th>
                   {# The columns below are hidden, but need to be included to make their content exportable #}
-                  <th class="d-none">betaalomschrijving</th>
                   <th class="d-none">lange omschrijving</th>
                   <th class="d-none">bedrag €</th>
                   <th class="d-none">saldo na boeking €</th>
