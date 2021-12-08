@@ -532,6 +532,10 @@ def project(project_id):
         editable_payments = []
         editable_attachments = []
         if project.contains_subprojects:
+            if project_owner:
+                editable_payments += project.payments
+                for payment in project.payments:
+                    editable_attachments += payment.attachments
             for subproject in project.subprojects:
                 if project_owner:
                     editable_payments += subproject.payments
@@ -592,6 +596,7 @@ def project(project_id):
 
     payments = []
     if project.contains_subprojects:
+        payments += project.payments
         for subproject in project.subprojects:
             payments += subproject.payments
     else:
