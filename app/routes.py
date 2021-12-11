@@ -1,5 +1,5 @@
 from flask import (
-    render_template, redirect, url_for, flash, session, request,
+    render_template, redirect, url_for, flash, request,
     send_from_directory
 )
 from flask_login import login_required, login_user, logout_user, current_user
@@ -24,13 +24,7 @@ from app.form_processing import (
 )
 from sqlalchemy.exc import IntegrityError
 
-from bunq.sdk.context.api_environment_type import ApiEnvironmentType
-
 from datetime import datetime
-from time import time
-from werkzeug.utils import secure_filename
-import os
-import jwt
 import json
 
 
@@ -673,6 +667,7 @@ def project(project_id):
             if f.type != 'SubmitField' and f.type != 'CSRFTokenField':
                 if f.short_name == 'iban':
                     # TODO: Implement logic to link a project to BNG.
+                    pass
                 else:
                     new_project_data[f.short_name] = f.data
 
@@ -840,7 +835,7 @@ def project(project_id):
         user_subproject_ids=user_subproject_ids,
         timestamp=util.get_export_timestamp(),
         server_name=app.config['SERVER_NAME'],  # TODO Remove or edit
-        bunq_client_id=app.config['BUNQ_CLIENT_ID'],  # TODO Remove or edit
+        bunq_client_id=app.config['URL_PREFIX'],  # TODO Remove or edit
         base_url_auth=base_url_auth,
         modal_id=json.dumps(modal_id),
         payment_id=json.dumps(payment_id)

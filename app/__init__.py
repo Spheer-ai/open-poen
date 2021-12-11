@@ -42,6 +42,8 @@ login_manager.login_view = "login"
 
 locale.setlocale(locale.LC_ALL, 'nl_NL.UTF-8')
 
+from app import routes, models, errors
+
 if not app.debug:
     # Send email on errors
     if app.config['MAIL_SERVER']:
