@@ -168,7 +168,9 @@ class User(UserMixin, db.Model):
 class Project(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     bank_name = db.Column(db.String(64), index=True)
+    # This has to become a BNG token.
     bunq_access_token = db.Column(db.String(64))
+    # This needs to be removed, or needs to become something linked to BNG.
     iban = db.Column(db.String(34), index=True, unique=True)
     iban_name = db.Column(db.String(120), index=True)
     name = db.Column(db.String(120), index=True, unique=True)
@@ -191,6 +193,7 @@ class Project(db.Model):
         lazy='dynamic'
     )
     funders = db.relationship('Funder', backref='project', lazy='dynamic')
+    # This has to become passes I guess.
     ibans = db.relationship('IBAN', backref='project', lazy='dynamic')
     payments = db.relationship(
         'Payment',
@@ -208,27 +211,11 @@ class Project(db.Model):
     def set_bank_name(self, bank_name):
         self.bank_name = bank_name
 
-    def set_bunq_access_token(self, access_token):
-        if len(access_token) == 64:
-            self.bunq_access_token = access_token
-        else:
-            app.logger.error(
-                'Did not save Bunq access token, its length is not 64'
-            )
-
     # Returns true if the project is linked to the given user_id
     def has_user(self, user_id):
         return self.users.filter(
             project_user.c.user_id == user_id
         ).count() > 0
-
-    # Create IBAN select options to be shown in a dropdown menu
-    def make_select_options(self):
-        select_options = [('', '')]
-        for iban in self.ibans:
-            option = '%s - %s' % (iban.iban, iban.iban_name)
-            select_options.append((option, option))
-        return select_options
 
     # Create category select options to be shown in a dropdown menu
     def make_category_select_options(self):
@@ -243,6 +230,7 @@ class Subproject(db.Model):
     project_id = db.Column(
         db.Integer, db.ForeignKey('project.id', ondelete='CASCADE')
     )
+    # This needs to be removed, or needs to become something linked to BNG.
     iban = db.Column(db.String(34), index=True, unique=True)
     iban_name = db.Column(db.String(120), index=True)
     name = db.Column(db.String(120), index=True)
@@ -288,13 +276,14 @@ class Subproject(db.Model):
         return select_options
 
 
+# TODO: Use this for BNG.
 class DebitCard(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     iban = db.Column(db.String(34), db.ForeignKey('subproject.iban'))
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     card_id = db.Column(db.Integer)
 
-
+# TODO: Make this compatible with BNG payments if necessary.
 class Payment(db.Model):
     # Currently not used
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
@@ -405,6 +394,7 @@ class Funder(db.Model):
     )
 
 
+# Make these BNG accounts?
 class IBAN(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     project_id = db.Column(

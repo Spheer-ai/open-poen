@@ -73,10 +73,6 @@ def before_request():
 def index():
     modal_id = None
 
-    # Process Bunq OAuth callback (this will redirect to the project page)
-    if request.args.get('state'):
-        return util.process_bunq_oauth_callback(request, current_user)
-
     # Process filled in edit admin form
     edit_admin_form = EditAdminForm(prefix="edit_admin_form")
 
@@ -338,57 +334,19 @@ def project(project_id):
     # Somehow we need to repopulate the iban.choices with the same
     # values as used when the form was generated for this
     # subproject. Probably to validate if the selected value is valid.
-    if util.form_in_request(subproject_form, request):
-        if request.method == 'POST' and subproject_form.name.data:
-            subproject_form.iban.choices = project.make_select_options()
 
     if util.validate_on_submit(subproject_form, request):
         # Get data from the form
         new_subproject_data = {}
         for f in subproject_form:
             if f.type != 'SubmitField' and f.type != 'CSRFTokenField':
-                if f.short_name == 'iban':
-                    new_iban = None
-                    new_iban_name = None
-                    if not f.data == '' and f.data != 'None':
-                        new_iban, new_iban_name = f.data.split(
-                            ' - ', maxsplit=1
-                        )
-                    new_subproject_data['iban'] = new_iban
-                    new_subproject_data['iban_name'] = new_iban_name
-                else:
-                    new_subproject_data[f.short_name] = f.data
-
+                new_subproject_data[f.short_name] = f.data
         try:
-            # Check if the IBAN is not already used by a project (the same
-            # check for subprojects is automatically done by MySQL as the iban
-            # field is unique for the Subproject model)
-            if new_subproject_data['iban']:
-                project_with_same_iban = Project.query.filter_by(
-                    iban=new_subproject_data['iban']
-                ).first()
-                if project_with_same_iban:
-                    raise ValueError(
-                        f'IBAN already used by project "{project_with_same_iban.name}"'
-                    )
-
             # Save a new subproject
             subproject = Subproject(**new_subproject_data)
             db.session.add(subproject)
             db.session.commit()
 
-            # If IBAN, link the correct payments to this subproject
-            if new_subproject_data['iban'] is not None:
-                Payment.query.filter_by(
-                    alias_value=new_subproject_data['iban']
-                ).update({'subproject_id': subproject.id})
-                db.session.commit()
-            flash(
-                '<span class="text-default-green">Subproject "%s" is '
-                'toegevoegd</span>' % (
-                    new_subproject_data['name']
-                )
-            )
         except (ValueError, IntegrityError) as e:
             db.session().rollback()
             app.logger.error(repr(e))
@@ -397,7 +355,8 @@ def project(project_id):
                 '"%s" en/of IBAN "%s" bestaan al, kies een andere naam en/of '
                 'IBAN<span>' % (
                     new_subproject_data['name'],
-                    new_subproject_data['iban']
+                    new_subproject_data['iban']  # TODO: This will probably become a
+                    # different field or will be removed.
                 )
             )
         # redirect back to clear form data
@@ -413,11 +372,6 @@ def project(project_id):
         subproject_form = SubprojectForm(prefix="subproject_form", **{
             'project_id': project.id
         })
-
-        # If a bunq account is available, allow the user to select
-        # an IBAN
-        if project.bunq_access_token:
-            subproject_form.iban.choices = project.make_select_options()
 
     # Retrieve any subprojects a normal logged in user is part of
     user_subproject_ids = []
@@ -711,27 +665,14 @@ def project(project_id):
     if util.form_in_request(project_form, request):
         if request.method == 'POST' and project_form.name.data:
             projects = Project.query.filter_by(id=project_form.id.data)
-            if len(projects.all()):
-                project_form.iban.choices = (
-                    projects.first().make_select_options()
-                )
+            # TODO: Implement logic to be able to link passes to a project.
 
     if util.validate_on_submit(project_form, request):
         new_project_data = {}
         for f in project_form:
             if f.type != 'SubmitField' and f.type != 'CSRFTokenField':
                 if f.short_name == 'iban':
-                    new_iban = None
-                    new_iban_name = None
-                    # New projects f.data is 'None', editing an existing
-                    # project with an IBAN to have no IBAN will make
-                    # f.data be ''
-                    if not f.data == '' and f.data != 'None':
-                        new_iban, new_iban_name = f.data.split(
-                            ' - ', maxsplit=1
-                        )
-                    new_project_data['iban'] = new_iban
-                    new_project_data['iban_name'] = new_iban_name
+                    # TODO: Implement logic to link a project to BNG.
                 else:
                     new_project_data[f.short_name] = f.data
 
@@ -741,31 +682,10 @@ def project(project_id):
                 # We don't allow editing of the 'contains_subprojects' value after a project is created
                 del new_project_data['contains_subprojects']
 
-                # Check if the IBAN is not already used by a subproject (the same
-                # check for projects is automatically done by MySQL as the iban
-                # field is unique for the Project model)
-                if new_project_data['iban']:
-                    subproject_with_same_iban = Subproject.query.filter_by(
-                        iban=new_project_data['iban']
-                    ).first()
-                    if subproject_with_same_iban:
-                        raise ValueError(
-                            f'IBAN already used by subproject "{subproject_with_same_iban.name}"'
-                        )
+                # TODO: Ensure that the same passes can't be linked to multiple projects.
 
-                # If the IBAN is changed, then unlink the payments of the old
-                # IBAN and link the payments of the new IBAN
-                changed_project = projects.first()
-                if changed_project.iban != new_project_data['iban']:
-                    for payment in changed_project.payments:
-                        # Don't remove manually added payments from the project
-                        if payment.type == 'MANUAL':
-                            continue
-                        payment.project_id = None
-                    if new_project_data['iban']:
-                        Payment.query.filter_by(
-                            alias_value=new_project_data['iban']
-                        ).update({'project_id': changed_project.id})
+                # TODO: Ensure that when a pass is edited or removed, the list of payments
+                # belonging to the project are updated.
 
                 projects.update(new_project_data)
                 db.session.commit()
@@ -778,9 +698,6 @@ def project(project_id):
                 )
             # Otherwise, save a new project
             else:
-                # IBAN can't be set during initial creation of a new
-                # project so remove it
-                new_project_data.pop('iban')
                 new_project = Project(**new_project_data)
                 db.session.add(new_project)
                 db.session.commit()
@@ -826,21 +743,10 @@ def project(project_id):
     form = ''
 
     if project_owner:
-        if project.bunq_access_token and len(project.bunq_access_token):
-            already_authorized = True
+        # TODO Logic to define already_authorized to indicate if the
+        # project already has passes linked to it.
 
-        # Always generate a token as the user can connect to Bunq
-        # again in order to allow access to new IBANs
-        bunq_token = jwt.encode(
-            {
-                'user_id': current_user.id,
-                'project_id': project.id,
-                'bank_name': 'Bunq',
-                'exp': time() + 1800
-            },
-            app.config['SECRET_KEY'],
-            algorithm='HS256'
-        ).decode('utf-8')
+        # TODO? Generate state token for BNG.
 
         # Populate the project's form which allows the user to edit
         # it
@@ -859,16 +765,12 @@ def project(project_id):
         # We don't allow editing of the 'contains_subprojects'
         # value after a project is created, but we do need to pass the
         # value in the form, so simply disable it
+        # TODO: This will no also disable it when the form is returned
+        # with errors, right? Fix this.
         form.contains_subprojects.render_kw = {'disabled': ''}
 
-        # If a bunq account is available, allow the user to select
-        # an IBAN
-        if project.bunq_access_token:
-            form.iban.choices = project.make_select_options()
-            # Set default selected value
-            form.iban.data = '%s - %s' % (
-                project.iban, project.iban_name
-            )
+        # TODO: If this project is BNG enabled, allow the user to add, remove
+        # or change passes.
 
     # Populate the category forms which allows the user to
     # edit it
@@ -896,10 +798,10 @@ def project(project_id):
         'hidden': project.hidden,
         'hidden_sponsors': project.hidden_sponsors,
         'already_authorized': already_authorized,
-        'bunq_token': bunq_token,
-        'iban': project.iban,
-        'iban_name': project.iban_name,
-        'bank_name': project.bank_name,
+        'bunq_token': bunq_token,  # TODO Remove?
+        'iban': project.iban,  # TODO Remove?
+        'iban_name': project.iban_name,  # TODO Remove?
+        'bank_name': project.bank_name,  # TODO Remove?
         'amounts': amounts,
         'form': form,
         'contains_subprojects': project.contains_subprojects,
@@ -907,9 +809,8 @@ def project(project_id):
         'category_form': CategoryForm(prefix="category_form", **{'project_id': project.id})
     }
 
-    base_url_auth = 'https://oauth.bunq.com'
-    if app.config['BUNQ_ENVIRONMENT_TYPE'] == ApiEnvironmentType.SANDBOX:
-        base_url_auth = 'https://oauth.sandbox.bunq.com'
+    # TODO: BNG base url
+    base_url_auth = ""
 
     budget = ''
     if project.budget:
@@ -938,8 +839,8 @@ def project(project_id):
         project_owner=project_owner,
         user_subproject_ids=user_subproject_ids,
         timestamp=util.get_export_timestamp(),
-        server_name=app.config['SERVER_NAME'],
-        bunq_client_id=app.config['BUNQ_CLIENT_ID'],
+        server_name=app.config['SERVER_NAME'],  # TODO Remove or edit
+        bunq_client_id=app.config['BUNQ_CLIENT_ID'],  # TODO Remove or edit
         base_url_auth=base_url_auth,
         modal_id=json.dumps(modal_id),
         payment_id=json.dumps(payment_id)
@@ -984,16 +885,6 @@ def subproject(project_id, subproject_id):
     # Process filled in subproject form
     subproject_form = SubprojectForm(prefix="subproject_form")
 
-    # Update subproject
-    # Somehow we need to repopulate the iban.choices with the same
-    # values as used when the form was generated for this subproject.
-    # Probably to validate if the selected value is valid.
-    if util.form_in_request(subproject_form, request):
-        if request.method == 'POST' and subproject_form.name.data:
-            subproject_form.iban.choices = (
-                subproject.project.make_select_options()
-            )
-
     # Remove subproject
     if subproject_form.remove.data:
         Subproject.query.filter_by(id=subproject_form.id.data).delete()
@@ -1011,55 +902,20 @@ def subproject(project_id, subproject_id):
             )
         )
 
+    # TODO: Virtually no logic has to be programmed for passes within subprojects, because
+    # this will all happen on main project level.
     if util.validate_on_submit(subproject_form, request):
         # Get data from the form
         new_subproject_data = {}
         for f in subproject_form:
             if f.type != 'SubmitField' and f.type != 'CSRFTokenField':
-                if f.short_name == 'iban':
-                    new_iban = None
-                    new_iban_name = None
-                    if not f.data == '' and f.data != 'None':
-                        new_iban, new_iban_name = f.data.split(
-                            ' - ', maxsplit=1
-                        )
-                    new_subproject_data['iban'] = new_iban
-                    new_subproject_data['iban_name'] = new_iban_name
-                else:
-                    new_subproject_data[f.short_name] = f.data
-
+                new_subproject_data[f.short_name] = f.data
         try:
             # Update if the subproject already exists
             subprojects = Subproject.query.filter_by(
                 id=subproject_form.id.data
             )
             if len(subprojects.all()):
-                # Check if the IBAN is not already used by a project (the same
-                # check for subprojects is automatically done by MySQL as the iban
-                # field is unique for the Subproject model)
-                if new_subproject_data['iban']:
-                    project_with_same_iban = Project.query.filter_by(
-                        iban=new_subproject_data['iban']
-                    ).first()
-                    if project_with_same_iban:
-                        raise ValueError(
-                            f'IBAN already used by project "{project_with_same_iban.name}"'
-                        )
-
-                # If the IBAN is changed, then unlink the payments of the old
-                # IBAN and link the payments of the new IBAN
-                changed_subproject = subprojects.first()
-                if changed_subproject.iban != new_subproject_data['iban']:
-                    for payment in changed_subproject.payments:
-                        # Don't remove manually added payments from the subproject
-                        if payment.type == 'MANUAL':
-                            continue
-                        payment.subproject_id = None
-                    if new_subproject_data['iban']:
-                        Payment.query.filter_by(
-                            alias_value=new_subproject_data['iban']
-                        ).update({'subproject_id': changed_subproject.id})
-
                 subprojects.update(new_subproject_data)
                 db.session.commit()
                 flash(
@@ -1101,15 +957,6 @@ def subproject(project_id, subproject_id):
             'project_id': subproject.project.id,
             'id': subproject.id
         })
-
-    # If a bunq account is available, allow the user to select
-    # an IBAN
-    if subproject.project.bunq_access_token:
-        subproject_form.iban.choices = subproject.project.make_select_options()
-        # Set default selected value
-        subproject_form.iban.data = '%s - %s' % (
-            subproject.iban, subproject.iban_name
-        )
 
     # Retrieve the subproject id a normal logged in user is part of
     user_subproject_ids = []
