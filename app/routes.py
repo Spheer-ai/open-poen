@@ -16,16 +16,16 @@ from app.email import send_password_reset_email
 from app.models import (
     User, Project, Subproject, Payment, UserStory, IBAN, File, Funder, Category
 )
-from app import util
 from app.form_processing import (
     process_category_form, process_payment_form, create_payment_forms,
     process_transaction_attachment_form, create_edit_attachment_forms,
-    process_edit_attachment_form, save_attachment
+    process_edit_attachment_form, save_attachment, process_subproject_form
 )
 from sqlalchemy.exc import IntegrityError
 
 from datetime import datetime
 import json
+from app import util
 
 
 # Add 'Cache-Control': 'private' header if users are logged in
@@ -321,48 +321,19 @@ def project(project_id):
             })
         )
 
-    # Process filled in subproject form
+
+
     subproject_form = SubprojectForm(prefix="subproject_form")
-
-    # Save subproject
-    # Somehow we need to repopulate the iban.choices with the same
-    # values as used when the form was generated for this
-    # subproject. Probably to validate if the selected value is valid.
-
     if util.validate_on_submit(subproject_form, request):
-        # Get data from the form
-        new_subproject_data = {}
-        for f in subproject_form:
-            if f.type != 'SubmitField' and f.type != 'CSRFTokenField':
-                new_subproject_data[f.short_name] = f.data
-        try:
-            # Save a new subproject
-            subproject = Subproject(**new_subproject_data)
-            db.session.add(subproject)
-            db.session.commit()
-
-        except (ValueError, IntegrityError) as e:
-            db.session().rollback()
-            app.logger.error(repr(e))
-            flash(
-                '<span class="text-default-red">Subproject toevoegen mislukt: naam '
-                '"%s" en/of IBAN "%s" bestaan al, kies een andere naam en/of '
-                'IBAN<span>' % (
-                    new_subproject_data['name'],
-                    new_subproject_data['iban']  # TODO: This will probably become a
-                    # different field or will be removed.
-                )
-            )
-        # redirect back to clear form data
-        return redirect(url_for('project', project_id=project_id))
+        res = process_subproject_form(
+            form=subproject_form,
+            redirect_url=url_for("project", project_id=project.id)    
+        )
+        if res:
+            return res
+    if len(subproject_form.errors) > 0:
+        modal_id = ["#subproject-toevoegen"]
     else:
-        if len(subproject_form.errors) > 0:
-            modal_id = ["#subproject-toevoegen"]
-
-    # We don't want to edit the form if it was validated but has errors. How do we
-    # code this logically and orderly, because this is becoming spaghetti.
-    if len(subproject_form.errors) == 0:
-        # Populate the the new subproject form with its project's ID
         subproject_form = SubprojectForm(prefix="subproject_form", **{
             'project_id': project.id
         })
@@ -877,73 +848,22 @@ def subproject(project_id, subproject_id):
             footer=app.config['FOOTER']
         )
 
-    # Process filled in subproject form
+
     subproject_form = SubprojectForm(prefix="subproject_form")
-
-    # Remove subproject
-    if subproject_form.remove.data:
-        Subproject.query.filter_by(id=subproject_form.id.data).delete()
-        db.session.commit()
-        flash(
-            '<span class="text-default-green">Subproject "%s" is verwijderd</span>' % (
-                subproject_form.name.data
-            )
-        )
-        # redirect back to clear form data
-        return redirect(
-            url_for(
-                'project',
-                project_id=project_id,
-            )
-        )
-
-    # TODO: Virtually no logic has to be programmed for passes within subprojects, because
-    # this will all happen on main project level.
     if util.validate_on_submit(subproject_form, request):
-        # Get data from the form
-        new_subproject_data = {}
-        for f in subproject_form:
-            if f.type != 'SubmitField' and f.type != 'CSRFTokenField':
-                new_subproject_data[f.short_name] = f.data
-        try:
-            # Update if the subproject already exists
-            subprojects = Subproject.query.filter_by(
-                id=subproject_form.id.data
-            )
-            if len(subprojects.all()):
-                subprojects.update(new_subproject_data)
-                db.session.commit()
-                flash(
-                    '<span class="text-default-green">Subproject "%s" is '
-                    'bijgewerkt</span>' % (
-                        new_subproject_data['name']
-                    )
-                )
-        except (ValueError, IntegrityError) as e:
-            db.session().rollback()
-            app.logger.error(repr(e))
-            flash(
-                '<span class="text-default-red">Subproject bijwerken mislukt: naam '
-                '"%s" en/of IBAN "%s" bestaan al, kies een andere naam en/of '
-                'IBAN<span>' % (
-                    new_subproject_data['name'],
-                    new_subproject_data['iban']
-                )
-            )
-        # redirect back to clear form data
-        return redirect(
-            url_for(
-                'subproject',
+        res = process_subproject_form(
+            form=subproject_form,
+            redirect_url=url_for(
+                "subproject",
                 project_id=subproject.project.id,
                 subproject_id=subproject.id
             )
         )
-    else:
-        if len(subproject_form.errors) > 0:
-            modal_id = ["#subproject-bewerken"]
-
-    if len(subproject_form.errors) == 0:
-        # Populate the subproject's form which allows the user to edit it
+        if res:
+            return res
+    if len(subproject_form.errors) > 0:
+        modal_id = ["#subproject-bewerken"]
+    else:    
         subproject_form = SubprojectForm(prefix='subproject_form', **{
             'name': subproject.name,
             'description': subproject.description,

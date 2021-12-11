@@ -1,13 +1,14 @@
 from datetime import datetime
-from flask import flash, redirect, url_for
+from flask import flash, redirect, url_for, request
 from sqlalchemy.exc import IntegrityError
 from werkzeug.utils import secure_filename
 import os
 
 from app import app, db
 from app.forms import CategoryForm, PaymentForm, EditAttachmentForm
-from app.models import Category, Payment, File, User
+from app.models import Category, Payment, File, User, Subproject
 from app.util import flash_form_errors, form_in_request
+from app import util
 
 
 def return_redirect(project_id, subproject_id):
@@ -399,3 +400,83 @@ def process_edit_attachment_form(request, edit_attachment_form, project_id=0, su
         )
     else:
         flash_form_errors(edit_attachment_form, request)
+
+
+def process_subproject_form(form, redirect_url):
+    """A truthy value is returned if the form is handled properly. A False is returned
+    If no action has been taken and the form is invalid."""
+
+    if form.id.data and form.project_id.data:
+        action = "UPDATE"
+    elif not form.id.data and form.project_id.data:
+        action = "CREATE"
+    else:
+        action = None
+    if form.remove.data:
+        action = "DELETE"
+
+    if action == "DELETE":
+        Subproject.query.filter_by(id=form.id.data).delete()
+        db.session.commit()
+        flash(
+            '<span class="text-default-green">Subproject "%s" is verwijderd</span>' % (
+                form.name.data
+            )
+        )
+        return redirect(url_for("project", project_id=form.project_id.data))
+    
+    new_subproject_data = {}
+    for f in form:
+        if f.type != 'SubmitField' and f.type != 'CSRFTokenField':
+            new_subproject_data[f.short_name] = f.data
+
+    if action == "CREATE":
+        try:
+            subproject = Subproject(**new_subproject_data)
+            db.session.add(subproject)
+            db.session.commit()
+        except (ValueError, IntegrityError) as e:
+            db.session().rollback()
+            app.logger.error(repr(e))
+            flash(
+                '<span class="text-default-red">Subproject toevoegen mislukt: naam '
+                '"%s" en/of IBAN "%s" bestaan al, kies een andere naam en/of '
+                'IBAN<span>' % (
+                    new_subproject_data['name'],
+                    new_subproject_data['iban']  # TODO: This will probably become a
+                    # different field or will be removed.
+                )
+            )
+
+    if action == "UPDATE":
+        try:
+            subprojects = Subproject.query.filter_by(
+                id=form.id.data
+            )
+            if len(subprojects.all()):
+                subprojects.update(new_subproject_data)
+                db.session.commit()
+                flash(
+                    '<span class="text-default-green">Subproject "%s" is '
+                    'bijgewerkt</span>' % (
+                        new_subproject_data['name']
+                    )
+                )
+        except (ValueError, IntegrityError) as e:
+            db.session().rollback()
+            app.logger.error(repr(e))
+            flash(
+                '<span class="text-default-red">Subproject bijwerken mislukt: naam '
+                '"%s" en/of IBAN "%s" bestaan al, kies een andere naam en/of '
+                'IBAN<span>' % (
+                    new_subproject_data['name'],
+                    new_subproject_data['iban']
+                )
+            )
+        return redirect(url_for(
+            "subproject",
+            project_id=form.project_id.data,
+            subproject_id=form.id.data
+        ))
+    else:
+        return False
