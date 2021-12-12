@@ -146,12 +146,13 @@ class FlexibleDecimalField(DecimalField):
 
 # Add a new payment manually
 class NewPaymentForm(FlaskForm):
-    project_id = IntegerField(widget=HiddenInput())
+    project_id = IntegerField(widget=HiddenInput(), validators=[Optional()])
+    subproject_id = IntegerField(widget=HiddenInput(), validators=[Optional()])
 
     # Call the set_category function when the user selects a different
     # subproject (only on project pages) as we need to set new categories
     # that belong to that subproject
-    subproject_id = SelectField(
+    subproject = SelectField(
         'Initiatief',
         coerce=int,
         choices=[],

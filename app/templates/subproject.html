@@ -312,6 +312,8 @@
                                 {{ wtf.form_field(f, class="form-control datepicker") }}
                             {% endif %}
                           {% endfor %}
+                          {{ new_payment_form.project_id }}
+                          {{ new_payment_form.subproject_id }}
                         </div>
                         <div class="modal-footer">
                           <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>

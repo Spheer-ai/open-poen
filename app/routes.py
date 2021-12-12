@@ -17,7 +17,7 @@ from app.models import (
     User, Project, Subproject, Payment, UserStory, IBAN, File, Funder, Category
 )
 from app.form_processing import (
-    process_category_form, process_payment_form, create_payment_forms,
+    generate_new_payment_form, process_category_form, process_new_payment_form, process_payment_form, create_payment_forms,
     process_transaction_attachment_form, create_edit_attachment_forms,
     process_edit_attachment_form, save_attachment, process_subproject_form
 )
@@ -341,94 +341,20 @@ def project(project_id):
 
     new_payment_form = ''
     # Filled with all categories for each subproject; used by some JavaScript
-    # to update the categories in the Select field when the user selects
-    # another subproject to add the new payment to
+    # to update the categories in the select field when the user selects
+    # another subproject to add the new payment to.
     categories_dict = {}
-    # Process/create new payment form (added manually by a project owner)
     if project_owner:
-        # Process filled in new payment form
-        new_payment_form = NewPaymentForm(prefix="new_payment_form")
-        # Add subprojects that the user has access to
-        if project.contains_subprojects:
-            initialized_first_subproject_categories = False
-            for subproject in project.subprojects:
-                categories_dict[subproject.id] = subproject.make_category_select_options()
-                new_payment_form.subproject_id.choices.append(
-                    (subproject.id, subproject.name)
-                )
-                if not initialized_first_subproject_categories:
-                    new_payment_form.category_id.choices = categories_dict[subproject.id]
-                    initialized_first_subproject_categories = True
+        categories_dict = {x.id: x.make_category_select_options()
+                          for x in project.subprojects}
 
-        else:
-            del new_payment_form.subproject_id
-
-        # Somehow we need to repopulate the category_id.choices with the same
-        # values as used when the form was generated. Probably to validate
-        # if the selected value is valid.
-        if new_payment_form.subproject_id and new_payment_form.subproject_id.data != 'None':
-            tempsubproject = Subproject.query.filter_by(
-                id=new_payment_form.subproject_id.data
-            ).first()
-            if tempsubproject:
-                new_payment_form.category_id.choices = tempsubproject.make_category_select_options()
-        else:
-            new_payment_form.category_id.choices = project.make_category_select_options()
-
-        # Save new payment
-        if util.validate_on_submit(new_payment_form, request):
-            new_payment_data = {}
-            for f in new_payment_form:
-                if f.type != 'SubmitField' and f.type != 'CSRFTokenField':
-                    # If the category is edited to be empty again, make
-                    # sure to set it to None instead of ''
-                    if f.short_name == 'category_id':
-                        if f.data == '':
-                            new_payment_data[f.short_name] = None
-                        else:
-                            new_payment_data[f.short_name] = f.data
-                    else:
-                        new_payment_data[f.short_name] = f.data
-
-            new_attachment = {
-                "mediatype": new_payment_data.pop("mediatype"),
-                "data_file": new_payment_data.pop("data_file")
-            }
-
-            new_payment = Payment(**new_payment_data)
-
-            # A payment can only be linked to a project or a subproject,
-            # so only add a project_id if this project doesn't contain
-            # subprojects
-            if not project.contains_subprojects:
-                new_payment.project_id = project_id
-
-            new_payment.amount_currency = 'EUR'
-            new_payment.type = 'MANUAL'
-            new_payment.updated = datetime.now()
-            db.session.add(new_payment)
-            db.session.commit()
-            flash(
-                '<span class="text-default-green">Transactie is toegevoegd</span>'
-            )
-
-            if new_attachment["data_file"] is not None:
-                save_attachment(
-                    new_attachment["data_file"],
-                    new_attachment["mediatype"],
-                    new_payment,
-                    'transaction-attachment'
-                )
-
-            # redirect back to clear form data
-            return redirect(url_for('project', project_id=project_id))
-        
-        # Open up again the adding a payment modal in case of errors after validation.
-        # NOTE: This works as intended because we only validate if the request contains
-        # the new_payment_form form.
-        else:
-            if len(new_payment_form.errors) > 0:
-                modal_id = ["#modal-transactie-toevoegen"]
+        # new_payment_form = NewPaymentForm(prefix="new_payment_form")
+        new_payment_form = generate_new_payment_form(project, subproject=None)
+        form_redirect = process_new_payment_form(new_payment_form, project, subproject=None)
+        if form_redirect:
+            return form_redirect
+        if len(new_payment_form.errors) > 0:
+            modal_id = ["#modal-transactie-toevoegen"]
 
     # Process/create (filled in) payment form
     payment_forms = {}
@@ -863,65 +789,13 @@ def subproject(project_id, subproject_id):
             user_subproject_ids.append(subproject.id)
 
     new_payment_form = ''
-    # Process/create new payment form (added manually by a user)
     if project_owner:
-        # Process filled in new payment form
-        new_payment_form = NewPaymentForm(prefix="new_payment_form")
-        # The subproject field is only required when adding a payment on a
-        # project page
-        del new_payment_form.subproject_id
-
-        # Somehow we need to repopulate the category_id.choices with the same
-        # values as used when the form was generated. Probably to validate
-        # if the selected value is valid. We don't know the subproject in the
-        # case of an edited payment on a project page which contains subprojects,
-        # so we need to retrieve this before running validate_on_submit
-        new_payment_form.category_id.choices = subproject.make_category_select_options()
-
-        # Save new payment
-        if util.validate_on_submit(new_payment_form, request):
-            new_payment_data = {}
-            for f in new_payment_form:
-                if f.type != 'SubmitField' and f.type != 'CSRFTokenField':
-                    # If the category is edited to be empty again, make
-                    # sure to set it to None instead of ''
-                    if f.short_name == 'category_id':
-                        if f.data == '':
-                            new_payment_data[f.short_name] = None
-                        else:
-                            new_payment_data[f.short_name] = f.data
-                    else:
-                        new_payment_data[f.short_name] = f.data
-
-            new_attachment = {
-                "mediatype": new_payment_data.pop("mediatype"),
-                "data_file": new_payment_data.pop("data_file")
-            }
-
-            new_payment = Payment(**new_payment_data)
-            new_payment.subproject_id = subproject.id
-            new_payment.amount_currency = 'EUR'
-            new_payment.type = 'MANUAL'
-            new_payment.updated = datetime.now()
-            db.session.add(new_payment)
-            db.session.commit()
-            flash(
-                '<span class="text-default-green">Transactie is toegevoegd</span>'
-            )
-
-            if new_attachment["data_file"] is not None:
-                save_attachment(
-                    new_attachment["data_file"],
-                    new_attachment["mediatype"],
-                    new_payment,
-                    'transaction-attachment'
-                )
-
-            # redirect back to clear form data
-            return redirect(url_for('subproject', project_id=subproject.project.id, subproject_id=subproject_id))
-        else:
-            if len(new_payment_form.errors) > 0:
-                modal_id = ["#transactie-toevoegen"]
+        new_payment_form = generate_new_payment_form(project=None, subproject=subproject)
+        form_redirect = process_new_payment_form(new_payment_form, project=None, subproject=subproject)
+        if form_redirect:
+            return form_redirect
+        if len(new_payment_form.errors) > 0:
+            modal_id = ["#transactie-toevoegen"]
 
     # Process filled in payment form
     payment_form_return = process_payment_form(request, subproject, project_owner, user_subproject_ids, is_subproject=True)

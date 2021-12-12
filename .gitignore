@@ -23,3 +23,6 @@ notes.md
 
 server_backups/*
 get_backups.sh
+
+*.key
+*.cer

@@ -7,7 +7,7 @@ import os
 from wtforms.validators import ValidationError
 
 from app import app, db
-from app.forms import CategoryForm, PaymentForm, EditAttachmentForm
+from app.forms import CategoryForm, NewPaymentForm, PaymentForm, EditAttachmentForm
 from app.models import Category, Payment, File, User, Subproject
 from app.util import flash_form_errors, form_in_request
 from app import util
@@ -436,7 +436,7 @@ def process_subproject_form(form):
                     # different field or will be removed.
                 )
             )
-
+        return redirect(url_for("project", project_id=form.project_id.data))
     if action == "UPDATE":
         try:
             subprojects = Subproject.query.filter_by(
@@ -470,3 +470,91 @@ def process_subproject_form(form):
     
     if action is None:
         raise ValidationError("No action taken for submitted valid subproject form.")
+
+
+def process_new_payment_form(form, project, subproject):
+    if not util.validate_on_submit(form, request):
+        return None
+    
+    if project:
+        redirect_url = url_for("project", project_id=project.id)
+    elif subproject:
+        redirect_url = url_for(
+            "subproject",
+            project_id=subproject.project.id,
+            subproject_id=subproject.id
+        )
+    else:
+        raise ValidationError("No project or subproject supplied.")
+
+    new_payment = {}
+    for f in form:
+        if f.type != 'SubmitField' and f.type != 'CSRFTokenField':
+            new_payment[f.short_name] = f.data
+    media_type = new_payment.pop("mediatype")
+    data_file = new_payment.pop("data_file")
+
+    # This is necessary, because the subproject id is assigned dynamically in the
+    # form when it is submitted from the project page.
+    if form.subproject:
+        new_payment["subproject_id"] = new_payment["subproject"]
+        del new_payment["subproject"], new_payment["project_id"]
+
+    value = new_payment["category_id"]
+    new_payment["category_id"] = None if value == "" else value
+
+    new_payment = Payment(**new_payment)
+    new_payment.amount_currency = 'EUR'
+    new_payment.type = 'MANUAL'
+    new_payment.updated = datetime.now()
+
+    # Payments are not allowed to have both a project and a subproject id.
+    if new_payment.project_id and new_payment.subproject_id:
+        raise ValidationError("Project and subproject ID are mutually exclusive.")
+
+    try:
+        db.session.add(new_payment)
+        db.session.commit()
+        flash(
+            '<span class="text-default-green">Transactie is toegevoegd</span>'
+        )
+    except (ValueError, IntegrityError) as e:
+        db.session.rollback()
+        app.logger.error(repr(e))
+        flash(
+            '<span class="text-default-red">Transactie toevoegen mislukt.</span>'
+        )
+        return redirect(redirect_url)
+    if data_file is not None:
+        save_attachment(
+            data_file,
+            media_type,
+            new_payment,
+            'transaction-attachment'
+        )
+    return redirect(redirect_url)
+
+
+def generate_new_payment_form(project, subproject):
+    if project and subproject:
+        raise ValidationError(("Cannot create a payment form for a project ",
+                                "and a subproject at once."))
+
+    form = NewPaymentForm(prefix="new_payment_form")
+
+    if project:
+        form.project_id.data = project.id
+        if project.contains_subprojects:
+            form.category_id.choices = project.subprojects[0].make_category_select_options()
+            form.subproject.choices = [(x.id, x.name) for x in project.subprojects]
+            return form
+        else:
+            form.category_id.choices = project.make_category_select_options()
+            del form.subproject
+            return form
+
+    if subproject:
+        form.subproject_id.data = subproject.id
+        del form.subproject
+        form.category_id.choices = subproject.make_category_select_options()
+        return form
