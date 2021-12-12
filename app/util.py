@@ -12,8 +12,8 @@ from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 
 
-def format_flash(text, color):
-    return f'<span class="text-default-{color}">' + text + '</span>'
+def formatted_flash(text, color):
+    return flash(f'<span class="text-default-{color}">' + text + '</span>')
 
 
 def human_format(num):
