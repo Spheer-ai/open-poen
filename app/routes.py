@@ -324,13 +324,9 @@ def project(project_id):
 
 
     subproject_form = SubprojectForm(prefix="subproject_form")
-    if util.validate_on_submit(subproject_form, request):
-        res = process_subproject_form(
-            form=subproject_form,
-            redirect_url=url_for("project", project_id=project.id)    
-        )
-        if res:
-            return res
+    form_redirect = process_subproject_form(subproject_form)
+    if form_redirect:
+        return form_redirect
     if len(subproject_form.errors) > 0:
         modal_id = ["#subproject-toevoegen"]
     else:
@@ -850,17 +846,9 @@ def subproject(project_id, subproject_id):
 
 
     subproject_form = SubprojectForm(prefix="subproject_form")
-    if util.validate_on_submit(subproject_form, request):
-        res = process_subproject_form(
-            form=subproject_form,
-            redirect_url=url_for(
-                "subproject",
-                project_id=subproject.project.id,
-                subproject_id=subproject.id
-            )
-        )
-        if res:
-            return res
+    form_redirect = process_subproject_form(subproject_form)
+    if form_redirect:
+        return form_redirect
     if len(subproject_form.errors) > 0:
         modal_id = ["#subproject-bewerken"]
     else:    

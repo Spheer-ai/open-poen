@@ -4,6 +4,8 @@ from sqlalchemy.exc import IntegrityError
 from werkzeug.utils import secure_filename
 import os
 
+from wtforms.validators import ValidationError
+
 from app import app, db
 from app.forms import CategoryForm, PaymentForm, EditAttachmentForm
 from app.models import Category, Payment, File, User, Subproject
@@ -402,9 +404,9 @@ def process_edit_attachment_form(request, edit_attachment_form, project_id=0, su
         flash_form_errors(edit_attachment_form, request)
 
 
-def process_subproject_form(form, redirect_url):
-    """A truthy value is returned if the form is handled properly. A False is returned
-    If no action has been taken and the form is invalid."""
+def process_subproject_form(form):
+    """Returns a truthy value in the form of a redirect or None when no redirect
+    is necessary."""
 
     if form.id.data and form.project_id.data:
         action = "UPDATE"
@@ -424,6 +426,9 @@ def process_subproject_form(form, redirect_url):
             )
         )
         return redirect(url_for("project", project_id=form.project_id.data))
+    
+    if not util.validate_on_submit(form, request):
+        return None
     
     new_subproject_data = {}
     for f in form:
@@ -478,5 +483,6 @@ def process_subproject_form(form, redirect_url):
             project_id=form.project_id.data,
             subproject_id=form.id.data
         ))
-    else:
-        return False
+    
+    if action is None:
+        raise ValidationError("No action taken for submitted valid subproject form.")
