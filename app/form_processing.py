@@ -9,7 +9,7 @@ from wtforms.validators import ValidationError
 from app import app, db
 from app.forms import CategoryForm, NewPaymentForm, PaymentForm, EditAttachmentForm
 from app.models import Category, Payment, File, User, Subproject
-from app.util import flash_form_errors, form_in_request
+from app.util import flash_form_errors, form_in_request, formatted_flash
 from app import util
 
 
@@ -404,11 +404,7 @@ def process_subproject_form(form):
     if action == "DELETE":
         Subproject.query.filter_by(id=form.id.data).delete()
         db.session.commit()
-        flash(
-            '<span class="text-default-green">Subproject "%s" is verwijderd</span>' % (
-                form.name.data
-            )
-        )
+        formatted_flash('Subproject "%s" is verwijderd' % form.name.data, color="green")
         return redirect(url_for("project", project_id=form.project_id.data))
     
     if not util.validate_on_submit(form, request):
@@ -418,6 +414,7 @@ def process_subproject_form(form):
     for f in form:
         if f.type != 'SubmitField' and f.type != 'CSRFTokenField':
             new_subproject_data[f.short_name] = f.data
+    name, iban = new_subproject_data['name'], new_subproject_data['iban']
 
     if action == "CREATE":
         try:
@@ -427,15 +424,8 @@ def process_subproject_form(form):
         except (ValueError, IntegrityError) as e:
             db.session().rollback()
             app.logger.error(repr(e))
-            flash(
-                '<span class="text-default-red">Subproject toevoegen mislukt: naam '
-                '"%s" en/of IBAN "%s" bestaan al, kies een andere naam en/of '
-                'IBAN<span>' % (
-                    new_subproject_data['name'],
-                    new_subproject_data['iban']  # TODO: This will probably become a
-                    # different field or will be removed.
-                )
-            )
+            # TODO: BNG
+            formatted_flash("Subproject toevoegen mislukt: naam {name} en/of IBAN {iban} bestaan al.", color="red")
         return redirect(url_for("project", project_id=form.project_id.data))
     if action == "UPDATE":
         try:
@@ -445,23 +435,13 @@ def process_subproject_form(form):
             if len(subprojects.all()):
                 subprojects.update(new_subproject_data)
                 db.session.commit()
-                flash(
-                    '<span class="text-default-green">Subproject "%s" is '
-                    'bijgewerkt</span>' % (
-                        new_subproject_data['name']
-                    )
-                )
+                name = new_subproject_data["name"]
+                formatted_flash(f'Subproject {name} is bijgewerkt</span>', color="green")
         except (ValueError, IntegrityError) as e:
             db.session().rollback()
             app.logger.error(repr(e))
-            flash(
-                '<span class="text-default-red">Subproject bijwerken mislukt: naam '
-                '"%s" en/of IBAN "%s" bestaan al, kies een andere naam en/of '
-                'IBAN<span>' % (
-                    new_subproject_data['name'],
-                    new_subproject_data['iban']
-                )
-            )
+            # TODO: BNG
+            formatted_flash("Subproject bijwerken mislukt: naam {name} en/of IBAN {iban} bestaan al.", color="red")
         return redirect(url_for(
             "subproject",
             project_id=form.project_id.data,
@@ -515,15 +495,12 @@ def process_new_payment_form(form, project, subproject):
     try:
         db.session.add(new_payment)
         db.session.commit()
-        flash(
-            '<span class="text-default-green">Transactie is toegevoegd</span>'
-        )
+        formatted_flash("Transactie is toegevoegd", "green")
+
     except (ValueError, IntegrityError) as e:
         db.session.rollback()
         app.logger.error(repr(e))
-        flash(
-            '<span class="text-default-red">Transactie toevoegen mislukt.</span>'
-        )
+        formatted_flash("Transactie toevoegen mislukt.", "red")
         return redirect(redirect_url)
     if data_file is not None:
         save_attachment(

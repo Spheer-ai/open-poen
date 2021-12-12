@@ -12,6 +12,10 @@ from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 
 
+def format_flash(text, color):
+    return f'<span class="text-default-{color}">' + text + '</span>'
+
+
 def human_format(num):
     magnitude = 0
     while abs(num) >= 1000:
