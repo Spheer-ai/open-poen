@@ -217,14 +217,9 @@ def process_payment_form(request, project_or_subproject, project_owner, user_sub
 
 
 # Populate the payment forms which allows the user to edit it
-def create_payment_forms(payments, project_owner):
+def create_payment_forms(payments):
     payment_forms = {}
     for payment in payments:
-        # If a payment already contains a category, retrieve it to set
-        # this category as the selected category in the drop-down menu
-        selected_category = ''
-        if payment.category:
-            selected_category = payment.category.id
         payment_form = PaymentForm(prefix=f'payment_form_{payment.id}', **{
             'short_user_description': payment.short_user_description,
             'long_user_description': payment.long_user_description,
@@ -232,18 +227,14 @@ def create_payment_forms(payments, project_owner):
             'amount_value': payment.amount_value,
             'id': payment.id,
             'hidden': payment.hidden,
-            'category_id': selected_category,
+            'category_id': "" if payment.category is None else payment.category.id,
             'route': payment.route
         })
 
-        # The created field may only be edited on manually added transactions
         if payment.type != 'MANUAL':
             del payment_form['created']
+            del payment_form['remove']
 
-        # A project with subprojects can contain multiple editable
-        # payments on the project page, so we need to retrieve the
-        # categories for each payment (could be made more efficient,
-        # but this is readable)
         if payment.subproject:
             payment_form.category_id.choices = payment.subproject.make_category_select_options()
         else:
@@ -255,16 +246,7 @@ def create_payment_forms(payments, project_owner):
             ('uitgaven', 'uitgaven')
         ]
 
-        # Only allow manually added payments to be removed
-        if payment.type != 'MANUAL':
-            del payment_form.remove
-
-        # Only allow project owners to hide a transaction
-        if project_owner:
-            payment_form.hidden = payment.hidden
-
         payment_forms[payment.id] = payment_form
-
     return payment_forms
 
 
@@ -336,6 +318,7 @@ def process_transaction_attachment_form(request, transaction_attachment_form, pr
         else:
             flash_form_errors(transaction_attachment_form, request)
 
+
 # Populate the edit attachment forms which allows the user to edit it
 def create_edit_attachment_forms(attachments):
     edit_attachment_forms = {}
@@ -348,6 +331,7 @@ def create_edit_attachment_forms(attachments):
         edit_attachment_forms[attachment.id] = edit_attachment_form
 
     return edit_attachment_forms
+
 
 def process_edit_attachment_form(request, edit_attachment_form, project_id=0, subproject_id=0):
     edit_attachment_form = EditAttachmentForm(prefix="edit_attachment_form")

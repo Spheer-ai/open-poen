@@ -321,8 +321,6 @@ def project(project_id):
             })
         )
 
-
-
     subproject_form = SubprojectForm(prefix="subproject_form")
     form_redirect = process_subproject_form(subproject_form)
     if form_redirect:
@@ -472,10 +470,7 @@ def project(project_id):
             payment_id = payment_form_return.id.data
             editable_payments = [x for x in editable_payments if x.id != payment_form_return.id.data]
 
-        payment_forms = create_payment_forms(
-            editable_payments,
-            project_owner
-        )
+        payment_forms = create_payment_forms(editable_payments)
 
         if type(payment_form_return) == PaymentForm:
             payment_forms[payment_form_return.id.data] = payment_form_return
@@ -942,10 +937,7 @@ def subproject(project_id, subproject_id):
     # Populate the payment forms which allows the user to edit it
     payment_forms = {}
     if project_owner or user_in_subproject:
-        payment_forms = create_payment_forms(
-            subproject.payments,
-            project_owner
-        )
+        payment_forms = create_payment_forms(subproject.payments)
 
     if type(payment_form_return) == PaymentForm:
         payment_forms[payment_form_return.id.data] = payment_form_return
