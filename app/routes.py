@@ -66,6 +66,7 @@ def before_request():
 @app.route("/", methods=['GET', 'POST'])
 def index():
     modal_id = None
+    bng_is_linked = False
 
     # Process filled in edit admin form
     edit_admin_form = EditAdminForm(prefix="edit_admin_form")
@@ -224,8 +225,9 @@ def index():
         add_user_form=AddUserForm(prefix='add_user_form'),
         edit_admin_forms=edit_admin_forms,
         user_stories=UserStory.query.all(),
-        modal_id=json.dumps(modal_id)  # Does nothing if None. Loads the modal
+        modal_id=json.dumps(modal_id),  # Does nothing if None. Loads the modal
         # on page load if supplied.
+        bng_is_linked=bng_is_linked
     )
 
 

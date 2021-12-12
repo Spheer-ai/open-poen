@@ -219,6 +219,49 @@
                     </div>
                   </div>
                 </div>
+
+                <div class="col-12">
+                  <!-- Button trigger modal -->
+                  <button type="button" class="btn amounts-half-card w-100 bg-green-light text-white" data-toggle="modal" data-target="#modal-bng-koppeling-beheren">
+                    <h1>BNG-koppeling</h1>
+                    <h1 style="margin-top: 15px">beheren</h1>
+                  </button>
+                  <!-- Modal -->
+                  <div class="modal fade" id="modal-bng-koppeling-beheren" tabindex="-1" role="dialog" aria-labelledby="BNGKoppelingBeherenLabel" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="BNGKoppelingBeherenLabel">BNG-koppeling Beheren</h5>
+                          <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
+                            <span aria-hidden="true">&times;</span>
+                          </button>
+                        </div>
+                        <div class="modal-body">
+                          {% if not bng_is_linked %}
+                            <div class="bng-info-unit">
+                              <i class="fas fa-link fa-3x fa-fw"></i>
+                              <p>Er is een koppeling actief.</p>
+                            </div>
+                            <div class="bng-info-unit">
+                            <i class="fas fa-wifi fa-3x fa-fw"></i>
+                            <p>Koppeling online.</p>
+                            </div>
+                            <div class="bng-info-unit">
+                            <i class="fas fa-check-circle fa-3x fa-fw"></i>
+                            <p>Nog 55 dagen geldig.</p>
+                            </div>
+                            <div class="bng-info-unit">
+                            <i class="fas fa-sync-alt fa-3x fa-fw"></i>
+                            <p>Laatst gesynchroniseerd op: 3-12-2021</p>
+                            </div>
+                          {% else %}
+                            <p>Er is geen koppeling actief.</p>
+                          {% endif %}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           {% endif %}

@@ -22,11 +22,11 @@ import transaction from './routes/transaction';
 // Import the needed Font Awesome functionality
 import { config, library, dom } from '@fortawesome/fontawesome-svg-core';
 // Import required icons
-import { faBars, faChevronDown, faFile, faCamera, faDownload, faReceipt, faWindowRestore } from '@fortawesome/free-solid-svg-icons';
+import { faBars, faChevronDown, faFile, faCamera, faDownload, faReceipt, faWindowRestore, faLink, faWifi, faCheckCircle, faSyncAlt} from '@fortawesome/free-solid-svg-icons';
 import moment from 'moment';
 
 // Add the imported icons to the library
-library.add(faBars, faChevronDown, faFile, faCamera, faDownload, faReceipt);
+library.add(faBars, faChevronDown, faFile, faCamera, faDownload, faReceipt, faLink, faWifi, faCheckCircle, faSyncAlt);
 
 // Tell FontAwesome to watch the DOM and add the SVGs when it detects icon markup
 dom.watch();
