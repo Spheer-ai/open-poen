@@ -10,7 +10,7 @@ from app.forms import (
     SubprojectForm, TransactionAttachmentForm,
     EditAttachmentForm, FunderForm, AddUserForm, EditAdminForm,
     EditProjectOwnerForm, EditUserForm, EditProfileForm, CategoryForm,
-    NewPaymentForm, PaymentForm
+    NewPaymentForm, PaymentForm, BNGLinkForm
 )
 from app.email import send_password_reset_email
 from app.models import (
@@ -167,6 +167,12 @@ def index():
         if len(project_form.errors) > 0:
             modal_id = ["#modal-project-toevoegen"]
 
+    # BNG
+    bng_link_form = BNGLinkForm(prefix="bng_link_form")
+
+    # <input class="btn btn-info" id="bng_link_form-submit" name="bng_link_form-submit" type="submit" value="Aanmaken">
+    # <input class="btn btn-info" id="project_form-submit" name="project_form-submit" type="submit" value="Opslaan">
+
     # Calculate amounts awarded and spent
     # total_awarded = all current project balances
     #               + abs(all spent project amounts)
@@ -227,7 +233,8 @@ def index():
         user_stories=UserStory.query.all(),
         modal_id=json.dumps(modal_id),  # Does nothing if None. Loads the modal
         # on page load if supplied.
-        bng_is_linked=bng_is_linked
+        bng_is_linked=bng_is_linked,
+        bng_link_form=bng_link_form
     )
 
 

@@ -16,6 +16,29 @@ allowed_extensions = [
     'docx'
 ]
 
+
+class BNGLinkForm(FlaskForm):
+    iban = StringField(
+        "IBAN", validators=[DataRequired()]
+    )
+    valid_until = DateField(
+        'Geldig tot', format="%d-%m-%Y",
+        validators=[DataRequired()]
+    )
+    submit = SubmitField(
+        'Aanmaken',
+        render_kw={
+            'class': 'btn btn-info'
+        }
+    )
+    remove = SubmitField(
+        'Verwijderen',
+        render_kw={
+            'class': 'btn btn-danger'
+        }
+    )
+
+
 class ResetPasswordRequestForm(FlaskForm):
     email = StringField(
         'E-mailadres', validators=[DataRequired(), Email(), Length(max=120)]

@@ -146,20 +146,18 @@ def create_consent(iban, valid_until):
 
     r = requests.post(url, data=body, headers=headers, cert=REQUEST_CERTS).json()
 
-    print(
-        "".join(
-            [
-                "https://api.xs2a-sandbox.bngbank.nl/authorise?response_type=code&",
-                "client_id=PSDNL-AUT-SANDBOX&",
-                "state=state12345&",
-                "scope=" + "AIS:" + r["consentId"] + "&",
-                "code_challenge=12345&",
-                "code_challenge_method=Plain&",
-                "redirect_uri=" + REDIRECT_URL,
-            ]
-        )
+    oauth_url = "".join(
+        [
+            "https://api.xs2a-sandbox.bngbank.nl/authorise?response_type=code&",
+            "client_id=PSDNL-AUT-SANDBOX&",
+            "state=state12345&",
+            "scope=" + "AIS:" + r["consentId"] + "&",
+            "code_challenge=12345&",
+            "code_challenge_method=Plain&",
+            "redirect_uri=" + REDIRECT_URL,
+        ]
     )
-    return r["consentId"]
+    return r["consentId"], oauth_url
 
 
 def retrieve_access_token():
