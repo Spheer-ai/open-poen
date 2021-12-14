@@ -2,7 +2,7 @@ from app import app
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired, FileAllowed
 from wtforms.validators import (
-    DataRequired, Email, EqualTo, Length, Optional, URL
+    DataRequired, Email, EqualTo, Length, Optional, URL, ValidationError
 )
 from wtforms.widgets import HiddenInput
 from wtforms import (
@@ -14,7 +14,7 @@ from wtforms.fields.html5 import EmailField
 allowed_extensions = [
     'jpg', 'jpeg', 'png', 'txt', 'pdf', 'ods', 'xls', 'xlsx', 'odt', 'doc',
     'docx'
-]
+]   
 
 
 class BNGLinkForm(FlaskForm):
@@ -37,6 +37,13 @@ class BNGLinkForm(FlaskForm):
             'class': 'btn btn-danger'
         }
     )
+
+    def validate_iban(form, field):
+        if (field.data.startswith("NL") and field.data[4:7] == "BNG" and
+            all([(x.isdigit()) for x in field.data[8:]])):
+            return
+        else:
+            raise ValidationError(f"{field.data} is niet een BNG-rekening.")    
 
 
 class ResetPasswordRequestForm(FlaskForm):

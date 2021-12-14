@@ -14,11 +14,12 @@ from urllib.parse import urlencode
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 
-REDIRECT_URL = "https://nu.nl"
+# REDIRECT_URL = "https://nu.nl"
+REDIRECT_URL = "http://www.openpoen.nl"
 PSU_IP_ADDRESS = "212.178.101.162"
 REQUEST_CERTS = (
-    "xs2a_sandbox_bngbank_client_tls.cer",
-    "xs2a_sandbox_bngbank_client_tls.key",
+    "app/bng/xs2a_sandbox_bngbank_client_tls.cer",
+    "app/bng/xs2a_sandbox_bngbank_client_tls.key",
 )
 URL_PREFIX = "https://api.xs2a-sandbox.bngbank.nl/api/v1/"
 
@@ -36,14 +37,6 @@ def get_cert_data(cert):
     # 'CN=xs2a_sandbox_bngbank_client_signing'         ---> CA=CN=xs2a_sandbox_bngbank_client_signing
     issuer = str(x.issuer).replace("<Name(", "").replace(")>", "").split(",")
     return serial_number, issuer
-
-
-def validate_iban(iban):
-    if (iban.startswith("NL") and iban[4:7] == "BNG" and
-            all([(x.isdigit()) for x in iban[8:]])):
-        return
-    else:
-        raise ValueError(f"{iban} is not a valid IBAN.")
 
 
 def get_current_rfc_1123_date():
@@ -77,7 +70,7 @@ def get_signature(method, headers):
     digest = SHA256.new()
     digest.update(bytes(signing_string, encoding="utf-8"))
 
-    with open("xs2a_sandbox_bngbank_client_signing.key", "r") as file:
+    with open("app/bng/xs2a_sandbox_bngbank_client_signing.key", "r") as file:
         private_key = RSA.importKey(file.read())
 
     signer = PKCS1_v1_5.new(private_key)
@@ -96,7 +89,7 @@ def get_signature(method, headers):
 
 
 def get_certificate():
-    with open("xs2a_sandbox_bngbank_client_signing.cer", "r") as file:
+    with open("app/bng/xs2a_sandbox_bngbank_client_signing.cer", "r") as file:
         data = file.read().replace("\n", "")
     return data
 
@@ -122,7 +115,6 @@ def make_headers(
 
 
 def create_consent(iban, valid_until):
-    validate_iban(iban)
     body = {
         "access": {
             "accounts": [{"iban": iban, "currency": "EUR"}],
@@ -134,7 +126,7 @@ def create_consent(iban, valid_until):
         },
         "combinedServiceIndicator": False,
         "recurringIndicator": True,
-        "validUntil": valid_until,
+        "validUntil": valid_until.strftime("%Y-%m-%d"),
         "frequencyPerDay": 4,
     }
     body = json.dumps(body)
@@ -150,7 +142,7 @@ def create_consent(iban, valid_until):
         [
             "https://api.xs2a-sandbox.bngbank.nl/authorise?response_type=code&",
             "client_id=PSDNL-AUT-SANDBOX&",
-            "state=state12345&",
+            "state={}&",
             "scope=" + "AIS:" + r["consentId"] + "&",
             "code_challenge=12345&",
             "code_challenge_method=Plain&",
@@ -160,11 +152,7 @@ def create_consent(iban, valid_until):
     return r["consentId"], oauth_url
 
 
-def retrieve_access_token():
-    access_code = input(
-        "Enter access code query string parameter from the previous step: "
-    )
-
+def retrieve_access_token(access_code):
     body = {
         "client_id": "PSDNL-AUT-SANDBOX",
         "grant_type": "authorization_code",

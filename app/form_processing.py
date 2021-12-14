@@ -11,7 +11,11 @@ from app.forms import CategoryForm, NewPaymentForm, PaymentForm, EditAttachmentF
 from app.models import Category, Payment, File, User, Subproject
 from app.util import flash_form_errors, form_in_request, formatted_flash
 from app import util
+from app import bng as bng
 
+import jwt
+from flask_login import current_user
+from time import time
 
 def return_redirect(project_id, subproject_id):
     # Redirect back to clear form data
@@ -535,3 +539,54 @@ def generate_new_payment_form(project, subproject):
         del form.subproject
         form.category_id.choices = subproject.make_category_select_options()
         return form
+
+
+def process_bng_link_form(form):
+    if not util.validate_on_submit(form, request) or not current_user.admin:
+        return None
+    
+    consent_id, oauth_url = bng.create_consent(
+        iban=form.iban.data,
+        valid_until=form.valid_until.data
+    )
+
+    # TODO: What if the API returns an error code?
+
+    bng_token = jwt.encode({
+            'user_id': current_user.id,
+            'iban': form.iban.data,
+            'bank_name': 'BNG',
+            'exp': time() + 1800,
+            "consent_id": consent_id
+        },
+        app.config['SECRET_KEY'],
+        algorithm='HS256'
+    ).decode('utf-8')
+    
+    return redirect(oauth_url.format(bng_token))
+
+
+def process_bng_callback(request):
+    if not current_user.admin:
+        # TODO Error handling.
+        return None
+    
+    try:
+        access_code = request.args.get("code")
+        token_info = jwt.decode(
+            request.args.get("state"),
+            app.config["SECRET_KEY"],
+            algorithms="HS256"
+        )
+    except Exception as e:
+        # TODO Error handling.
+        # Token is still decoded when user went back / cancelled.
+        pass 
+    
+    try:
+        access_token = bng.retrieve_access_token(access_code)
+    except Exception as e:
+        # TODO Error handling. (User went back / cancelled.)
+        pass
+
+    # TODO: Now save consent_id and access_token to the database. (And expires in!)

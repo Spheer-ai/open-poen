@@ -19,11 +19,11 @@ from app.models import (
 from app.form_processing import (
     generate_new_payment_form, process_category_form, process_new_payment_form, process_payment_form, create_payment_forms,
     process_transaction_attachment_form, create_edit_attachment_forms,
-    process_edit_attachment_form, save_attachment, process_subproject_form
+    process_edit_attachment_form, save_attachment, process_subproject_form,
+    process_bng_link_form, process_bng_callback
 )
 from sqlalchemy.exc import IntegrityError
 
-from datetime import datetime
 import json
 from app import util
 
@@ -67,6 +67,9 @@ def before_request():
 def index():
     modal_id = None
     bng_is_linked = False
+
+    if request.args.get("state"):
+        process_bng_callback(request)
 
     # Process filled in edit admin form
     edit_admin_form = EditAdminForm(prefix="edit_admin_form")
@@ -169,7 +172,15 @@ def index():
 
     # BNG
     bng_link_form = BNGLinkForm(prefix="bng_link_form")
-
+    form_redirect = process_bng_link_form(bng_link_form)
+    if form_redirect:
+        return form_redirect
+    if len(bng_link_form.errors) > 0:
+        modal_id = ["#modal-bng-koppeling-beheren"]
+    else:
+        # DEBUGGING
+        bng_link_form.iban.data = "NL34BNGT5532530633"
+    
     # <input class="btn btn-info" id="bng_link_form-submit" name="bng_link_form-submit" type="submit" value="Aanmaken">
     # <input class="btn btn-info" id="project_form-submit" name="project_form-submit" type="submit" value="Opslaan">
 
