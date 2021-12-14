@@ -525,7 +525,7 @@ def generate_new_payment_form(project, subproject):
 
     if project:
         form.project_id.data = project.id
-        if project.contains_subprojects:
+        if project.subprojects.first() is not None:
             form.category_id.choices = project.subprojects[0].make_category_select_options()
             form.subproject.choices = [(x.id, x.name) for x in project.subprojects]
             return form
