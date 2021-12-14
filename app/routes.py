@@ -169,6 +169,8 @@ def index():
     else:
         if len(project_form.errors) > 0:
             modal_id = ["#modal-project-toevoegen"]
+            for idx in range(0, len(project_form.ibans)):
+                project_form.ibans[idx].label.text = "IBAN " + str(idx + 1)
 
     # BNG
     bng_link_form = BNGLinkForm(prefix="bng_link_form")

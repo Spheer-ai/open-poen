@@ -22,11 +22,13 @@ import transaction from './routes/transaction';
 // Import the needed Font Awesome functionality
 import { config, library, dom } from '@fortawesome/fontawesome-svg-core';
 // Import required icons
-import { faBars, faChevronDown, faFile, faCamera, faDownload, faReceipt, faWindowRestore, faLink, faWifi, faCheckCircle, faSyncAlt} from '@fortawesome/free-solid-svg-icons';
+import { faBars, faChevronDown, faFile, faCamera, faDownload, faReceipt, faWindowRestore,
+         faLink, faWifi, faCheckCircle, faSyncAlt, faPlus} from '@fortawesome/free-solid-svg-icons';
 import moment from 'moment';
 
 // Add the imported icons to the library
-library.add(faBars, faChevronDown, faFile, faCamera, faDownload, faReceipt, faLink, faWifi, faCheckCircle, faSyncAlt);
+library.add(faBars, faChevronDown, faFile, faCamera, faDownload, faReceipt, faLink, faWifi,
+            faCheckCircle, faSyncAlt, faPlus);
 
 // Tell FontAwesome to watch the DOM and add the SVGs when it detects icon markup
 dom.watch();
@@ -248,4 +250,34 @@ $(window).on('load', function() {
       }, 400);
     }
   }
+});
+
+window.FieldListIdx = $("#debit-card-ibans").find(".form-group").length
+
+var addFieldToFieldList = function () {
+  window.FieldListIdx += 1;
+  var newDiv = $('<div>').attr({
+    class: "form-group"
+  });
+  newDiv.appendTo('#debit-card-ibans');
+  var newField = $('<input>').attr({
+    type: "text",
+    class: "form-control",
+    id: "project_form-ibans-" + window.FieldListIdx,
+    name: "project_form-ibans-" + window.FieldListIdx,
+    value: ""
+  })
+  newField.appendTo(newDiv);
+}
+
+var removeLastField = function () {
+  var lastField = $("#debit-card-ibans").find("#project_form-ibans-" + window.FieldListIdx);
+  var lastDiv = lastField.parent()
+  lastField.remove()
+  lastDiv.remove()
+  window.FieldListIdx -= 1;
+};
+
+$("#add-debit-card").on("click", function () {
+  addFieldToFieldList();
 });

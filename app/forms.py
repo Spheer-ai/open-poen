@@ -1,3 +1,4 @@
+from wtforms.fields.core import FieldList, FormField
 from app import app
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired, FileAllowed
@@ -7,19 +8,49 @@ from wtforms.validators import (
 from wtforms.widgets import HiddenInput
 from wtforms import (
     StringField, IntegerField, BooleanField, PasswordField, SubmitField,
-    SelectField, TextAreaField, DecimalField, DateField, RadioField
+    SelectField, TextAreaField, DecimalField, DateField, RadioField, Form
 )
 from wtforms.fields.html5 import EmailField
 
 allowed_extensions = [
     'jpg', 'jpeg', 'png', 'txt', 'pdf', 'ods', 'xls', 'xlsx', 'odt', 'doc',
     'docx'
-]   
+]
+
+
+def validate_iban(form, field):
+    if (field.data.startswith("NL") and field.data[4:7] == "BNG" and
+        all([(x.isdigit()) for x in field.data[8:]])):
+        return
+    else:
+        raise ValidationError(f"{field.data} is niet een BNG-rekening.")
+
+
+def validate_iban_list(form, field):
+    errors = []
+    for idx, f in enumerate(field.data):
+        # Ensure all fields are either blank (no data) or contain a valid
+        # BNG IBAN.
+        if f == "":
+            continue
+        if not (f.startswith("NL") and f[4:7] == "BNG" and
+            all([(x.isdigit()) for x in f[8:]])):
+            errors.append(idx + 1)
+    if len(errors) > 0:
+        errors = [str(x) for x in errors]
+        raise ValidationError(
+            "De volgende pasnummers zijn geen BNG-rekening: " + ", ".join(errors) + "."
+        )
+    no_blanks = [x for x in field.data if x != ""]
+    if not len(set(no_blanks)) == len(no_blanks):
+        raise ValidationError(
+            "De opgegeven pasnummers zijn niet uniek."
+        )
 
 
 class BNGLinkForm(FlaskForm):
     iban = StringField(
-        "IBAN", validators=[DataRequired()]
+        "IBAN", validators=[DataRequired(), validate_iban]
     )
     valid_until = DateField(
         'Geldig tot', format="%d-%m-%Y",
@@ -37,13 +68,6 @@ class BNGLinkForm(FlaskForm):
             'class': 'btn btn-danger'
         }
     )
-
-    def validate_iban(form, field):
-        if (field.data.startswith("NL") and field.data[4:7] == "BNG" and
-            all([(x.isdigit()) for x in field.data[8:]])):
-            return
-        else:
-            raise ValidationError(f"{field.data} is niet een BNG-rekening.")    
 
 
 class ResetPasswordRequestForm(FlaskForm):
@@ -120,7 +144,13 @@ class ProjectForm(FlaskForm):
     budget = IntegerField('Budget voor dit project', validators=[Optional()])
     # TODO: Projects will be linked to debit cards, not to IBAN's with BNG.
     # Move the link with a BNG IBAN to user level.
-    iban = SelectField('IBAN', validators=[Optional()], choices=[])
+    # iban = SelectField('IBAN', validators=[Optional()], choices=[])
+    ibans = FieldList(
+        StringField("IBAN"),
+        min_entries=1,
+        max_entries=None,
+        validators=[validate_iban_list]
+    )
     id = IntegerField(widget=HiddenInput())
 
     submit = SubmitField(

@@ -198,15 +198,25 @@
                           <div class="modal-body">
                             <div>
                               {{ project_form.csrf_token }}
-
+                              <h3>Projecteigenschappen</h3>
                               {% for f in project_form %}
-                                {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' and f.label.text != 'IBAN' %}
-                                  <div>
-                                    {{ wtf.form_field(f, class="form-control") }}
-                                    <br>
-                                    <br>
-                                  </div>
+                                {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' and f.name != 'project_form-ibans' %}
+                                  {{ wtf.form_field(f, class="form-control") }}
                                 {% endif %}
+                              {% endfor %}
+                              <div id="debit-card-ibans">
+                              <h3>Betaalpassen</h3>
+                              <p>Voer hier de betaalpassen in die aan het project moeten worden gekoppeld. Voer of een valide IBAN in, of laat het veld leeg.</p>
+                              {% for f in project_form.ibans %}
+                                {{ wtf.form_field(f) }}
+                              {% endfor %}
+                              </div>
+                              <div class="bng-info-unit" id="add-debit-card">
+                                <i class="fas fa-plus fa-3x"></i>
+                                <p>Voeg meer betaalpassen toe.</p>
+                              </div>
+                              {% for error in project_form.ibans.errors %}
+                                <p style="color: red">{{ error }}</p>
                               {% endfor %}
                             </div>
                           </div>
