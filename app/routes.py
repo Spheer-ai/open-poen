@@ -135,6 +135,9 @@ def index():
     # return the validated version. modal_id is used to pop open the modal
     # on loading the page, if it contains a validated form.
     project_form = ProjectForm(prefix="project_form")
+    for idx in range(0, len(project_form.ibans)):
+        l = project_form.ibans[idx].iban.label.text
+        project_form.ibans[idx].iban.label.text = l + " " + str(idx + 1)
     # Save (i.e. create) project
     if util.validate_on_submit(project_form, request):
         new_project_data = {}
@@ -169,8 +172,8 @@ def index():
     else:
         if len(project_form.errors) > 0:
             modal_id = ["#modal-project-toevoegen"]
-            for idx in range(0, len(project_form.ibans)):
-                project_form.ibans[idx].label.text = "IBAN " + str(idx + 1)
+            # for idx in range(0, len(project_form.ibans)):
+            #     project_form.ibans[idx].label.text = "IBAN " + str(idx + 1)
 
     # BNG
     bng_link_form = BNGLinkForm(prefix="bng_link_form")
@@ -182,9 +185,6 @@ def index():
     else:
         # DEBUGGING
         bng_link_form.iban.data = "NL34BNGT5532530633"
-    
-    # <input class="btn btn-info" id="bng_link_form-submit" name="bng_link_form-submit" type="submit" value="Aanmaken">
-    # <input class="btn btn-info" id="project_form-submit" name="project_form-submit" type="submit" value="Opslaan">
 
     # Calculate amounts awarded and spent
     # total_awarded = all current project balances

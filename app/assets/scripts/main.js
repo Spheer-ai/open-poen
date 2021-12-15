@@ -252,32 +252,87 @@ $(window).on('load', function() {
   }
 });
 
-window.FieldListIdx = $("#debit-card-ibans").find(".form-group").length
+window.IBANIdx = $("#project-ibans").find(".form-group").length + 1
 
-var addFieldToFieldList = function () {
-  window.FieldListIdx += 1;
+var addIBAN = function () {
   var newDiv = $('<div>').attr({
     class: "form-group"
   });
-  newDiv.appendTo('#debit-card-ibans');
+  newDiv.appendTo('#project-ibans');
+
+  var newLabel = $('<label>').attr({
+    class: "control-label",
+    for: "project_form-ibans-" + window.IBANIdx + "-iban"
+  });
+  newLabel.append("Pasnummer " + window.IBANIdx);
+  newLabel.appendTo(newDiv);
+
   var newField = $('<input>').attr({
     type: "text",
     class: "form-control",
-    id: "project_form-ibans-" + window.FieldListIdx,
-    name: "project_form-ibans-" + window.FieldListIdx,
+    id: "project_form-ibans-" + window.IBANIdx + "-iban",
+    name: "project_form-ibans-" + window.IBANIdx + "-iban",
     value: ""
   })
   newField.appendTo(newDiv);
+
+  window.IBANIdx += 1;
 }
 
-var removeLastField = function () {
-  var lastField = $("#debit-card-ibans").find("#project_form-ibans-" + window.FieldListIdx);
-  var lastDiv = lastField.parent()
-  lastField.remove()
-  lastDiv.remove()
-  window.FieldListIdx -= 1;
-};
+$("#add-iban").on("click", function () {
+  addIBAN();
+});
 
-$("#add-debit-card").on("click", function () {
-  addFieldToFieldList();
+window.FunderIdx = ($("#project-funders").find(".form-group").length / 2) + 1
+
+var addFunder = function () {
+  $("#project-funders").append(
+    $('<p>').append("Sponsor " + window.FunderIdx)
+  );
+
+  // NAME
+  var newNameDiv = $('<div>').attr({
+    class: "form-group required"
+  });
+  newNameDiv.appendTo("#project-funders");
+  var newNameLabel = $('<label>').attr({
+    class: "control-label",
+    for: "project_form-funders-" + window.FunderIdx + "-funder_name"
+  });
+  newNameLabel.append("Naam");
+  newNameLabel.appendTo(newNameDiv);
+  var newNameField = $('<input>').attr({
+    type: "text",
+    class: "form-control",
+    id: "project_form-funders-" + window.FunderIdx + "-funder_name",
+    name: "project_form-funders-" + window.FunderIdx + "-funder_name",
+    value: ""
+  })
+  newNameField.appendTo(newNameDiv);
+
+  // URL
+  var newURLDiv = $('<div>').attr({
+    class: "form-group required"
+  });
+  newURLDiv.appendTo("#project-funders");
+  var newURLLabel = $('<label>').attr({
+    class: "control-label",
+    for: "project_form-funders-" + window.FunderIdx + "-url"
+  });
+  newURLLabel.append("URL");
+  newURLLabel.appendTo(newURLDiv);
+  var newURLField = $('<input>').attr({
+    type: "text",
+    class: "form-control",
+    id: "project_form-funders-" + window.FunderIdx + "-url",
+    name: "project_form-funders-" + window.FunderIdx + "-url",
+    value: ""
+  })
+  newURLField.appendTo(newURLDiv);
+
+  window.FunderIdx += 1;
+}
+
+$("#add-funder").on("click", function () {
+  addFunder();
 });

@@ -198,26 +198,46 @@
                           <div class="modal-body">
                             <div>
                               {{ project_form.csrf_token }}
-                              <h3>Projecteigenschappen</h3>
-                              {% for f in project_form %}
-                                {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' and f.name != 'project_form-ibans' %}
-                                  {{ wtf.form_field(f, class="form-control") }}
-                                {% endif %}
-                              {% endfor %}
-                              <div id="debit-card-ibans">
-                              <h3>Betaalpassen</h3>
-                              <p>Voer hier de betaalpassen in die aan het project moeten worden gekoppeld. Voer of een valide IBAN in, of laat het veld leeg.</p>
-                              {% for f in project_form.ibans %}
-                                {{ wtf.form_field(f) }}
-                              {% endfor %}
+                              <div class="project-unit">
+                                <h2>Projecteigenschappen</h2>
+                                {{ wtf.form_field(project_form.name) }}
+                                {{ wtf.form_field(project_form.description) }}
+                                {{ wtf.form_field(project_form.contains_subprojects) }}
+                                {{ wtf.form_field(project_form.hidden) }}
+                                {{ wtf.form_field(project_form.hidden_sponsors) }}
+                                {{ wtf.form_field(project_form.budget) }}
                               </div>
-                              <div class="bng-info-unit" id="add-debit-card">
-                                <i class="fas fa-plus fa-3x"></i>
-                                <p>Voeg meer betaalpassen toe.</p>
+                              <div class="project-unit">
+                                <div id="project-funders">
+                                  <h2>Sponsoren</h2>
+                                  <p>Voer hier de sponsoren van het project in. Vul of beide velden in, of laat beide velden leeg.</p>
+                                  {% for funder in project_form.funders %}
+                                  <p>Sponsor {{ loop.index }}</p>
+                                  {{ wtf.form_field(funder.funder_name) }}
+                                  {{ wtf.form_field(funder.url) }}
+                                  {{ funder.csrf_token }}
+                                  {% endfor %}
+                                </div>
+                                <div class="bng-info-unit" id="add-funder">
+                                  <i class="fas fa-plus fa-3x"></i>
+                                  <p>Voeg meer sponsoren toe.</p>
+                                </div>
                               </div>
-                              {% for error in project_form.ibans.errors %}
-                                <p style="color: red">{{ error }}</p>
-                              {% endfor %}
+                              <div class="project-unit">
+                                <div id="project-ibans">
+                                  <h2>Betaalpassen</h2>
+                                  <p>Voer hier de betaalpassen in die aan het project moeten worden gekoppeld. Voer of een valide IBAN in, of laat
+                                    het veld leeg.</p>
+                                  {% for iban in project_form.ibans %}
+                                  {{ wtf.form_field(iban.iban) }}
+                                  {{ iban.csrf_token }}
+                                  {% endfor %}
+                                </div>
+                                <div class="bng-info-unit" id="add-iban">
+                                  <i class="fas fa-plus fa-3x"></i>
+                                  <p>Voeg meer betaalpassen toe.</p>
+                                </div>
+                              </div>
                             </div>
                           </div>
                           <div class="modal-footer">

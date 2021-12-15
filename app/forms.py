@@ -129,6 +129,17 @@ class LoginForm(FlaskForm):
     )
 
 
+class ProjectFunderForm(FlaskForm):
+    funder_name = StringField('Naam', validators=[DataRequired(), Length(max=120)])
+    url = StringField(
+        'URL', validators=[DataRequired(), URL(), Length(max=2000)]
+    )
+
+
+class ProjectIBANForm(FlaskForm):
+    iban = StringField("Pasnummer", validators=[validate_iban, Optional()])
+
+
 class ProjectForm(FlaskForm):
     name = StringField('Naam', validators=[DataRequired(), Length(max=120)])
     description = TextAreaField('Beschrijving', validators=[DataRequired()])
@@ -146,10 +157,16 @@ class ProjectForm(FlaskForm):
     # Move the link with a BNG IBAN to user level.
     # iban = SelectField('IBAN', validators=[Optional()], choices=[])
     ibans = FieldList(
-        StringField("IBAN"),
+        FormField(ProjectIBANForm),
         min_entries=1,
         max_entries=None,
-        validators=[validate_iban_list]
+        validators=[]
+    )
+    funders = FieldList(
+        FormField(ProjectFunderForm),
+        min_entries=1,
+        max_entries=None,
+        validators=[]
     )
     id = IntegerField(widget=HiddenInput())
 
