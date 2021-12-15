@@ -6,8 +6,8 @@ from flask_login import login_required, login_user, logout_user, current_user
 
 from app import app, db
 from app.forms import (
-    ResetPasswordRequestForm, ResetPasswordForm, LoginForm, ProjectForm,
-    SubprojectForm, TransactionAttachmentForm,
+    ResetPasswordRequestForm, ResetPasswordForm, LoginForm, NewProjectForm,
+    EditProjectForm, SubprojectForm, TransactionAttachmentForm,
     EditAttachmentForm, FunderForm, AddUserForm, EditAdminForm,
     EditProjectOwnerForm, EditUserForm, EditProfileForm, CategoryForm,
     NewPaymentForm, PaymentForm, BNGLinkForm
@@ -134,7 +134,7 @@ def index():
     # Create an empty form, or fill it with a submitted form so that we can
     # return the validated version. modal_id is used to pop open the modal
     # on loading the page, if it contains a validated form.
-    project_form = ProjectForm(prefix="project_form")
+    project_form = NewProjectForm(prefix="project_form")
     for idx in range(0, len(project_form.ibans)):
         l = project_form.ibans[idx].iban.label.text
         project_form.ibans[idx].iban.label.text = l + " " + str(idx + 1)
@@ -146,9 +146,7 @@ def index():
                 new_project_data[f.short_name] = f.data
 
         try:
-            # IBAN can't be set during initial creation of a new
-            # project so remove it
-            new_project_data.pop('iban')
+            # TODO Implement object creation.
             project = Project(**new_project_data)
             db.session.add(project)
             db.session.commit()
@@ -172,8 +170,6 @@ def index():
     else:
         if len(project_form.errors) > 0:
             modal_id = ["#modal-project-toevoegen"]
-            # for idx in range(0, len(project_form.ibans)):
-            #     project_form.ibans[idx].label.text = "IBAN " + str(idx + 1)
 
     # BNG
     bng_link_form = BNGLinkForm(prefix="bng_link_form")
@@ -548,7 +544,7 @@ def project(project_id):
             modal_id = ["#project-bewerken", "#project-owner-toevoegen"]
 
     # Process filled in project form
-    project_form = ProjectForm(prefix="project_form")
+    project_form = EditProjectForm(prefix="project_form")
 
     # Remove project
     if project_form.remove.data and current_user.admin:
@@ -658,7 +654,7 @@ def project(project_id):
         if len(project_form.errors) > 0:
             form = project_form
         else:
-            form = ProjectForm(prefix="project_form", **{
+            form = EditProjectForm(prefix="project_form", **{
                 'name': project.name,
                 'description': project.description,
                 'hidden': project.hidden,

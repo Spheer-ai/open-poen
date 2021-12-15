@@ -129,18 +129,25 @@ class LoginForm(FlaskForm):
     )
 
 
-class ProjectFunderForm(FlaskForm):
-    funder_name = StringField('Naam', validators=[DataRequired(), Length(max=120)])
+class NewProjectFunderForm(FlaskForm):
+    name = StringField('Naam', validators=[Optional(), Length(max=120)])
     url = StringField(
-        'URL', validators=[DataRequired(), URL(), Length(max=2000)]
+        'URL', validators=[Optional(), URL(), Length(max=2000)]
     )
 
 
-class ProjectIBANForm(FlaskForm):
-    iban = StringField("Pasnummer", validators=[validate_iban, Optional()])
+class NewProjectIBANForm(FlaskForm):
+    iban = StringField("Pasnummer", validators=[Optional(), validate_iban])
 
 
-class ProjectForm(FlaskForm):
+class NewProjectSubprojectForm(FlaskForm):
+    name = StringField('Naam', validators=[Optional(), Length(max=120)])
+    description = TextAreaField('Beschrijving', validators=[Optional()])
+    hidden = BooleanField('Initiatief verbergen')
+    budget = IntegerField('Budget voor dit initiatief', validators=[Optional()])
+
+
+class NewProjectForm(FlaskForm):
     name = StringField('Naam', validators=[DataRequired(), Length(max=120)])
     description = TextAreaField('Beschrijving', validators=[DataRequired()])
     contains_subprojects = BooleanField(
@@ -153,36 +160,65 @@ class ProjectForm(FlaskForm):
     hidden = BooleanField('Project verbergen')
     hidden_sponsors = BooleanField('Sponsoren verbergen')
     budget = IntegerField('Budget voor dit project', validators=[Optional()])
-    # TODO: Projects will be linked to debit cards, not to IBAN's with BNG.
-    # Move the link with a BNG IBAN to user level.
-    # iban = SelectField('IBAN', validators=[Optional()], choices=[])
     ibans = FieldList(
-        FormField(ProjectIBANForm),
+        FormField(NewProjectIBANForm),
         min_entries=1,
         max_entries=None,
         validators=[]
     )
     funders = FieldList(
-        FormField(ProjectFunderForm),
+        FormField(NewProjectFunderForm),
+        min_entries=1,
+        max_entries=None,
+        validators=[]
+    )
+    subprojects = FieldList(
+        FormField(NewProjectSubprojectForm),
         min_entries=1,
         max_entries=None,
         validators=[]
     )
     id = IntegerField(widget=HiddenInput())
-
     submit = SubmitField(
         'Opslaan',
         render_kw={
             'class': 'btn btn-info'
         }
     )
-
     remove = SubmitField(
         'Verwijderen',
         render_kw={
             'class': 'btn btn-danger'
         }
     )
+
+
+class EditProjectForm(FlaskForm):
+    name = StringField('Naam', validators=[DataRequired(), Length(max=120)])
+    description = TextAreaField('Beschrijving', validators=[DataRequired()])
+    contains_subprojects = BooleanField(
+        'Uitgaven van dit project gebeuren via subrekeningen en subprojecten',
+        render_kw={
+            'checked': '',
+            'value': 'y'
+        }
+    )
+    hidden = BooleanField('Project verbergen')
+    hidden_sponsors = BooleanField('Sponsoren verbergen')
+    budget = IntegerField('Budget voor dit project', validators=[Optional()])
+    id = IntegerField(widget=HiddenInput())
+    submit = SubmitField(
+        'Opslaan',
+        render_kw={
+            'class': 'btn btn-info'
+        }
+    )
+    remove = SubmitField(
+        'Verwijderen',
+        render_kw={
+            'class': 'btn btn-danger'
+        }
+    ) 
 
 
 class SubprojectForm(FlaskForm):

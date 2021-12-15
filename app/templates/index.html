@@ -199,7 +199,7 @@
                             <div>
                               {{ project_form.csrf_token }}
                               <div class="project-unit">
-                                <h2>Projecteigenschappen</h2>
+                                <h2>Eigenschappen</h2>
                                 {{ wtf.form_field(project_form.name) }}
                                 {{ wtf.form_field(project_form.description) }}
                                 {{ wtf.form_field(project_form.contains_subprojects) }}
@@ -213,8 +213,8 @@
                                   <p>Voer hier de sponsoren van het project in. Vul of beide velden in, of laat beide velden leeg.</p>
                                   {% for funder in project_form.funders %}
                                   <p>Sponsor {{ loop.index }}</p>
-                                  {{ wtf.form_field(funder.funder_name) }}
-                                  {{ wtf.form_field(funder.url) }}
+                                  {{ wtf.form_field(funder.form.name) }}
+                                  {{ wtf.form_field(funder.form.url) }}
                                   {{ funder.csrf_token }}
                                   {% endfor %}
                                 </div>
@@ -238,6 +238,27 @@
                                   <p>Voeg meer betaalpassen toe.</p>
                                 </div>
                               </div>
+                              <div class="project-unit">
+                                  <h2>Initiatieven</h2>
+                                  <p>Voeg hier de initiatieven in die moeten worden aangemaakt voor dit project. Laat de velden leeg als je alleen het hoofdproject wilt aanmaken.</p>
+                                  <div id="project-subprojects">
+                                  {% for subproject in project_form.subprojects %}
+                                    <p>Initiatief {{ loop.index }}</p>
+                                    <div class="project-subproject">
+                                      {{ wtf.form_field(subproject.form.name) }}
+                                      {{ wtf.form_field(subproject.form.description) }}
+                                      {{ wtf.form_field(subproject.form.hidden) }}
+                                      {{ wtf.form_field(subproject.form.budget) }}
+                                      {{ subproject.csrf_token }}
+                                    </div>
+                                  {% endfor %}
+                                  </div>
+                                <div class="bng-info-unit" id="add-subproject">
+                                  <i class="fas fa-plus fa-3x"></i>
+                                  <p>Voeg meer initiatieven toe.</p>
+                                </div>
+                              </div>
+                              
                             </div>
                           </div>
                           <div class="modal-footer">

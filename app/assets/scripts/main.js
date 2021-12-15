@@ -336,3 +336,29 @@ var addFunder = function () {
 $("#add-funder").on("click", function () {
   addFunder();
 });
+
+var cloneForm = function(formDiv, idx) {
+  var $newDiv = $(formDiv).clone(true);
+  $newDiv.find('input, textarea').each(function() {
+      var $this = $(this);
+      $this.attr('id', $this.attr('id').replace(idx - 1, idx));
+      $this.attr('name', $this.attr('name').replace(idx - 1, idx));
+      $this.val('');
+  });
+  $newDiv.find('label').each(function() {
+    var $this = $(this);
+    if ($this.attr('for') !== undefined) {
+      $this.attr('for', $this.attr('for').replace(idx - 1, idx));
+    }
+  });
+  $newDiv.find("p").remove();
+  $newDiv.prepend('<p>Initiatief ' + (idx + 1) + '</p>')
+  $newDiv.insertAfter(formDiv);
+};
+
+window.subprojectIdx = $("#project-subprojects").find(".project-subproject").length
+
+$("#add-subproject").on("click", function () {
+  cloneForm(".project-subproject:last", window.subprojectIdx);
+  window.subprojectIdx += 1;
+})
