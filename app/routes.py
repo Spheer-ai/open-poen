@@ -3,6 +3,7 @@ from flask import (
     send_from_directory
 )
 from flask_login import login_required, login_user, logout_user, current_user
+from wtforms.validators import ValidationError
 
 from app import app, db
 from app.forms import (
@@ -14,7 +15,7 @@ from app.forms import (
 )
 from app.email import send_password_reset_email
 from app.models import (
-    User, Project, Subproject, Payment, UserStory, IBAN, File, Funder, Category
+    User, Project, Subproject, Payment, UserStory, IBAN, File, Funder, Category, BNGAccount
 )
 from app.form_processing import (
     generate_new_payment_form, process_category_form, process_new_payment_form, process_payment_form, create_payment_forms,
@@ -67,6 +68,14 @@ def before_request():
 def index():
     modal_id = None
     bng_is_linked = False
+
+    linked_bng_accounts = BNGAccount.query.filter_by(user_id=current_user.id).all()
+    if len(linked_bng_accounts) > 1:
+        # TODO: The decision was made to link only one account to one user for now.
+        # We can implement logic to handle multiple accounts later on.
+        raise ValidationError("Multiple BNG accounts linked to a single user.")
+    elif len(linked_bng_accounts) > 0:
+        bng_is_linked = True
 
     if request.args.get("state"):
         process_bng_callback(request)

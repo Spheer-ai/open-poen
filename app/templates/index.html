@@ -313,7 +313,6 @@
                               <p>Laatst gesynchroniseerd op: 3-12-2021</p>
                               </div>
                             {% else %}
-                                {{ bng_link_form.csrf_token }}
                                 {% for f in bng_link_form %}
                                     {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' and f.name != "bng_link_form-valid_until" %}
                                     <div>
@@ -329,8 +328,9 @@
                                     <br>
                                     </div>
                                     {% endif %}
-                              {% endfor %}
+                                  {% endfor %}
                             {% endif %}
+                            {{ bng_link_form.csrf_token }}
                             </div>
                           </div>
                           <div class="modal-footer">
@@ -340,7 +340,7 @@
                             {% if not bng_is_linked %}
                               {{ bng_link_form.submit }}
                             {% else %}
-                              {{ bng_link_form.remove}}
+                              {{ bng_link_form.remove }}
                             {% endif %}
                           </div>
                         </form>

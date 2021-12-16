@@ -542,8 +542,21 @@ def generate_new_payment_form(project, subproject):
 
 
 def process_bng_link_form(form):
-    if not util.validate_on_submit(form, request) or not current_user.admin:
+    if not current_user.admin:
         return None
+
+    if form.remove.data:
+        # This will remove ALL BNG accounts, which should always be one for
+        # a user for now. Later on we might want to enable multiple BNG accounts
+        # per user. We will have to change this then.
+        BNGAccount.query.filter_by(user_id=current_user.id).delete()
+        db.session.commit()
+        # TODO: Revoke consent with BNG's API.
+        formatted_flash("BNG-koppeling is verwijderd.", color="green")
+        return redirect(url_for("index"))
+
+    if not util.validate_on_submit(form, request):
+        return
 
     if form.iban.data in [x.iban for x in BNGAccount.query.all()]:
         formatted_flash(f"Het aanmaken van de BNG-koppeling is mislukt. Er bestaat al een koppeling met deze IBAN: {form.iban.data}.", color="red")
