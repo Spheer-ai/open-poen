@@ -111,6 +111,15 @@ user_story_image = db.Table(
 )
 
 
+class BNGAccount(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    consent_id = db.Column(db.String(36))
+    access_token = db.Column(db.String(496))
+    expires_on = db.Column(db.DateTime(timezone=True))
+    iban = db.Column(db.String(34), unique=True)
+
+
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), index=True, unique=True)
@@ -401,7 +410,6 @@ class IBAN(db.Model):
         db.Integer, db.ForeignKey('project.id', ondelete='CASCADE')
     )
     iban = db.Column(db.String(34), index=True)
-    iban_name = db.Column(db.String(120), index=True)
 
 
 class UserStory(db.Model):

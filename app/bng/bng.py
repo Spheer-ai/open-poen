@@ -171,7 +171,7 @@ def retrieve_access_token(access_code):
     )
 
     r = requests.post(url, data=body, headers=headers, cert=REQUEST_CERTS)
-    return r.json()["access_token"]
+    return r.json()
 
 
 def retrieve_consent_details(consent_id, access_token):

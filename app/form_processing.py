@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import flash, redirect, url_for, request
 from sqlalchemy.exc import IntegrityError
 from werkzeug.utils import secure_filename
@@ -8,8 +8,8 @@ from wtforms.validators import ValidationError
 
 from app import app, db
 from app.forms import CategoryForm, NewPaymentForm, PaymentForm, EditAttachmentForm
-from app.models import Category, Payment, File, User, Subproject
-from app.util import flash_form_errors, form_in_request, formatted_flash
+from app.models import Category, Payment, File, User, Subproject, BNGAccount
+from app.util import flash_form_errors, form_in_request, format_currency, formatted_flash
 from app import util
 from app import bng as bng
 
@@ -544,13 +544,19 @@ def generate_new_payment_form(project, subproject):
 def process_bng_link_form(form):
     if not util.validate_on_submit(form, request) or not current_user.admin:
         return None
-    
-    consent_id, oauth_url = bng.create_consent(
-        iban=form.iban.data,
-        valid_until=form.valid_until.data
-    )
 
-    # TODO: What if the API returns an error code?
+    if form.iban.data in [x.iban for x in BNGAccount.query.all()]:
+        formatted_flash(f"Het aanmaken van de BNG-koppeling is mislukt. Er bestaat al een koppeling met deze IBAN: {form.iban.data}.", color="red")
+        return
+    
+    try:
+        consent_id, oauth_url = bng.create_consent(
+            iban=form.iban.data,
+            valid_until=form.valid_until.data
+        )
+    except Exception as e:
+        formatted_flash(f"De aanvraag bij BNG bank is mislukt. De foutcode is: {e}", color="red")
+        return
 
     bng_token = jwt.encode({
             'user_id': current_user.id,
@@ -567,26 +573,39 @@ def process_bng_link_form(form):
 
 
 def process_bng_callback(request):
-    if not current_user.admin:
-        # TODO Error handling.
-        return None
+    if not current_user.admin or not current_user.is_authenticated:
+        formatted_flash("Je hebt niet voldoende rechten om een koppeling met BNG bank aan te maken.", color="red")
+        return
     
     try:
         access_code = request.args.get("code")
+        if not access_code: raise ValidationError("Toegangscode ontbreekt in callback.")
         token_info = jwt.decode(
             request.args.get("state"),
             app.config["SECRET_KEY"],
             algorithms="HS256"
         )
     except Exception as e:
-        # TODO Error handling.
-        # Token is still decoded when user went back / cancelled.
-        pass 
+        formatted_flash(f"Er ging iets terwijl je toegang verleende aan BNG bank. De foutcode is: {e}", color="red")
+        return
     
     try:
-        access_token = bng.retrieve_access_token(access_code)
+        response = bng.retrieve_access_token(access_code)
+        access_token, expires_in = response["access_token"], response["expires_in"]
     except Exception as e:
-        # TODO Error handling. (User went back / cancelled.)
-        pass
+        formatted_flash("Het ophalen van de toegangscode voor de koppeling met BNG bank is mislukt.", color="red")
+        return
 
-    # TODO: Now save consent_id and access_token to the database. (And expires in!)
+    try:
+        new_bng_account = BNGAccount(
+            user_id=token_info["user_id"],
+            consent_id = token_info["consent_id"],
+            access_token = access_token,
+            expires_on = datetime.now() + timedelta(seconds=int(expires_in)),
+            iban = token_info["iban"]
+        )
+        db.session.add(new_bng_account)
+        db.session.commit()
+        formatted_flash("BNG-koppeling succesvol aangemaakt.", color="green")
+    except Exception as e:
+        formatted_flash(f"Aanmaken BNG-koppeling mislukt. De foutcode is: {e}", color="red")
