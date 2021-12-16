@@ -69,16 +69,20 @@ def index():
     modal_id = None
     bng_is_linked = False
 
-    linked_bng_accounts = BNGAccount.query.filter_by(user_id=current_user.id).all()
-    if len(linked_bng_accounts) > 1:
-        # TODO: The decision was made to link only one account to one user for now.
-        # We can implement logic to handle multiple accounts later on.
-        raise ValidationError("Multiple BNG accounts linked to a single user.")
-    elif len(linked_bng_accounts) > 0:
-        bng_is_linked = True
+    if current_user.is_authenticated:
+        if current_user.admin:
+            linked_bng_accounts = BNGAccount.query.filter_by(user_id=current_user.id).all()
+            if len(linked_bng_accounts) > 1:
+                # TODO: The decision was made to link only one account to one user for now.
+                # We can implement logic to handle multiple accounts later on.
+                raise ValidationError("Multiple BNG accounts linked to a single user.")
+            elif len(linked_bng_accounts) > 0:
+                bng_is_linked = True
 
     if request.args.get("state"):
-        process_bng_callback(request)
+        redirect = process_bng_callback(request)
+        if redirect:
+            return redirect
 
     # Process filled in edit admin form
     edit_admin_form = EditAdminForm(prefix="edit_admin_form")

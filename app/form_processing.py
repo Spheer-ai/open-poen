@@ -542,7 +542,7 @@ def generate_new_payment_form(project, subproject):
 
 
 def process_bng_link_form(form):
-    if not current_user.admin:
+    if not current_user.is_authenticated or not current_user.admin:
         return None
 
     if form.remove.data:
@@ -599,7 +599,7 @@ def process_bng_callback(request):
             algorithms="HS256"
         )
     except Exception as e:
-        formatted_flash(f"Er ging iets terwijl je toegang verleende aan BNG bank. De foutcode is: {e}", color="red")
+        formatted_flash(f"Er ging iets mis terwijl je toegang verleende aan BNG bank. De foutcode is: {e}", color="red")
         return
     
     try:
@@ -620,5 +620,6 @@ def process_bng_callback(request):
         db.session.add(new_bng_account)
         db.session.commit()
         formatted_flash("BNG-koppeling succesvol aangemaakt.", color="green")
+        return redirect(url_for("index"))
     except Exception as e:
         formatted_flash(f"Aanmaken BNG-koppeling mislukt. De foutcode is: {e}", color="red")
