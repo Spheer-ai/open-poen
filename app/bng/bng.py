@@ -183,7 +183,25 @@ def retrieve_consent_details(consent_id, access_token):
     )
 
     r = requests.get(url, data="", headers=headers, cert=REQUEST_CERTS)
-    return r.json()
+    if r.status_code != 200:
+        raise requests.ConnectionError("Expected status code 200, but received {}.".format(r.status_code))
+    else:
+        return r.json()
+
+
+def delete_consent(consent_id, access_token):
+    url = f"{URL_PREFIX}consents/{consent_id}"
+    request_id = str(uuid.uuid4())
+
+    headers = make_headers("get", url, request_id, "",
+        extra_headers={"Authorization": f"Bearer {access_token}"},
+    )
+
+    r = requests.delete(url, data="", headers=headers, cert=REQUEST_CERTS)
+    if r.status_code != 204:
+        raise requests.ConnectionError("Expected status code 204, but received {}.".format(r.status_code))
+    else:
+        return r.json()
 
 
 def read_available_accounts(consent_id, access_token):

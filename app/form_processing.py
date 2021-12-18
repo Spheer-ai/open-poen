@@ -16,6 +16,7 @@ from app import bng as bng
 import jwt
 from flask_login import current_user
 from time import time
+from requests import ConnectionError
 
 def return_redirect(project_id, subproject_id):
     # Redirect back to clear form data
@@ -546,10 +547,21 @@ def process_bng_link_form(form):
         return None
 
     if form.remove.data:
-        # This will remove ALL BNG accounts, which should always be one for
-        # a user for now. Later on we might want to enable multiple BNG accounts
-        # per user. We will have to change this then.
-        BNGAccount.query.filter_by(user_id=current_user.id).delete()
+        # This should always result in one account for now. Eventually we might
+        # want to support multiple BNG accounts per user, but we'll have to implement
+        # this later.
+        bng_account = BNGAccount.query.filter_by(user_id=current_user.id).all()
+        if len(bng_account) > 1:
+            raise NotImplementedError("A user should not be able to have more than one BNG account.")
+        if len(bng_account) == 0:
+            raise ValidationError("A user shouldn't be able to click remove if there is no BNG account linked.")
+        bng_account = bng_account[0]
+
+        # TODO: This returns a 401 now for the Sandbox, but I don't see how there is
+        # anything wrong with my request.
+        # bng.delete_consent(bng_account.consent_id, bng_account.access_token)
+
+        db.session.delete(bng_account)
         db.session.commit()
         # TODO: Revoke consent with BNG's API.
         formatted_flash("BNG-koppeling is verwijderd.", color="green")
@@ -623,3 +635,65 @@ def process_bng_callback(request):
         return redirect(url_for("index"))
     except Exception as e:
         formatted_flash(f"Aanmaken BNG-koppeling mislukt. De foutcode is: {e}", color="red")
+    
+
+def get_days_until(date):
+    # TODO: Handle timezones gracefully.
+    time_left = date.replace(tzinfo=None) - datetime.now()
+    days_left = time_left.days
+    if days_left < 0:
+        days_left = 0
+    if days_left < 4:
+        color = "red"
+    elif days_left < 11:
+        color = "orange"
+    else:
+        color = "green"
+    return days_left, color
+
+
+def get_bng_info(bng_account):
+    try:
+        bng_info = bng.retrieve_consent_details(
+            bng_account.consent_id,
+            bng_account.access_token
+        )
+    except ConnectionError as e:
+        formatted_flash("Er is een BNG-koppeling, maar het ophalen van de status is mislukt", color="red")
+        days_left, days_left_color = get_days_until(bng_account.expires_on)
+        date_last_sync = "12-12-2021"  #TODO Add time of last payment import.
+
+        return {
+            "status": {
+                "color": "red",
+                "message": "Koppeling is offline."
+            },
+            "days_left": {
+                "color": days_left_color,
+                "message": f"Nog {days_left} dagen geldig."
+            },
+            "sync" : {
+                "color": "green",
+                "message": f"Laatst gesynchroniseerd op {date_last_sync}."
+            }
+        }
+    
+    days_left, days_left_color = get_days_until(
+        datetime.strptime(bng_info["validUntil"], "%Y-%m-%d")
+    )
+    date_last_sync = "12-12-2021"
+
+    return {
+        "status": {
+            "color": "green",
+            "message": "Koppeling is online."
+        },
+        "days_left": {
+            "color": days_left_color,
+            "message": f"Nog {days_left} dagen geldig."
+        },
+        "sync" : {
+            "color": "green",
+            "message": f"Laatst gesynchroniseerd op {date_last_sync}."
+        }
+    }

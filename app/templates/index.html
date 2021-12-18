@@ -271,7 +271,7 @@
                   </div>
                 </div>
 
-                {% if bng_is_linked %}
+                {% if bng_info %}
                   {% set bng_action = "Beheren" %} 
                 {% else %}
                   {% set bng_action = "Aanmaken" %}
@@ -295,22 +295,22 @@
                           </div>
                           <div class="modal-body">
                             <div>
-                            {% if bng_is_linked %}
+                            {% if bng_info %}
                               <div class="bng-info-unit">
-                                <i class="fas fa-link fa-3x fa-fw"></i>
-                                <p>Er is een koppeling actief.</p>
+                                <i class="fas fa-link fa-2x fa-fw" style="color: green"></i>
+                                <p>Koppeling is aangemaakt.</p>
                               </div>
                               <div class="bng-info-unit">
-                              <i class="fas fa-wifi fa-3x fa-fw"></i>
-                              <p>Koppeling online.</p>
+                              <i class="fas fa-wifi fa-2x fa-fw" style="color: {{ bng_info['status']['color'] }}"></i>
+                              <p>{{ bng_info["status"]["message"] }}</p>
                               </div>
                               <div class="bng-info-unit">
-                              <i class="fas fa-check-circle fa-3x fa-fw"></i>
-                              <p>Nog 55 dagen geldig.</p>
+                              <i class="fas fa-check-circle fa-2x fa-fw" style="color: {{ bng_info['days_left']['color'] }}"></i>
+                              <p>{{ bng_info["days_left"]["message"] }}</p>
                               </div>
                               <div class="bng-info-unit">
-                              <i class="fas fa-sync-alt fa-3x fa-fw"></i>
-                              <p>Laatst gesynchroniseerd op: 3-12-2021</p>
+                              <i class="fas fa-sync-alt fa-2x fa-fw" style="color: {{ bng_info['sync']['color'] }}"></i>
+                              <p>{{ bng_info["sync"]["message"] }}</p>
                               </div>
                             {% else %}
                                 {% for f in bng_link_form %}
@@ -337,7 +337,7 @@
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">
                               {{ "Terug" if bng_is_linked else "Annuleren" }}
                             </button>
-                            {% if not bng_is_linked %}
+                            {% if not bng_info %}
                               {{ bng_link_form.submit }}
                             {% else %}
                               {{ bng_link_form.remove }}

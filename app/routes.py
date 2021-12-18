@@ -21,7 +21,7 @@ from app.form_processing import (
     generate_new_payment_form, process_category_form, process_new_payment_form, process_payment_form, create_payment_forms,
     process_transaction_attachment_form, create_edit_attachment_forms,
     process_edit_attachment_form, save_attachment, process_subproject_form,
-    process_bng_link_form, process_bng_callback
+    process_bng_link_form, process_bng_callback, get_bng_info
 )
 from sqlalchemy.exc import IntegrityError
 
@@ -67,17 +67,17 @@ def before_request():
 @app.route("/", methods=['GET', 'POST'])
 def index():
     modal_id = None
-    bng_is_linked = False
+    bng_info = {}
 
     if current_user.is_authenticated:
         if current_user.admin:
-            linked_bng_accounts = BNGAccount.query.filter_by(user_id=current_user.id).all()
+            linked_bng_accounts = BNGAccount.query.all()
             if len(linked_bng_accounts) > 1:
-                # TODO: The decision was made to link only one account to one user for now.
+                # TODO: The decision was made to link only one account for now.
                 # We can implement logic to handle multiple accounts later on.
-                raise ValidationError("Multiple BNG accounts linked to a single user.")
+                raise NotImplementedError("Multiple BNG accounts linked to Open Poen.")
             elif len(linked_bng_accounts) > 0:
-                bng_is_linked = True
+                bng_info = get_bng_info(linked_bng_accounts[0])
 
     if request.args.get("state"):
         redirect = process_bng_callback(request)
@@ -255,7 +255,7 @@ def index():
         user_stories=UserStory.query.all(),
         modal_id=json.dumps(modal_id),  # Does nothing if None. Loads the modal
         # on page load if supplied.
-        bng_is_linked=bng_is_linked,
+        bng_info=bng_info,
         bng_link_form=bng_link_form
     )
 
