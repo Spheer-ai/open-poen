@@ -17,6 +17,7 @@ import jwt
 from flask_login import current_user
 from time import time
 from requests import ConnectionError
+from functools import partial
 
 def return_redirect(project_id, subproject_id):
     # Redirect back to clear form data
@@ -631,7 +632,8 @@ def process_bng_callback(request):
         )
         db.session.add(new_bng_account)
         db.session.commit()
-        formatted_flash("BNG-koppeling succesvol aangemaakt.", color="green")
+        get_bng_payments()
+        formatted_flash("BNG-koppeling succesvol aangemaakt. Betalingen worden nu op de achtergrond opgehaald.", color="green")
         return redirect(url_for("index"))
     except Exception as e:
         formatted_flash(f"Aanmaken BNG-koppeling mislukt. De foutcode is: {e}", color="red")
@@ -681,7 +683,7 @@ def get_bng_info(bng_account):
     days_left, days_left_color = get_days_until(
         datetime.strptime(bng_info["validUntil"], "%Y-%m-%d")
     )
-    date_last_sync = "12-12-2021"
+    date_last_sync = "12-12-2021"  #TODO Add time of last payment import.
 
     return {
         "status": {
@@ -697,3 +699,56 @@ def get_bng_info(bng_account):
             "message": f"Laatst gesynchroniseerd op {date_last_sync}."
         }
     }
+
+
+def get_bng_payments():
+    # TODO: Error handling.
+    bng_account = BNGAccount.query.all()
+    if len(bng_account) > 1:
+        raise NotImplementedError("At this moment, we only support a coupling with a single BNG account.")
+    if len(bng_account) == 0:
+        # TODO: Write a message to the log if no payments can be retrieved?
+        return
+    bng_account = bng_account[0]
+
+    account_info = bng.read_account_information(
+        bng_account.consent_id,
+        bng_account.access_token
+    )
+    if len(account_info["accounts"]) > 1:
+        raise NotImplementedError("At this moment, we only support consents for a single account.")
+    elif len(account_info["accounts"]) == 0:
+        raise ValidationError("It should not be possible to have consent, but to not have an account associated with it.")
+
+    date_from = datetime.today() - timedelta(days=300)
+
+    # TODO: Make this part asynchronous?
+    # TODO: Do something with dateTo as well.
+    # TODO: What to do with booking status? Are we interested in pending?
+    # TODO: What about balance?
+
+
+    def get_payment_batch(page):
+        transaction_list = bng.read_transaction_list(
+            bng_account.consent_id,
+            bng_account.access_token,
+            account_info["accounts"][0]["resourceId"],
+            date_from.strftime("%Y-%m-%d"),
+            page=page
+        )
+        payments = transaction_list["transactions"]["booked"]
+        links = transaction_list["transactions"]["_links"]
+        if links.get("Next") is not None and links.get("Last") is not None:
+            return payments, page + 1
+        else:
+            return payments, None
+
+
+    current_page = 1
+    payments = []
+    while current_page is not None:
+        payment_batch, next_page = get_payment_batch(current_page)
+        payments.extend(payment_batch)
+        current_page = next_page
+
+    return payments

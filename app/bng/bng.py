@@ -234,13 +234,13 @@ def read_available_accounts(consent_id, access_token):
     return r.json()
 
 
-def read_transaction_list(consent_id, access_token, account_id, date_from):
-    booking_status = "both"  # booked, pending or both
-    with_balance = "true"
+def read_transaction_list(consent_id, access_token, account_id, date_from, page):
+    booking_status = "booked"  # booked, pending or both
+    with_balance = "false"
 
     url = (f"{API_URL_PREFIX}accounts/{account_id}/"
            f"transactions?bookingStatus={booking_status}&dateFrom={date_from}&"
-           f"withBalance={with_balance}")
+           f"withBalance={with_balance}&page={page}")
     request_id = str(uuid.uuid4())
 
     headers = make_headers("get", url, request_id, "",
