@@ -335,7 +335,7 @@
                           </div>
                           <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                              {{ "Terug" if bng_is_linked else "Annuleren" }}
+                              {{ "Terug" if bng_info else "Annuleren" }}
                             </button>
                             {% if not bng_info %}
                               {{ bng_link_form.submit }}

@@ -61,3 +61,19 @@ class Config(object):
     MAIL_PASSWORD = ''
     FROM = ''
     ADMINS = ['']
+
+    # BNG
+    USE_SANDBOX = True
+    CLIENT_ID = ""
+    REDIRECT_URL = "http://openpoen.nl"
+    SANDBOX_CERTS = {
+        "TLS": ("auth/xs2a_sandbox_bngbank_client_tls.cer", "auth/xs2a_sandbox_bngbank_client_tls.key"),
+        "SIGNING": ("auth/xs2a_sandbox_bngbank_client_signing.cer", "auth/xs2a_sandbox_bngbank_client_signing.key")
+    }
+    PRODUCTION_CERTS = (
+        "auth/public_key.cert", "auth/private_key.key"
+    )
+    PRODUCTION_KEYID_FDN = ('')
+    SANDBOX_KEYID_FDN = ('keyId="SN=00E8B54055D929413F,CA=CN=xs2a_sandbox_bngbank_client_signing, '
+                         'E=klantenservice@bngbank.nl, O=BNG Bank, OU=API XS2A Sandbox, C=NL, '
+                         'S=South-Holland, L=The Hague, OID.2.5.4.97=PSDNL-AUT-SANDBOX"')

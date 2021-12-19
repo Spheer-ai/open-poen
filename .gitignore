@@ -26,3 +26,5 @@ get_backups.sh
 
 *.key
 *.cer
+*.crt
+auth/

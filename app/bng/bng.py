@@ -13,15 +13,32 @@ from urllib.parse import urlparse
 from urllib.parse import urlencode
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
+import sys
+from os.path import dirname, abspath
 
-# REDIRECT_URL = "https://nu.nl"
-REDIRECT_URL = "http://www.openpoen.nl"
+sys.path.insert(0, dirname(dirname(dirname(abspath(__file__)))))
+from app import app
+
+# TODO: Set dynamically.
 PSU_IP_ADDRESS = "212.178.101.162"
-REQUEST_CERTS = (
-    "app/bng/xs2a_sandbox_bngbank_client_tls.cer",
-    "app/bng/xs2a_sandbox_bngbank_client_tls.key",
-)
-URL_PREFIX = "https://api.xs2a-sandbox.bngbank.nl/api/v1/"
+
+REDIRECT_URL = app.config["REDIRECT_URL"]
+API_URL_PREFIX = "https://api.xs2a{}.bngbank.nl/api/v1/"
+OAUTH_URL_PREFIX = "https://api.xs2a{}.bngbank.nl/authorise?response_type=code&"
+
+if app.config["USE_SANDBOX"]:
+    API_URL_PREFIX = API_URL_PREFIX.format("-sandbox")
+    OAUTH_URL_PREFIX = OAUTH_URL_PREFIX.format("-sandbox")
+    CLIENT_ID = "PSDNL-AUT-SANDBOX"
+    TLS_CERTS = app.config["SANDBOX_CERTS"]["TLS"]
+    SIGNING_CERTS = app.config["SANDBOX_CERTS"]["SIGNING"]
+    KEYID_FDN = app.config["SANDBOX_KEYID_FDN"]
+else:
+    API_URL_PREFIX = API_URL_PREFIX.format("")
+    OAUTH_URL_PREFIX = OAUTH_URL_PREFIX.format("")
+    CLIENT_ID = app.config["CLIENT_ID"]
+    TLS_CERTS = SIGNING_CERTS = app.config["PRODUCTION_CERTS"]
+    KEYID_FDN = app.config["PRODUCTION_KEYID_FDN"]
 
 
 def get_cert_data(cert):
@@ -70,7 +87,7 @@ def get_signature(method, headers):
     digest = SHA256.new()
     digest.update(bytes(signing_string, encoding="utf-8"))
 
-    with open("app/bng/xs2a_sandbox_bngbank_client_signing.key", "r") as file:
+    with open(SIGNING_CERTS[1], "r") as file:
         private_key = RSA.importKey(file.read())
 
     signer = PKCS1_v1_5.new(private_key)
@@ -78,9 +95,7 @@ def get_signature(method, headers):
 
     return ",".join(
         [
-            ('keyId="SN=00E8B54055D929413F,CA=CN=xs2a_sandbox_bngbank_client_signing, '
-            'E=klantenservice@bngbank.nl, O=BNG Bank, OU=API XS2A Sandbox, C=NL, '
-            'S=South-Holland, L=The Hague, OID.2.5.4.97=PSDNL-AUT-SANDBOX"'),
+            KEYID_FDN,
             'algorithm="sha256RSA"',
             'headers="' + signature_headers + '"',
             'signature="' + signature.decode("utf-8") + '"',
@@ -89,7 +104,7 @@ def get_signature(method, headers):
 
 
 def get_certificate():
-    with open("app/bng/xs2a_sandbox_bngbank_client_signing.cer", "r") as file:
+    with open(SIGNING_CERTS[0], "r") as file:
         data = file.read().replace("\n", "")
     return data
 
@@ -131,17 +146,17 @@ def create_consent(iban, valid_until):
     }
     body = json.dumps(body)
 
-    url = f"{URL_PREFIX}consents"
+    url = f"{API_URL_PREFIX}consents"
     request_id = str(uuid.uuid4())
 
     headers = make_headers("post", url, request_id, body)
 
-    r = requests.post(url, data=body, headers=headers, cert=REQUEST_CERTS).json()
+    r = requests.post(url, data=body, headers=headers, cert=TLS_CERTS).json()
 
     oauth_url = "".join(
         [
-            "https://api.xs2a-sandbox.bngbank.nl/authorise?response_type=code&",
-            "client_id=PSDNL-AUT-SANDBOX&",
+            OAUTH_URL_PREFIX,
+            "client_id=" + CLIENT_ID + "&",
             "state={}&",
             "scope=" + "AIS:" + r["consentId"] + "&",
             "code_challenge=12345&",
@@ -154,7 +169,7 @@ def create_consent(iban, valid_until):
 
 def retrieve_access_token(access_code):
     body = {
-        "client_id": "PSDNL-AUT-SANDBOX",
+        "client_id": CLIENT_ID,
         "grant_type": "authorization_code",
         "code": access_code,
         "code_verifier": "12345",  # TODO
@@ -170,19 +185,19 @@ def retrieve_access_token(access_code):
         content_type="application/x-www-form-urlencoded;charset=UTF-8",
     )
 
-    r = requests.post(url, data=body, headers=headers, cert=REQUEST_CERTS)
+    r = requests.post(url, data=body, headers=headers, cert=TLS_CERTS)
     return r.json()
 
 
 def retrieve_consent_details(consent_id, access_token):
-    url = f"{URL_PREFIX}consents/{consent_id}"
+    url = f"{API_URL_PREFIX}consents/{consent_id}"
     request_id = str(uuid.uuid4())
 
     headers = make_headers("get", url, request_id, "",
         extra_headers={"Authorization": f"Bearer {access_token}"},
     )
 
-    r = requests.get(url, data="", headers=headers, cert=REQUEST_CERTS)
+    r = requests.get(url, data="", headers=headers, cert=TLS_CERTS)
     if r.status_code != 200:
         raise requests.ConnectionError("Expected status code 200, but received {}.".format(r.status_code))
     else:
@@ -190,14 +205,14 @@ def retrieve_consent_details(consent_id, access_token):
 
 
 def delete_consent(consent_id, access_token):
-    url = f"{URL_PREFIX}consents/{consent_id}"
+    url = f"{API_URL_PREFIX}consents/{consent_id}"
     request_id = str(uuid.uuid4())
 
     headers = make_headers("get", url, request_id, "",
         extra_headers={"Authorization": f"Bearer {access_token}"},
     )
 
-    r = requests.delete(url, data="", headers=headers, cert=REQUEST_CERTS)
+    r = requests.delete(url, data="", headers=headers, cert=TLS_CERTS)
     if r.status_code != 204:
         raise requests.ConnectionError("Expected status code 204, but received {}.".format(r.status_code))
     else:
@@ -205,7 +220,7 @@ def delete_consent(consent_id, access_token):
 
 
 def read_available_accounts(consent_id, access_token):
-    url = f"{URL_PREFIX}accounts?withBalance=true"
+    url = f"{API_URL_PREFIX}accounts?withBalance=true"
     request_id = str(uuid.uuid4())
 
     headers = make_headers("get", url, request_id, "",
@@ -215,7 +230,7 @@ def read_available_accounts(consent_id, access_token):
         },
     )
 
-    r = requests.get(url, data="", headers=headers, cert=REQUEST_CERTS)
+    r = requests.get(url, data="", headers=headers, cert=TLS_CERTS)
     return r.json()
 
 
@@ -223,7 +238,7 @@ def read_transaction_list(consent_id, access_token, account_id, date_from):
     booking_status = "both"  # booked, pending or both
     with_balance = "true"
 
-    url = (f"{URL_PREFIX}accounts/{account_id}/"
+    url = (f"{API_URL_PREFIX}accounts/{account_id}/"
            f"transactions?bookingStatus={booking_status}&dateFrom={date_from}&"
            f"withBalance={with_balance}")
     request_id = str(uuid.uuid4())
@@ -235,12 +250,12 @@ def read_transaction_list(consent_id, access_token, account_id, date_from):
         },
     )
 
-    r = requests.get(url, data="", headers=headers, cert=REQUEST_CERTS)
+    r = requests.get(url, data="", headers=headers, cert=TLS_CERTS)
     return r.json()
 
 
 def read_account_information(consent_id, access_token):
-    url = f"{URL_PREFIX}accounts"
+    url = f"{API_URL_PREFIX}accounts"
     request_id = str(uuid.uuid4())
 
     headers = make_headers("get", url, request_id, "",
@@ -250,12 +265,12 @@ def read_account_information(consent_id, access_token):
         },
     )
 
-    r = requests.get(url, data="", headers=headers, cert=REQUEST_CERTS)
+    r = requests.get(url, data="", headers=headers, cert=TLS_CERTS)
     return r.json()
 
 
 def read_transaction_details(consent_id, access_token, account_id, transaction_id):
-    url = f"{URL_PREFIX}accounts/{account_id}/transactions/{transaction_id}"
+    url = f"{API_URL_PREFIX}accounts/{account_id}/transactions/{transaction_id}"
     request_id = str(uuid.uuid4())
 
     headers = make_headers("get", url, request_id, "",
@@ -265,17 +280,18 @@ def read_transaction_details(consent_id, access_token, account_id, transaction_i
         },
     )
 
-    r = requests.get(url, data="", headers=headers, cert=REQUEST_CERTS)
+    r = requests.get(url, data="", headers=headers, cert=TLS_CERTS)
     return r.json()
 
 
 if __name__ == "__main__":
-    sandbox_signing = get_cert_data("xs2a_sandbox_bngbank_client_signing.cer")
-    own_signing = get_cert_data("test_public.cer")
+    # sandbox_signing = get_cert_data("xs2a_sandbox_bngbank_client_signing.cer")
+    # own_signing = get_cert_data("test_public.cer")
+    # get_cert_data(TLS_CERTS[0])
 
     consent_id = create_consent(
         iban="NL34BNGT5532530633",
-        valid_until="2021-12-31"
+        valid_until=datetime(2022, 1, 1)
     )
     access_token = retrieve_access_token()
     consent_details = retrieve_consent_details(consent_id, access_token)
