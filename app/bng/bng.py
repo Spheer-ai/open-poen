@@ -13,10 +13,6 @@ from urllib.parse import urlparse
 from urllib.parse import urlencode
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
-import sys
-from os.path import dirname, abspath
-
-sys.path.insert(0, dirname(dirname(dirname(abspath(__file__)))))
 from app import app
 
 # TODO: Set dynamically.
@@ -236,7 +232,7 @@ def read_available_accounts(consent_id, access_token):
 
 def read_transaction_list(consent_id, access_token, account_id, date_from, page):
     booking_status = "booked"  # booked, pending or both
-    with_balance = "false"
+    with_balance = "true"
 
     url = (f"{API_URL_PREFIX}accounts/{account_id}/"
            f"transactions?bookingStatus={booking_status}&dateFrom={date_from}&"
@@ -251,7 +247,10 @@ def read_transaction_list(consent_id, access_token, account_id, date_from, page)
     )
 
     r = requests.get(url, data="", headers=headers, cert=TLS_CERTS)
-    return r.json()
+    if r.status_code != 200:
+        raise requests.ConnectionError("Expected status code 200, but received {}.".format(r.status_code))
+    else:
+        return r.json()
 
 
 def read_account_information(consent_id, access_token):
@@ -266,7 +265,10 @@ def read_account_information(consent_id, access_token):
     )
 
     r = requests.get(url, data="", headers=headers, cert=TLS_CERTS)
-    return r.json()
+    if r.status_code != 200:
+        raise requests.ConnectionError("Expected status code 200, but received {}.".format(r.status_code))
+    else:
+        return r.json()
 
 
 def read_transaction_details(consent_id, access_token, account_id, transaction_id):

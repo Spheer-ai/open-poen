@@ -17,7 +17,9 @@ import jwt
 from flask_login import current_user
 from time import time
 from requests import ConnectionError
-from functools import partial
+import collections
+import re
+
 
 def return_redirect(project_id, subproject_id):
     # Redirect back to clear form data
@@ -632,7 +634,8 @@ def process_bng_callback(request):
         )
         db.session.add(new_bng_account)
         db.session.commit()
-        get_bng_payments()
+        payments = get_bng_payments()
+        process_bng_payments(payments)
         formatted_flash("BNG-koppeling succesvol aangemaakt. Betalingen worden nu op de achtergrond opgehaald.", color="green")
         return redirect(url_for("index"))
     except Exception as e:
@@ -707,7 +710,6 @@ def get_bng_payments():
     if len(bng_account) > 1:
         raise NotImplementedError("At this moment, we only support a coupling with a single BNG account.")
     if len(bng_account) == 0:
-        # TODO: Write a message to the log if no payments can be retrieved?
         return
     bng_account = bng_account[0]
 
@@ -752,3 +754,50 @@ def get_bng_payments():
         current_page = next_page
 
     return payments
+
+
+def flatten(d, parent_key='', sep='_'):
+    items = []
+    for k, v in d.items():
+        new_key = parent_key + sep + k if parent_key else k
+        if isinstance(v, collections.MutableMapping):
+            items.extend(flatten(v, new_key, sep=sep).items())
+        else:
+            items.append((new_key, v))
+    return dict(items)
+
+
+def process_bng_payments(payments):
+    pattern = re.compile(r'(?<!^)(?=[A-Z])')
+    new_payments = []
+
+    for payment in payments:
+        # Contains a link to the transaction details. Not necessary to save.
+        del payment["_links"]
+        # Flatten the nested dictionary. Otherwise we won't be able to save it in the database.
+        payment = flatten(payment)
+        # Convert from camel case to snake case to match the column names in the database.
+        payment = {pattern.sub("_", k).lower(): v for (k, v) in payment.items()}
+        # Edit these keys to make them fit the database schema.
+        payment["transaction_amount"] = payment["transaction_amount_amount"]
+        del payment["transaction_amount_amount"]
+        payment["transaction_currency"] = payment["transaction_amount_currency"]
+        del payment["transaction_amount_currency"]
+        # These two fields need to be cast. The other fields are strings and should remain so.
+        payment["booking_date"] = datetime.strptime(
+            payment["booking_date"], "%Y-%m-%d"
+        )
+        payment["transaction_amount"] = float(payment["transaction_amount"])
+        if payment["transaction_amount"] > 0:
+            route = "inkomsten"
+        else:
+            route = "uitgaven"
+        new_payments.append(Payment(
+            **payment,
+            route=route,
+            created=datetime.now()
+        ))
+    
+    # TODO: Apparently getting payments with pagination retrieves double records...
+    db.session.bulk_save_objects(new_payments)
+    db.session.commit()
