@@ -147,7 +147,11 @@ def create_consent(iban, valid_until):
 
     headers = make_headers("post", url, request_id, body)
 
-    r = requests.post(url, data=body, headers=headers, cert=TLS_CERTS).json()
+    r = requests.post(url, data=body, headers=headers, cert=TLS_CERTS)
+    if r.status_code != 201:
+        raise requests.ConnectionError("Expected status code 201, but received {}.".format(r.status_code))
+    else:
+        r = r.json()
 
     oauth_url = "".join(
         [
@@ -182,7 +186,10 @@ def retrieve_access_token(access_code):
     )
 
     r = requests.post(url, data=body, headers=headers, cert=TLS_CERTS)
-    return r.json()
+    if r.status_code != 200:
+        raise requests.ConnectionError("Expected status code 200, but received {}.".format(r.status_code))
+    else:
+        return r.json()
 
 
 def retrieve_consent_details(consent_id, access_token):
@@ -230,13 +237,13 @@ def read_available_accounts(consent_id, access_token):
     return r.json()
 
 
-def read_transaction_list(consent_id, access_token, account_id, date_from, page):
+def read_transaction_list(consent_id, access_token, account_id, date_from):
     booking_status = "booked"  # booked, pending or both
     with_balance = "true"
 
     url = (f"{API_URL_PREFIX}accounts/{account_id}/"
            f"transactions?bookingStatus={booking_status}&dateFrom={date_from}&"
-           f"withBalance={with_balance}&page={page}")
+           f"withBalance={with_balance}&download=true")
     request_id = str(uuid.uuid4())
 
     headers = make_headers("get", url, request_id, "",
@@ -250,7 +257,7 @@ def read_transaction_list(consent_id, access_token, account_id, date_from, page)
     if r.status_code != 200:
         raise requests.ConnectionError("Expected status code 200, but received {}.".format(r.status_code))
     else:
-        return r.json()
+        return r.content
 
 
 def read_account_information(consent_id, access_token):

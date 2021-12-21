@@ -76,7 +76,8 @@ def downgrade():
     op.add_column('payment', sa.Column('counterparty_alias_type', sa.VARCHAR(length=12), autoincrement=False, nullable=True))
     op.add_column('payment', sa.Column('sub_type', sa.VARCHAR(length=12), autoincrement=False, nullable=True))
     op.create_foreign_key('payment_user_id_fkey', 'payment', 'user', ['user_id'], ['id'])
-    op.drop_constraint(None, 'payment', type_='unique')
+    # Commented this out because it otherwise results in an error. Also, this column is removed anyways.
+    # op.drop_constraint(None, 'payment', type_='unique')
     op.create_unique_constraint('payment_bank_payment_id_key', 'payment', ['bank_payment_id'])
     op.create_index('ix_payment_monetary_account_id', 'payment', ['monetary_account_id'], unique=False)
     op.create_index('ix_payment_counterparty_alias_value', 'payment', ['counterparty_alias_value'], unique=False)

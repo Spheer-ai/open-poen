@@ -19,6 +19,10 @@ from time import time
 from requests import ConnectionError
 import collections
 import re
+from tempfile import TemporaryDirectory
+import zipfile
+import json
+from dateutil.parser import parse
 
 
 def return_redirect(project_id, subproject_id):
@@ -613,7 +617,7 @@ def process_bng_callback(request):
             app.config["SECRET_KEY"],
             algorithms="HS256"
         )
-    except Exception as e:
+    except ValidationError as e:
         formatted_flash(f"Er ging iets mis terwijl je toegang verleende aan BNG bank. De foutcode is: {e}", color="red")
         return
     
@@ -638,7 +642,7 @@ def process_bng_callback(request):
         process_bng_payments(payments)
         formatted_flash("BNG-koppeling succesvol aangemaakt. Betalingen worden nu op de achtergrond opgehaald.", color="green")
         return redirect(url_for("index"))
-    except Exception as e:
+    except (ValidationError, NotImplementedError, IntegrityError, ValueError) as e:
         formatted_flash(f"Aanmaken BNG-koppeling mislukt. De foutcode is: {e}", color="red")
     
 
@@ -664,7 +668,7 @@ def get_bng_info(bng_account):
             bng_account.access_token
         )
     except ConnectionError as e:
-        formatted_flash("Er is een BNG-koppeling, maar het ophalen van de status is mislukt", color="red")
+        formatted_flash("Er is een BNG-koppeling, maar deze is offline.", color="red")
         days_left, days_left_color = get_days_until(bng_account.expires_on)
         date_last_sync = "12-12-2021"  #TODO Add time of last payment import.
 
@@ -716,42 +720,35 @@ def get_bng_payments():
     account_info = bng.read_account_information(
         bng_account.consent_id,
         bng_account.access_token
-    )
+    )    
     if len(account_info["accounts"]) > 1:
         raise NotImplementedError("At this moment, we only support consents for a single account.")
     elif len(account_info["accounts"]) == 0:
         raise ValidationError("It should not be possible to have consent, but to not have an account associated with it.")
 
-    date_from = datetime.today() - timedelta(days=300)
+    date_from = datetime.today() - timedelta(days=1000)
 
     # TODO: Make this part asynchronous?
     # TODO: Do something with dateTo as well.
     # TODO: What to do with booking status? Are we interested in pending?
     # TODO: What about balance?
 
-
-    def get_payment_batch(page):
-        transaction_list = bng.read_transaction_list(
-            bng_account.consent_id,
-            bng_account.access_token,
-            account_info["accounts"][0]["resourceId"],
-            date_from.strftime("%Y-%m-%d"),
-            page=page
-        )
-        payments = transaction_list["transactions"]["booked"]
-        links = transaction_list["transactions"]["_links"]
-        if links.get("Next") is not None and links.get("Last") is not None:
-            return payments, page + 1
-        else:
-            return payments, None
-
-
-    current_page = 1
-    payments = []
-    while current_page is not None:
-        payment_batch, next_page = get_payment_batch(current_page)
-        payments.extend(payment_batch)
-        current_page = next_page
+    with TemporaryDirectory() as d:
+        with open(os.path.join(d, "transaction_list.zip"), "wb") as f:
+            f.write(bng.read_transaction_list(
+                bng_account.consent_id,
+                bng_account.access_token,
+                account_info["accounts"][0]["resourceId"],
+                date_from.strftime("%Y-%m-%d"),
+            ))
+        with zipfile.ZipFile(os.path.join(d, "transaction_list.zip")) as z:
+            z.extractall(d)
+        payment_json_files = [x for x in os.listdir(d) if x.endswith(".json")]
+        if len(payment_json_files) != 1:
+            raise ValidationError("The downloaded transaction zip does not contain a json file.")
+        with open(os.path.join(d, payment_json_files[0])) as f:
+            payments = json.load(f)
+            payments = payments["transactions"]["booked"]
 
     return payments
 
@@ -772,21 +769,12 @@ def process_bng_payments(payments):
     new_payments = []
 
     for payment in payments:
-        # Contains a link to the transaction details. Not necessary to save.
-        del payment["_links"]
         # Flatten the nested dictionary. Otherwise we won't be able to save it in the database.
         payment = flatten(payment)
         # Convert from camel case to snake case to match the column names in the database.
         payment = {pattern.sub("_", k).lower(): v for (k, v) in payment.items()}
-        # Edit these keys to make them fit the database schema.
-        payment["transaction_amount"] = payment["transaction_amount_amount"]
-        del payment["transaction_amount_amount"]
-        payment["transaction_currency"] = payment["transaction_amount_currency"]
-        del payment["transaction_amount_currency"]
         # These two fields need to be cast. The other fields are strings and should remain so.
-        payment["booking_date"] = datetime.strptime(
-            payment["booking_date"], "%Y-%m-%d"
-        )
+        payment["booking_date"] = parse(payment["booking_date"])
         payment["transaction_amount"] = float(payment["transaction_amount"])
         if payment["transaction_amount"] > 0:
             route = "inkomsten"
@@ -798,6 +786,13 @@ def process_bng_payments(payments):
             created=datetime.now()
         ))
     
-    # TODO: Apparently getting payments with pagination retrieves double records...
-    db.session.bulk_save_objects(new_payments)
-    db.session.commit()
+    # TODO: Check for already existing payments.
+
+    try:
+        db.session.bulk_save_objects(new_payments)
+        db.session.commit()
+        # TODO: Log this.
+    except (ValueError, IntegrityError) as e:
+        db.session.rollback()
+        app.logger.error(repr(e))
+        raise
