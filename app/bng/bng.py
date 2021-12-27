@@ -21,10 +21,12 @@ PSU_IP_ADDRESS = "212.178.101.162"
 REDIRECT_URL = app.config["REDIRECT_URL"]
 API_URL_PREFIX = "https://api.xs2a{}.bngbank.nl/api/v1/"
 OAUTH_URL_PREFIX = "https://api.xs2a{}.bngbank.nl/authorise?response_type=code&"
+ACCESS_TOKEN_URL = "https://api.xs2a{}.bngbank.nl/token"
 
 if app.config["USE_SANDBOX"]:
     API_URL_PREFIX = API_URL_PREFIX.format("-sandbox")
     OAUTH_URL_PREFIX = OAUTH_URL_PREFIX.format("-sandbox")
+    ACCESS_TOKEN_URL = ACCESS_TOKEN_URL.format("-sandbox")
     CLIENT_ID = "PSDNL-AUT-SANDBOX"
     TLS_CERTS = app.config["SANDBOX_CERTS"]["TLS"]
     SIGNING_CERTS = app.config["SANDBOX_CERTS"]["SIGNING"]
@@ -32,6 +34,7 @@ if app.config["USE_SANDBOX"]:
 else:
     API_URL_PREFIX = API_URL_PREFIX.format("")
     OAUTH_URL_PREFIX = OAUTH_URL_PREFIX.format("")
+    ACCESS_TOKEN_URL = ACCESS_TOKEN_URL.format("")
     CLIENT_ID = app.config["CLIENT_ID"]
     TLS_CERTS = SIGNING_CERTS = app.config["PRODUCTION_CERTS"]
     KEYID_FDN = app.config["PRODUCTION_KEYID_FDN"]
@@ -178,14 +181,13 @@ def retrieve_access_token(access_code):
     }
     body = urlencode(body, doseq=False)
 
-    url = "https://api.xs2a-sandbox.bngbank.nl/token"
     request_id = str(uuid.uuid4())
 
-    headers = make_headers("post", url, request_id, body,
+    headers = make_headers("post", ACCESS_TOKEN_URL, request_id, body,
         content_type="application/x-www-form-urlencoded;charset=UTF-8",
     )
 
-    r = requests.post(url, data=body, headers=headers, cert=TLS_CERTS)
+    r = requests.post(ACCESS_TOKEN_URL, data=body, headers=headers, cert=TLS_CERTS)
     if r.status_code != 200:
         raise requests.ConnectionError("Expected status code 200, but received {}.".format(r.status_code))
     else:
