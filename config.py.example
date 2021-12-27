@@ -1,4 +1,3 @@
-from bunq.sdk.context.api_environment_type import ApiEnvironmentType
 import os
 import pytz
 
