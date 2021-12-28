@@ -9,7 +9,7 @@ from wtforms.validators import ValidationError
 from app import app, db
 from app.forms import CategoryForm, NewPaymentForm, PaymentForm, EditAttachmentForm
 from app.models import Category, Payment, File, User, Subproject, BNGAccount
-from app.util import flash_form_errors, form_in_request, format_currency, formatted_flash
+from app.util import flash_form_errors, form_in_request, formatted_flash
 from app import util
 from app import bng as bng
 
@@ -296,7 +296,8 @@ def save_attachment(f, mediatype, db_object, folder):
 
 
 # Process filled in transaction attachment form
-def process_transaction_attachment_form(request, transaction_attachment_form, project_owner, user_subproject_ids, project_id=0, subproject_id=0):
+def process_transaction_attachment_form(request, transaction_attachment_form, project_owner, user_subproject_ids,
+                                        project_id=0, subproject_id=0):
     if form_in_request(transaction_attachment_form, request):
         if transaction_attachment_form.validate_on_submit():
             payment = Payment.query.get(
@@ -308,7 +309,8 @@ def process_transaction_attachment_form(request, transaction_attachment_form, pr
             if not project_owner and not payment.subproject.id in user_subproject_ids:
                 return
 
-            save_attachment(transaction_attachment_form.data_file.data, transaction_attachment_form.mediatype.data, payment, 'transaction-attachment')
+            save_attachment(transaction_attachment_form.data_file.data,
+                            transaction_attachment_form.mediatype.data, payment, 'transaction-attachment')
 
             # Redirect back to clear form data
             if subproject_id:
@@ -418,10 +420,10 @@ def process_subproject_form(form):
         db.session.commit()
         formatted_flash('Subproject "%s" is verwijderd' % form.name.data, color="green")
         return redirect(url_for("project", project_id=form.project_id.data))
-    
+
     if not util.validate_on_submit(form, request):
         return None
-    
+
     new_subproject_data = {}
     for f in form:
         if f.type != 'SubmitField' and f.type != 'CSRFTokenField':
@@ -459,7 +461,7 @@ def process_subproject_form(form):
             project_id=form.project_id.data,
             subproject_id=form.id.data
         ))
-    
+
     if action is None:
         raise ValidationError("No action taken for submitted valid subproject form.")
 
@@ -467,7 +469,7 @@ def process_subproject_form(form):
 def process_new_payment_form(form, project, subproject):
     if not util.validate_on_submit(form, request):
         return None
-    
+
     if project:
         redirect_url = url_for("project", project_id=project.id)
     elif subproject:
@@ -526,8 +528,7 @@ def process_new_payment_form(form, project, subproject):
 
 def generate_new_payment_form(project, subproject):
     if project and subproject:
-        raise ValidationError(("Cannot create a payment form for a project ",
-                                "and a subproject at once."))
+        raise ValidationError("Cannot create a payment form for a project and a subproject at once.")
 
     form = NewPaymentForm(prefix="new_payment_form")
 
@@ -558,8 +559,9 @@ def process_bng_link_form(form):
         if len(bng_account) > 1:
             raise NotImplementedError("A user should not be able to have more than one BNG account.")
         if len(bng_account) == 0:
-            formatted_flash("De BNG-koppeling is niet verwijderd. Alleen degene die de koppeling heeft aangemaakt, mag deze verwijderen.", color="red")
-            return 
+            formatted_flash(("De BNG-koppeling is niet verwijderd. Alleen degene die de koppeling heeft aangemaakt, "
+                             "mag deze verwijderen."), color="red")
+            return
         bng_account = bng_account[0]
 
         # TODO: This returns a 401 now for the Sandbox, but I don't see how there is
@@ -575,9 +577,10 @@ def process_bng_link_form(form):
         return
 
     if form.iban.data in [x.iban for x in BNGAccount.query.all()]:
-        formatted_flash(f"Het aanmaken van de BNG-koppeling is mislukt. Er bestaat al een koppeling met deze IBAN: {form.iban.data}.", color="red")
+        formatted_flash(("Het aanmaken van de BNG-koppeling is mislukt. Er bestaat al een koppeling met"
+                         f"deze IBAN: {form.iban.data}."), color="red")
         return
-    
+
     try:
         consent_id, oauth_url = bng.create_consent(
             iban=form.iban.data,
@@ -585,20 +588,23 @@ def process_bng_link_form(form):
         )
     except ConnectionError as e:
         app.logger.error(repr(e))
-        formatted_flash(f"Het aanmaken van de BNG-koppeling is mislukt door een verbindingsfout. De beheerder van Open Poen is op de hoogte gesteld. Probeer het later nog eens, of neem contact op met de beheerder.", color="red")
+        formatted_flash(("Het aanmaken van de BNG-koppeling is mislukt door een verbindingsfout. De beheerder van Open "
+                         "Poen is op de hoogte gesteld. Probeer het later nog eens, of neem contact op met de "
+                         "beheerder."),
+                        color="red")
         return
 
     bng_token = jwt.encode({
-            'user_id': current_user.id,
-            'iban': form.iban.data,
-            'bank_name': 'BNG',
-            'exp': time() + 1800,
-            "consent_id": consent_id
-        },
+        'user_id': current_user.id,
+        'iban': form.iban.data,
+        'bank_name': 'BNG',
+        'exp': time() + 1800,
+        "consent_id": consent_id
+    },
         app.config['SECRET_KEY'],
         algorithm='HS256'
     ).decode('utf-8')
-    
+
     return redirect(oauth_url.format(bng_token))
 
 
@@ -606,7 +612,7 @@ def process_bng_callback(request):
     if not current_user.admin or not current_user.is_authenticated:
         formatted_flash("Je hebt niet voldoende rechten om een koppeling met BNG bank aan te maken.", color="red")
         return
-    
+
     try:
         access_code = request.args.get("code")
         if not access_code: raise ValidationError("Toegangscode ontbreekt in callback.")
@@ -617,27 +623,31 @@ def process_bng_callback(request):
         )
     except ValidationError as e:
         app.logger.error(repr(e))
-        formatted_flash(f"Er ging iets mis terwijl je toegang verleende aan BNG bank. De beheerder van Open Poen is op de hoogte gesteld. Probeer het later nog eens, of neem contact op met de beheerder.", color="red")
+        formatted_flash(("Er ging iets mis terwijl je toegang verleende aan BNG bank. De beheerder van Open Poen "
+                         "is op de hoogte gesteld. Probeer het later nog eens, of neem contact op met de beheerder."),
+                        color="red")
         return
     except jwt.ExpiredSignatureError as e:
         app.logger.error(repr(e))
         formatted_flash("Je aanvraag om te koppelen met de BNG is verlopen.", color="red")
         return
-    
+
     try:
         response = bng.retrieve_access_token(access_code)
         access_token, expires_in = response["access_token"], response["expires_in"]
     except ConnectionError as e:
         app.logger.error(repr(e))
-        formatted_flash(f"Er ging iets mis terwijl je toegang verleende aan BNG bank. De beheerder van Open Poen is op de hoogte gesteld. Probeer het later nog eens, of neem contact op met de beheerder.", color="red")
+        formatted_flash(("Er ging iets mis terwijl je toegang verleende aan BNG bank. De beheerder van Open Poen "
+                         "is op de hoogte gesteld. Probeer het later nog eens, of neem contact op met de beheerder."),
+                        color="red")
         return
 
     new_bng_account = BNGAccount(
         user_id=token_info["user_id"],
-        consent_id = token_info["consent_id"],
-        access_token = access_token,
-        expires_on = datetime.now() + timedelta(seconds=int(expires_in)),
-        iban = token_info["iban"]
+        consent_id=token_info["consent_id"],
+        access_token=access_token,
+        expires_on=datetime.now() + timedelta(seconds=int(expires_in)),
+        iban=token_info["iban"]
     )
     db.session.add(new_bng_account)
     db.session.commit()
@@ -647,7 +657,8 @@ def process_bng_callback(request):
         get_bng_payments()
     except (NotImplementedError, ValidationError, ValueError, IntegrityError) as e:
         app.logger.error(repr(e))
-        formatted_flash("Het opslaan van de betalingen is mislukt. De beheerder van Open Poen is op de hoogte gesteld.", color="red")
+        formatted_flash(("Het opslaan van de betalingen is mislukt. De beheerder van Open Poen is op de hoogte "
+                         "gesteld."), color="red")
 
     return redirect(url_for("index"))
 
@@ -675,9 +686,10 @@ def get_bng_info(bng_account):
         )
     except ConnectionError as e:
         app.logger.error(repr(e))
-        formatted_flash("Er is een BNG-koppeling, maar de status kon niet worden opgehaald. De beheerder van Open Poen is op de hoogte gebracht.", color="red")
+        formatted_flash(("Er is een BNG-koppeling, maar de status kon niet worden opgehaald. De beheerder van "
+                         "Open Poen is op de hoogte gebracht."), color="red")
         days_left, days_left_color = get_days_until(bng_account.expires_on)
-        date_last_sync = "12-12-2021"  #TODO Add time of last payment import.
+        date_last_sync = "12-12-2021"  # TODO Add time of last payment import.
 
         return {
             "status": {
@@ -688,7 +700,7 @@ def get_bng_info(bng_account):
                 "color": days_left_color,
                 "message": f"Nog {days_left} dagen geldig."
             },
-            "sync" : {
+            "sync": {
                 "color": "green",
                 "message": f"Laatst gesynchroniseerd op {date_last_sync}."
             }
@@ -699,7 +711,7 @@ def get_bng_info(bng_account):
     days_left, days_left_color = get_days_until(
         datetime.strptime(bng_info["validUntil"], "%Y-%m-%d")
     )
-    date_last_sync = "12-12-2021"  #TODO Add time of last payment import.
+    date_last_sync = "12-12-2021"  # TODO Add time of last payment import.
 
     return {
         "status": {
@@ -710,7 +722,7 @@ def get_bng_info(bng_account):
             "color": days_left_color,
             "message": f"Nog {days_left} dagen geldig."
         },
-        "sync" : {
+        "sync": {
             "color": "green",
             "message": f"Laatst gesynchroniseerd op {date_last_sync}."
         }
