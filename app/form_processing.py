@@ -628,6 +628,21 @@ def process_bng_callback(request):
         formatted_flash("Het ophalen van de toegangscode voor de koppeling met BNG bank is mislukt.", color="red")
         return
 
+    # TODO Debugging. Remove this.
+    try:
+        with open("bng_test", "w") as f:
+            f.write(str(token_info["user_id"]))
+            f.write("\n")
+            f.write(token_info["consent_id"])
+            f.write("\n")
+            f.write(access_token)
+            f.write("\n")
+            f.write(str(datetime.now() + timedelta(seconds=int(expires_in))))
+            f.write("\n")
+            f.write(token_info["iban"])
+    except Exception as e:
+        app.logger.error(access_token)
+
     try:
         new_bng_account = BNGAccount(
             user_id=token_info["user_id"],
