@@ -554,14 +554,12 @@ def process_bng_link_form(form):
         return None
 
     if form.remove.data:
-        # This should always result in one account for now. Eventually we might
-        # want to support multiple BNG accounts per user, but we'll have to implement
-        # this later.
         bng_account = BNGAccount.query.filter_by(user_id=current_user.id).all()
         if len(bng_account) > 1:
             raise NotImplementedError("A user should not be able to have more than one BNG account.")
         if len(bng_account) == 0:
-            raise ValidationError("A user shouldn't be able to click remove if there is no BNG account linked.")
+            formatted_flash("De BNG-koppeling is niet verwijderd. Alleen degene die de koppeling heeft aangemaakt, mag deze verwijderen.", color="red")
+            return 
         bng_account = bng_account[0]
 
         # TODO: This returns a 401 now for the Sandbox, but I don't see how there is
@@ -570,8 +568,7 @@ def process_bng_link_form(form):
 
         db.session.delete(bng_account)
         db.session.commit()
-        # TODO: Revoke consent with BNG's API.
-        formatted_flash("BNG-koppeling is verwijderd.", color="green")
+        formatted_flash("De BNG-koppeling is verwijderd.", color="green")
         return redirect(url_for("index"))
 
     if not util.validate_on_submit(form, request):
@@ -586,8 +583,9 @@ def process_bng_link_form(form):
             iban=form.iban.data,
             valid_until=form.valid_until.data
         )
-    except Exception as e:
-        formatted_flash(f"De aanvraag bij BNG bank is mislukt. De foutcode is: {e}", color="red")
+    except ConnectionError as e:
+        app.logger.error(repr(e))
+        formatted_flash(f"Het aanmaken van de BNG-koppeling is mislukt door een verbindingsfout. De beheerder van Open Poen is op de hoogte gesteld. Probeer het later nog eens, of neem contact op met de beheerder.", color="red")
         return
 
     bng_token = jwt.encode({
@@ -618,48 +616,41 @@ def process_bng_callback(request):
             algorithms="HS256"
         )
     except ValidationError as e:
-        formatted_flash(f"Er ging iets mis terwijl je toegang verleende aan BNG bank. De foutcode is: {e}", color="red")
+        app.logger.error(repr(e))
+        formatted_flash(f"Er ging iets mis terwijl je toegang verleende aan BNG bank. De beheerder van Open Poen is op de hoogte gesteld. Probeer het later nog eens, of neem contact op met de beheerder.", color="red")
+        return
+    except jwt.ExpiredSignatureError as e:
+        app.logger.error(repr(e))
+        formatted_flash("Je aanvraag om te koppelen met de BNG is verlopen.", color="red")
         return
     
     try:
         response = bng.retrieve_access_token(access_code)
         access_token, expires_in = response["access_token"], response["expires_in"]
-    except Exception as e:
-        formatted_flash("Het ophalen van de toegangscode voor de koppeling met BNG bank is mislukt.", color="red")
+    except ConnectionError as e:
+        app.logger.error(repr(e))
+        formatted_flash(f"Er ging iets mis terwijl je toegang verleende aan BNG bank. De beheerder van Open Poen is op de hoogte gesteld. Probeer het later nog eens, of neem contact op met de beheerder.", color="red")
         return
 
-    # TODO Debugging. Remove this.
-    try:
-        with open("bng_test", "w") as f:
-            f.write(str(token_info["user_id"]))
-            f.write("\n")
-            f.write(token_info["consent_id"])
-            f.write("\n")
-            f.write(access_token)
-            f.write("\n")
-            f.write(str(datetime.now() + timedelta(seconds=int(expires_in))))
-            f.write("\n")
-            f.write(token_info["iban"])
-    except Exception as e:
-        app.logger.error(access_token)
+    new_bng_account = BNGAccount(
+        user_id=token_info["user_id"],
+        consent_id = token_info["consent_id"],
+        access_token = access_token,
+        expires_on = datetime.now() + timedelta(seconds=int(expires_in)),
+        iban = token_info["iban"]
+    )
+    db.session.add(new_bng_account)
+    db.session.commit()
+    formatted_flash("De BNG-koppeling is aangemaakt. Betalingen worden nu op de achtergrond opgehaald.", color="green")
 
     try:
-        new_bng_account = BNGAccount(
-            user_id=token_info["user_id"],
-            consent_id = token_info["consent_id"],
-            access_token = access_token,
-            expires_on = datetime.now() + timedelta(seconds=int(expires_in)),
-            iban = token_info["iban"]
-        )
-        db.session.add(new_bng_account)
-        db.session.commit()
-        payments = get_bng_payments()
-        process_bng_payments(payments)
-        formatted_flash("BNG-koppeling succesvol aangemaakt. Betalingen worden nu op de achtergrond opgehaald.", color="green")
-        return redirect(url_for("index"))
-    except (ValidationError, NotImplementedError, IntegrityError, ValueError) as e:
-        formatted_flash(f"Aanmaken BNG-koppeling mislukt. De foutcode is: {e}", color="red")
-    
+        get_bng_payments()
+    except (NotImplementedError, ValidationError, ValueError, IntegrityError) as e:
+        app.logger.error(repr(e))
+        formatted_flash("Het opslaan van de betalingen is mislukt. De beheerder van Open Poen is op de hoogte gesteld.", color="red")
+
+    return redirect(url_for("index"))
+
 
 def get_days_until(date):
     # TODO: Handle timezones gracefully.
@@ -683,7 +674,8 @@ def get_bng_info(bng_account):
             bng_account.access_token
         )
     except ConnectionError as e:
-        formatted_flash("Er is een BNG-koppeling, maar deze is offline.", color="red")
+        app.logger.error(repr(e))
+        formatted_flash("Er is een BNG-koppeling, maar de status kon niet worden opgehaald. De beheerder van Open Poen is op de hoogte gebracht.", color="red")
         days_left, days_left_color = get_days_until(bng_account.expires_on)
         date_last_sync = "12-12-2021"  #TODO Add time of last payment import.
 
@@ -701,7 +693,9 @@ def get_bng_info(bng_account):
                 "message": f"Laatst gesynchroniseerd op {date_last_sync}."
             }
         }
-    
+
+    status = "online" if bng_info["consentStatus"] == "valid" else "offline"
+    status_color = "green" if status == "online" else "red"
     days_left, days_left_color = get_days_until(
         datetime.strptime(bng_info["validUntil"], "%Y-%m-%d")
     )
@@ -709,8 +703,8 @@ def get_bng_info(bng_account):
 
     return {
         "status": {
-            "color": "green",
-            "message": "Koppeling is online."
+            "color": status_color,
+            "message": f"Koppeling is {status}."
         },
         "days_left": {
             "color": days_left_color,
@@ -723,11 +717,55 @@ def get_bng_info(bng_account):
     }
 
 
+def flatten(d, parent_key='', sep='_'):
+    items = []
+    for k, v in d.items():
+        new_key = parent_key + sep + k if parent_key else k
+        if isinstance(v, collections.MutableMapping):
+            items.extend(flatten(v, new_key, sep=sep).items())
+        else:
+            items.append((new_key, v))
+    return dict(items)
+
+
+def parse_and_save_bng_payments(payments):
+    pattern = re.compile(r'(?<!^)(?=[A-Z])')
+    new_payments = []
+
+    for payment in payments:
+        # Flatten the nested dictionary. Otherwise we won't be able to save it in the database.
+        payment = flatten(payment)
+        # Convert from camel case to snake case to match the column names in the database.
+        payment = {pattern.sub("_", k).lower(): v for (k, v) in payment.items()}
+        # These two fields need to be cast. The other fields are strings and should remain so.
+        payment["booking_date"] = parse(payment["booking_date"])
+        payment["transaction_amount"] = float(payment["transaction_amount"])
+        if payment["transaction_amount"] > 0:
+            route = "inkomsten"
+        else:
+            route = "uitgaven"
+        new_payments.append(Payment(
+            **payment,
+            route=route,
+            created=datetime.now()
+        ))
+
+    existing_ids = set([x.transaction_id for x in Payment.query.all()])
+    new_payments = [x for x in new_payments if x.transaction_id not in existing_ids]
+
+    try:
+        db.session.bulk_save_objects(new_payments)
+        db.session.commit()
+    except (ValueError, IntegrityError):
+        db.session.rollback()
+        raise
+
+
 def get_bng_payments():
     # TODO: Error handling.
     bng_account = BNGAccount.query.all()
     if len(bng_account) > 1:
-        raise NotImplementedError("At this moment, we only support a coupling with a single BNG account.")
+        raise NotImplementedError("Op dit moment ondersteunen we slechts één BNG-koppeling.")
     if len(bng_account) == 0:
         return
     bng_account = bng_account[0]
@@ -735,11 +773,11 @@ def get_bng_payments():
     account_info = bng.read_account_information(
         bng_account.consent_id,
         bng_account.access_token
-    )    
+    )
     if len(account_info["accounts"]) > 1:
-        raise NotImplementedError("At this moment, we only support consents for a single account.")
+        raise NotImplementedError("Op dit moment ondersteunen we slechts één consent per BNG-koppeling.")
     elif len(account_info["accounts"]) == 0:
-        raise ValidationError("It should not be possible to have consent, but to not have an account associated with it.")
+        raise ValidationError("Het zou niet mogelijk moeten zijn om wel een account te hebben, maar geen consent.")
 
     date_from = datetime.today() - timedelta(days=1000)
 
@@ -765,49 +803,4 @@ def get_bng_payments():
             payments = json.load(f)
             payments = payments["transactions"]["booked"]
 
-    return payments
-
-
-def flatten(d, parent_key='', sep='_'):
-    items = []
-    for k, v in d.items():
-        new_key = parent_key + sep + k if parent_key else k
-        if isinstance(v, collections.MutableMapping):
-            items.extend(flatten(v, new_key, sep=sep).items())
-        else:
-            items.append((new_key, v))
-    return dict(items)
-
-
-def process_bng_payments(payments):
-    pattern = re.compile(r'(?<!^)(?=[A-Z])')
-    new_payments = []
-
-    for payment in payments:
-        # Flatten the nested dictionary. Otherwise we won't be able to save it in the database.
-        payment = flatten(payment)
-        # Convert from camel case to snake case to match the column names in the database.
-        payment = {pattern.sub("_", k).lower(): v for (k, v) in payment.items()}
-        # These two fields need to be cast. The other fields are strings and should remain so.
-        payment["booking_date"] = parse(payment["booking_date"])
-        payment["transaction_amount"] = float(payment["transaction_amount"])
-        if payment["transaction_amount"] > 0:
-            route = "inkomsten"
-        else:
-            route = "uitgaven"
-        new_payments.append(Payment(
-            **payment,
-            route=route,
-            created=datetime.now()
-        ))
-    
-    # TODO: Check for already existing payments.
-
-    try:
-        db.session.bulk_save_objects(new_payments)
-        db.session.commit()
-        # TODO: Log this.
-    except (ValueError, IntegrityError) as e:
-        db.session.rollback()
-        app.logger.error(repr(e))
-        raise
+    parse_and_save_bng_payments(payments)

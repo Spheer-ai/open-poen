@@ -21,7 +21,7 @@ from app.form_processing import (
     generate_new_payment_form, process_category_form, process_new_payment_form, process_payment_form, create_payment_forms,
     process_transaction_attachment_form, create_edit_attachment_forms,
     process_edit_attachment_form, save_attachment, process_subproject_form,
-    process_bng_link_form, process_bng_callback, get_bng_info
+    process_bng_link_form, process_bng_callback, get_bng_info, get_bng_payments
 )
 from sqlalchemy.exc import IntegrityError
 
@@ -68,6 +68,9 @@ def before_request():
 def index():
     modal_id = None
     bng_info = {}
+
+    # Debugging
+    # get_bng_payments()
 
     if current_user.is_authenticated:
         if current_user.admin:
