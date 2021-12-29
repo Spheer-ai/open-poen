@@ -756,10 +756,19 @@ def parse_and_save_bng_payments(payments):
             route = "inkomsten"
         else:
             route = "uitgaven"
+        # Get the card number, if one was used. This is used to identify what payments where done for
+        # what project later on. These numbers always start with 6731924.
+        try:
+            card_number = re.search("6731924\d*", payment["remittance_information_structured"]).group(0)
+        except AttributeError:
+            card_number = None
+        # To simplify things, we always save empty strings as None (NULL).
+        payment = {k: (v if v != "" else None) for (k, v) in payment.items()}
         new_payments.append(Payment(
             **payment,
             route=route,
-            created=datetime.now()
+            created=datetime.now(),
+            card_number=card_number
         ))
 
     existing_ids = set([x.transaction_id for x in Payment.query.all()])

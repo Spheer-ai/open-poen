@@ -216,6 +216,7 @@ def add_user(email, admin=False, project_id=0, subproject_id=0):
         # Send the new user an invitation email
         send_invite(user)
 
+
 def get_export_timestamp():
     return datetime.now(
         app.config['TZ']

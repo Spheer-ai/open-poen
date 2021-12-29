@@ -70,7 +70,7 @@ def index():
     bng_info = {}
 
     # Debugging
-    # get_bng_payments()
+    get_bng_payments()
 
     if current_user.is_authenticated:
         if current_user.admin:

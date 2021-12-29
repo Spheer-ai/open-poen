@@ -291,6 +291,7 @@ class DebitCard(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     card_id = db.Column(db.Integer)
 
+
 # TODO: Make this compatible with BNG payments if necessary.
 class Payment(db.Model):
     subproject_id = db.Column(
@@ -303,7 +304,7 @@ class Payment(db.Model):
         db.Integer, db.ForeignKey('category.id', ondelete='SET NULL')
     )
 
-    # Fields coming from the BNG API
+    # Fields coming from the BNG API (Snake case conversion is done by us.)
     # 'transaction_id':'79afd730-950e-4b9e-8fbb-fa643e4d0fbb'
     # 'entry_reference':'Bank reference 5532530633'
     # 'end_to_end_id':'42e272ca60144a32842cd72d134a881c'
@@ -333,6 +334,7 @@ class Payment(db.Model):
     remittance_information_structured = db.Column(db.Text())
     # Can be 'inbesteding', 'uitgaven' or 'inkomsten'
     route = db.Column(db.String(12))
+    card_number = db.Column(db.String(22))
 
     # Fields coming from the user
     short_user_description = db.Column(db.String(50))
