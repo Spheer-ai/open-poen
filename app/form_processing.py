@@ -429,18 +429,17 @@ def process_subproject_form(form):
     for f in form:
         if f.type != 'SubmitField' and f.type != 'CSRFTokenField':
             new_subproject_data[f.short_name] = f.data
-    name, iban = new_subproject_data['name'], new_subproject_data['iban']
 
     if action == "CREATE":
         try:
             subproject = Subproject(**new_subproject_data)
             db.session.add(subproject)
             db.session.commit()
+            formatted_flash(f"Initiatief {new_subproject_data['name']} is aangemaakt.", color="green")
         except (ValueError, IntegrityError) as e:
             db.session().rollback()
             app.logger.error(repr(e))
-            # TODO: BNG
-            formatted_flash("Subproject toevoegen mislukt: naam {name} en/of IBAN {iban} bestaan al.", color="red")
+            formatted_flash(f"Initiatief toevoegen mislukt: naam {new_subproject_data['name']} bestaat al.", color="red")
         return redirect(url_for("project", project_id=form.project_id.data))
     if action == "UPDATE":
         try:
@@ -450,13 +449,11 @@ def process_subproject_form(form):
             if len(subprojects.all()):
                 subprojects.update(new_subproject_data)
                 db.session.commit()
-                name = new_subproject_data["name"]
-                formatted_flash(f'Subproject {name} is bijgewerkt</span>', color="green")
+                formatted_flash(f"Subproject {new_subproject_data['name']} is bijgewerkt.", color="green")
         except (ValueError, IntegrityError) as e:
             db.session().rollback()
             app.logger.error(repr(e))
-            # TODO: BNG
-            formatted_flash("Subproject bijwerken mislukt: naam {name} en/of IBAN {iban} bestaan al.", color="red")
+            formatted_flash(f"Initiatief bijwerken mislukt: naam {new_subproject_data['name']} bestaat al.", color="red")
         return redirect(url_for(
             "subproject",
             project_id=form.project_id.data,
@@ -555,6 +552,7 @@ def process_new_project_form(form):
     if form_in_request(form, request):
         # We need to rerender the form if the user wants to add funders, debit cards or subprojects, but hasn't
         # received the rerendered form yet to actually enter those.
+        # TODO: Refactor.
         rerender = False
         funders_to_add = form.funders_amount.data - len(form.funders)
         if funders_to_add > 0:

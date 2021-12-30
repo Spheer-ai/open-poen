@@ -256,27 +256,14 @@
                                 <br>
 
                                 <div>
-                                  {{ project_data['form'].csrf_token }}
+                                  {{ project_form.csrf_token }}
 
-                                  {% for f in project_data['form'] %}
+                                  {% for f in project_form %}
                                     {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' %}
                                       {{ wtf.form_field(f, class="form-control") }}
                                     {% endif %}
                                   {% endfor %}
-
-                                  {% if project_data['contains_subprojects'] %}
-                                  Dit project werkt <b>met</b> deelprojecten: alle uitgaven moeten vanaf Bunq sub-accounts gedaan worden.
-                                  {% else %}
-                                  Dit project werkt <b>zonder</b> deelprojecten: alle uitgaven moeten vanaf de aan dit project gekoppelde Bunq account gedaan worden.
-                                  {% endif %}
-                                </div>
-
-                                <hr>
-
-                                <div>
-                                  Heeft u nieuwe IBANs toegevoegd aan dit project en kunt u deze hierboven nog niet selecteren? Koppel dit project dan opnieuw aan de Bunq account om zo toegang tot de nieuwe IBANs te krijgen.
-                                  <a href="{{ base_url_auth }}/auth?response_type=code&client_id={{ bunq_client_id }}&redirect_uri=https://{{ server_name }}/&state={{ project_data.bunq_token }}" rel="noopener"><img class="bunq-connect-button" src="{{ url_for('static', filename='images/bunq_Connect_button_svg.svg') }}"></a>
-                                  {{ project_data['form'].id }}
+                                  {{ project_form.id }}
                                 </div>
                               </div>
                               <div class="modal-footer">
@@ -290,7 +277,7 @@
                                 {% endif %}
 
                                 {# Make sure this 'Opslaan' submit button is listed before the 'Verwijderen' submit button to make sure that hitting 'enter' defaults to the 'Opslaan' submit button #}
-                                {{ project_data['form'].submit }}
+                                {{ project_form.submit }}
 
                                 <!-- Modal -->
                                 <div class="modal fade" id="project-verwijder-{{ project_data['id'] }}" tabindex="-1" role="dialog" aria-labelledby="projectVerwijderLabel" aria-hidden="true">
@@ -310,7 +297,7 @@
                                         </div>
                                         <div class="modal-footer">
                                           <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
-                                          {{ project_data['form'].remove }}
+                                          {{ project_form.remove }}
                                         </div>
                                       </form>
                                     </div>

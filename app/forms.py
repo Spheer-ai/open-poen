@@ -192,7 +192,7 @@ class EditProjectForm(FlaskForm):
         render_kw={
             'class': 'btn btn-danger'
         }
-    ) 
+    )
 
 
 class SubprojectForm(FlaskForm):
@@ -200,11 +200,6 @@ class SubprojectForm(FlaskForm):
     description = TextAreaField('Beschrijving', validators=[DataRequired()])
     hidden = BooleanField('Initiatief verbergen')
     budget = IntegerField('Budget voor dit initiatief', validators=[Optional()])
-    # TODO: Subprojects will be linked to debit cards, not to IBAN's with BNG.
-    # Move the link with a BNG IBAN to user level.
-    iban = SelectField(
-        'IBAN', validators=[Optional()], choices=[]
-    )
     project_id = IntegerField(widget=HiddenInput())
     id = IntegerField(widget=HiddenInput())
 

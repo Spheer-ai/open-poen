@@ -350,9 +350,8 @@ def project(project_id):
     categories_dict = {}
     if project_owner:
         categories_dict = {x.id: x.make_category_select_options()
-                          for x in project.subprojects}
+                           for x in project.subprojects}
 
-        # new_payment_form = NewPaymentForm(prefix="new_payment_form")
         new_payment_form = generate_new_payment_form(project, subproject=None)
         form_redirect = process_new_payment_form(new_payment_form, project, subproject=None)
         if form_redirect:
@@ -395,7 +394,7 @@ def project(project_id):
             editable_payments = project.payments
             for payment in project.payments:
                 editable_attachments += payment.attachments
-        
+
         if type(payment_form_return) == PaymentForm:
             payment_id = payment_form_return.id.data
             editable_payments = [x for x in editable_payments if x.id != payment_form_return.id.data]
@@ -536,80 +535,48 @@ def project(project_id):
     if project_form.remove.data and current_user.admin:
         Project.query.filter_by(id=project.id).delete()
         db.session.commit()
-        flash(
-            '<span class="text-default-green">Project "%s" is verwijderd</span>' % (
-                project.name
-            )
-        )
-        # redirect back to clear form data
+        util.formatted_flash(f"Project {project.name} is verwijderd.", color="green")
         return redirect(url_for('index'))
 
-    # Save or update project
-    # Somehow we need to repopulate the iban.choices with the same
-    # values as used when the form was generated for this project.
-    # Probably to validate if the selected value is valid.
-    if util.form_in_request(project_form, request):
-        if request.method == 'POST' and project_form.name.data:
-            projects = Project.query.filter_by(id=project_form.id.data)
-            # TODO: Implement logic to be able to link passes to a project.
-
     if util.validate_on_submit(project_form, request):
-        new_project_data = {}
-        for f in project_form:
-            if f.type != 'SubmitField' and f.type != 'CSRFTokenField':
-                if f.short_name == 'iban':
-                    # TODO: Implement logic to link a project to BNG.
-                    pass
-                else:
-                    new_project_data[f.short_name] = f.data
+        project_data = {}
+        # This property is not allowed to be changed after project creation.
+        project_form.contains_subprojects.data = project.contains_subprojects
+        # TODO: We don't want this hardcoded.
+        project_fields = ["name", "description", "contains_subprojects", "hidden", "hidden_sponsors", "budget", "id"]
+        project_data = {x.short_name: x.data for x in project_form if x.short_name in project_fields}
 
+        project_to_edit = Project.query.filter_by(id=project.id)
+        if len(project_to_edit.all()) == 0:
+            util.formatted_flash("Het project is niet aangepast, omdat dit project niet (meer) bestaat.", color="red")
+            redirect(url_for("index"))
         try:
-            # Update if the project already exists
-            if len(projects.all()):
-                # We don't allow editing of the 'contains_subprojects' value after a project is created
-                del new_project_data['contains_subprojects']
-
-                # TODO: Ensure that the same passes can't be linked to multiple projects.
-
-                # TODO: Ensure that when a pass is edited or removed, the list of payments
-                # belonging to the project are updated.
-
-                projects.update(new_project_data)
-                db.session.commit()
-
-                flash(
-                    '<span class="text-default-green">Project "%s" is '
-                    'bijgewerkt</span>' % (
-                        new_project_data['name']
-                    )
-                )
-            # Otherwise, save a new project
-            else:
-                new_project = Project(**new_project_data)
-                db.session.add(new_project)
-                db.session.commit()
-                flash(
-                    '<span class="text-default-green">Project "%s" is '
-                    'toegevoegd</span>' % (
-                        new_project_data['name']
-                    )
-                )
+            project_to_edit.update(project_data)
+            db.session.commit()
+            util.formatted_flash(f"Project {project_data['name']} is bijgewerkt.", color="green")
+            redirect(url_for("project", project_id=project.id))
         except (ValueError, IntegrityError) as e:
-            db.session().rollback()
             app.logger.error(repr(e))
-            flash(
-                '<span class="text-default-red">Project toevoegen/bijwerken mislukt: '
-                'naam "%s" en/of IBAN "%s" bestaan al, kies een andere naam '
-                'en/of IBAN<span>' % (
-                    new_project_data['name'],
-                    new_project_data['iban']
-                )
-            )
-        # redirect back to clear form data
-        return redirect(url_for('project', project_id=project.id))
+            db.session().rollback()
+            util.formatted_flash(("Project bijwerken is mislukt. Er bestaat al een project met deze naam: "
+                                  f"{project_data['name']}."),
+                                 color="red")
     else:
         if len(project_form.errors) > 0:
             modal_id = ["#project-bewerken"]
+
+    if not util.form_in_request(project_form, request):
+        project_form = EditProjectForm(prefix="project_form", **{
+            'name': project.name,
+            'description': project.description,
+            'hidden': project.hidden,
+            'hidden_sponsors': project.hidden_sponsors,
+            'budget': project.budget,
+            'id': project.id,
+            'contains_subprojects': project.contains_subprojects
+        })
+
+    project_form.contains_subprojects.render_kw = {'disabled': ''}
 
     # Process filled in category form
     category_form = ''
@@ -626,38 +593,20 @@ def project(project_id):
         project_owner = True
 
     already_authorized = False
-    bunq_token = ''
     form = ''
 
-    if project_owner:
-        # TODO Logic to define already_authorized to indicate if the
-        # project already has passes linked to it.
-
-        # TODO? Generate state token for BNG.
-
-        # Populate the project's form which allows the user to edit
-        # it
-        if len(project_form.errors) > 0:
-            form = project_form
-        else:
-            form = EditProjectForm(prefix="project_form", **{
-                'name': project.name,
-                'description': project.description,
-                'hidden': project.hidden,
-                'hidden_sponsors': project.hidden_sponsors,
-                'budget': project.budget,
-                'id': project.id,
-                'contains_subprojects': project.contains_subprojects
-            })
-        # We don't allow editing of the 'contains_subprojects'
-        # value after a project is created, but we do need to pass the
-        # value in the form, so simply disable it
-        # TODO: This will no also disable it when the form is returned
-        # with errors, right? Fix this.
-        form.contains_subprojects.render_kw = {'disabled': ''}
-
-        # TODO: If this project is BNG enabled, allow the user to add, remove
-        # or change passes.
+    # TODO Logic to define already_authorized to indicate if the
+    # project already has passes linked to it.
+    # TODO? Generate state token for BNG.
+    # Populate the project's form which allows the user to edit
+    # it
+    # We don't allow editing of the 'contains_subprojects'
+    # value after a project is created, but we do need to pass the
+    # value in the form, so simply disable it
+    # TODO: This will no also disable it when the form is returned
+    # with errors, right? Fix this.
+    # TODO: If this project is BNG enabled, allow the user to add, remove
+    # or change passes.
 
     # Populate the category forms which allows the user to
     # edit it
@@ -685,19 +634,11 @@ def project(project_id):
         'hidden': project.hidden,
         'hidden_sponsors': project.hidden_sponsors,
         'already_authorized': already_authorized,
-        'bunq_token': bunq_token,  # TODO Remove?
-        'iban': project.iban,  # TODO Remove?
-        'iban_name': project.iban_name,  # TODO Remove?
-        'bank_name': project.bank_name,  # TODO Remove?
         'amounts': amounts,
-        'form': form,
         'contains_subprojects': project.contains_subprojects,
         'category_forms': category_forms,
         'category_form': CategoryForm(prefix="category_form", **{'project_id': project.id})
     }
-
-    # TODO: BNG base url
-    base_url_auth = ""
 
     budget = ''
     if project.budget:
@@ -726,9 +667,6 @@ def project(project_id):
         project_owner=project_owner,
         user_subproject_ids=user_subproject_ids,
         timestamp=util.get_export_timestamp(),
-        server_name=app.config['SERVER_NAME'],  # TODO Remove or edit
-        bunq_client_id=app.config['URL_PREFIX'],  # TODO Remove or edit
-        base_url_auth=base_url_auth,
         modal_id=json.dumps(modal_id),
         payment_id=json.dumps(payment_id)
     )
