@@ -151,10 +151,6 @@ def index():
     # return the validated version. modal_id is used to pop open the modal
     # on loading the page, if it contains a validated form.
     project_form = NewProjectForm(prefix="project_form")
-    # We do this to label every card number with an index if the form is returned with errors.
-    for idx in range(0, len(project_form.card_numbers)):
-        l = project_form.card_numbers[idx].card_number.label.text
-        project_form.card_numbers[idx].card_number.label.text = l + " " + str(idx + 1)
     form_redirect = process_new_project_form(project_form)
     if form_redirect:
         return form_redirect

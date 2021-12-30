@@ -290,7 +290,7 @@ class DebitCard(db.Model):
         backref='debit_card',
         lazy='dynamic'
     )
-    project_id = db.Column(db.ForeignKey('project.id', ondelete="CASCADE"))
+    project_id = db.Column(db.ForeignKey('project.id', ondelete="SET NULL"))
 
 
 # TODO: Make this compatible with BNG payments if necessary.

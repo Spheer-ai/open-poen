@@ -552,8 +552,35 @@ def generate_new_payment_form(project, subproject):
 
 
 def process_new_project_form(form):
+    if form_in_request(form, request):
+        # We need to rerender the form if the user wants to add funders, debit cards or subprojects, but hasn't
+        # received the rerendered form yet to actually enter those.
+        rerender = False
+        funders_to_add = form.funders_amount.data - len(form.funders)
+        if funders_to_add > 0:
+            for x in range(0, funders_to_add):
+                form.funders.append_entry()
+            rerender = True
+            del form.funders_amount
+        debit_cards_to_add = form.card_numbers_amount.data - len(form.card_numbers)
+        if debit_cards_to_add > 0:
+            for x in range(0, debit_cards_to_add):
+                form.card_numbers.append_entry()
+            rerender = True
+            del form.card_numbers_amount
+        subprojects_to_add = form.subprojects_amount.data - len(form.subprojects)
+        if subprojects_to_add > 0:
+            for x in range(0, subprojects_to_add):
+                form.subprojects.append_entry()
+            rerender = True
+            del form.subprojects_amount
+        if rerender:
+            form.errors["rerender"] = "rerender"
+            return
+
     if not util.validate_on_submit(form, request):
         return
+
     # TODO: We don't want this hardcoded.
     new_project_fields = ["name", "description", "contains_subprojects", "hidden", "hidden_sponsors", "budget"]
     new_project_data = {x.short_name: x.data for x in form if x.short_name in new_project_fields}

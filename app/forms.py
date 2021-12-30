@@ -107,19 +107,19 @@ class LoginForm(FlaskForm):
 
 
 class NewProjectFunderForm(FlaskForm):
-    name = StringField('Naam', validators=[Optional(), Length(max=120)])
+    name = StringField('Naam', validators=[DataRequired(), Length(max=120)])
     url = StringField(
-        'URL', validators=[Optional(), URL(), Length(max=2000)]
+        'URL', validators=[DataRequired(), URL(), Length(max=2000)]
     )
 
 
 class CardNumber(FlaskForm):
-    card_number = StringField("Pasnummer", validators=[Optional()])
+    card_number = StringField("Pasnummer", validators=[DataRequired()])
 
 
 class NewProjectSubprojectForm(FlaskForm):
-    name = StringField('Naam', validators=[Optional(), Length(max=120)])
-    description = TextAreaField('Beschrijving', validators=[Optional()])
+    name = StringField('Naam', validators=[DataRequired(), Length(max=120)])
+    description = TextAreaField('Beschrijving', validators=[DataRequired()])
     hidden = BooleanField('Initiatief verbergen')
     budget = IntegerField('Budget voor dit initiatief', validators=[Optional()])
 
@@ -137,21 +137,24 @@ class NewProjectForm(FlaskForm):
     hidden = BooleanField('Project verbergen')
     hidden_sponsors = BooleanField('Sponsoren verbergen')
     budget = IntegerField('Budget voor dit project', validators=[Optional()])
+    card_numbers_amount = IntegerField("Aantal toe te voegen betaalpassen.", default=0)
     card_numbers = FieldList(
         FormField(CardNumber),
-        min_entries=1,
+        min_entries=0,
         max_entries=None,
         validators=[]
     )
+    funders_amount = IntegerField("Aantal toe te voegen sponsoren.", default=0)
     funders = FieldList(
         FormField(NewProjectFunderForm),
-        min_entries=1,
+        min_entries=0,
         max_entries=None,
         validators=[]
     )
+    subprojects_amount = IntegerField("Aantal toe te voegen initiatieven.", default=0)
     subprojects = FieldList(
         FormField(NewProjectSubprojectForm),
-        min_entries=1,
+        min_entries=0,
         max_entries=None,
         validators=[]
     )

@@ -206,9 +206,18 @@
                                 {{ wtf.form_field(project_form.hidden) }}
                                 {{ wtf.form_field(project_form.hidden_sponsors) }}
                                 {{ wtf.form_field(project_form.budget) }}
+                                {% if project_form.funders_amount %}
+                                {{ wtf.form_field(project_form.funders_amount)}}
+                                {% endif %}
+                                {% if project_form.card_numbers_amount %}
+                                {{ wtf.form_field(project_form.card_numbers_amount)}}
+                                {% endif %}
+                                {% if project_form.subprojects_amount %}
+                                {{ wtf.form_field(project_form.subprojects_amount)}}
+                                {% endif %}
                               </div>
+                              {% if project_form.funders|length > 0 %}
                               <div class="project-unit">
-                                <div id="project-funders">
                                   <h2>Sponsoren</h2>
                                   <p>Voer hier de sponsoren van het project in. Vul of beide velden in, of laat beide velden leeg.</p>
                                   {% for funder in project_form.funders %}
@@ -218,47 +227,33 @@
                                   {{ funder.csrf_token }}
                                   {% endfor %}
                                 </div>
-                                <div class="bng-info-unit" id="add-funder">
-                                  <i class="fas fa-plus fa-3x"></i>
-                                  <p>Voeg meer sponsoren toe.</p>
-                                </div>
-                              </div>
+                              {% endif %}
+                              {% if project_form.card_numbers|length > 0 %}
                               <div class="project-unit">
-                                <div id="project-ibans">
                                   <h2>Betaalpassen</h2>
                                   <p>Voer hier de betaalpassen in die aan het project moeten worden gekoppeld. Voer of een valide IBAN in, of laat
                                     het veld leeg.</p>
                                   {% for card_number in project_form.card_numbers %}
+                                  <p>Betaalpas {{ loop.index }}</p>
                                   {{ wtf.form_field(card_number.card_number) }}
                                   {{ card_number.csrf_token }}
                                   {% endfor %}
-                                </div>
-                                <div class="bng-info-unit" id="add-iban">
-                                  <i class="fas fa-plus fa-3x"></i>
-                                  <p>Voeg meer betaalpassen toe.</p>
-                                </div>
                               </div>
+                              {% endif %}
+                              {% if project_form.subprojects|length > 0 %}
                               <div class="project-unit">
                                   <h2>Initiatieven</h2>
                                   <p>Voeg hier de initiatieven in die moeten worden aangemaakt voor dit project. Laat de velden leeg als je alleen het hoofdproject wilt aanmaken.</p>
-                                  <div id="project-subprojects">
                                   {% for subproject in project_form.subprojects %}
                                     <p>Initiatief {{ loop.index }}</p>
-                                    <div class="project-subproject">
                                       {{ wtf.form_field(subproject.form.name) }}
                                       {{ wtf.form_field(subproject.form.description) }}
                                       {{ wtf.form_field(subproject.form.hidden) }}
                                       {{ wtf.form_field(subproject.form.budget) }}
                                       {{ subproject.csrf_token }}
-                                    </div>
                                   {% endfor %}
-                                  </div>
-                                <div class="bng-info-unit" id="add-subproject">
-                                  <i class="fas fa-plus fa-3x"></i>
-                                  <p>Voeg meer initiatieven toe.</p>
-                                </div>
                               </div>
-                              
+                              {% endif %}
                             </div>
                           </div>
                           <div class="modal-footer">
