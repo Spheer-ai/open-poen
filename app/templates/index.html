@@ -228,9 +228,9 @@
                                   <h2>Betaalpassen</h2>
                                   <p>Voer hier de betaalpassen in die aan het project moeten worden gekoppeld. Voer of een valide IBAN in, of laat
                                     het veld leeg.</p>
-                                  {% for iban in project_form.ibans %}
-                                  {{ wtf.form_field(iban.iban) }}
-                                  {{ iban.csrf_token }}
+                                  {% for card_number in project_form.card_numbers %}
+                                  {{ wtf.form_field(card_number.card_number) }}
+                                  {{ card_number.csrf_token }}
                                   {% endfor %}
                                 </div>
                                 <div class="bng-info-unit" id="add-iban">

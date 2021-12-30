@@ -19,33 +19,10 @@ allowed_extensions = [
 
 
 def validate_iban(form, field):
-    if (field.data.startswith("NL") and field.data[4:7] == "BNG" and
-        all([(x.isdigit()) for x in field.data[8:]])):
+    if (field.data.startswith("NL") and field.data[4:7] == "BNG" and all([(x.isdigit()) for x in field.data[8:]])):
         return
     else:
         raise ValidationError(f"{field.data} is niet een BNG-rekening.")
-
-
-def validate_iban_list(form, field):
-    errors = []
-    for idx, f in enumerate(field.data):
-        # Ensure all fields are either blank (no data) or contain a valid
-        # BNG IBAN.
-        if f == "":
-            continue
-        if not (f.startswith("NL") and f[4:7] == "BNG" and
-            all([(x.isdigit()) for x in f[8:]])):
-            errors.append(idx + 1)
-    if len(errors) > 0:
-        errors = [str(x) for x in errors]
-        raise ValidationError(
-            "De volgende pasnummers zijn geen BNG-rekening: " + ", ".join(errors) + "."
-        )
-    no_blanks = [x for x in field.data if x != ""]
-    if not len(set(no_blanks)) == len(no_blanks):
-        raise ValidationError(
-            "De opgegeven pasnummers zijn niet uniek."
-        )
 
 
 class BNGLinkForm(FlaskForm):
@@ -136,8 +113,8 @@ class NewProjectFunderForm(FlaskForm):
     )
 
 
-class NewProjectIBANForm(FlaskForm):
-    iban = StringField("Pasnummer", validators=[Optional(), validate_iban])
+class CardNumber(FlaskForm):
+    card_number = StringField("Pasnummer", validators=[Optional()])
 
 
 class NewProjectSubprojectForm(FlaskForm):
@@ -160,8 +137,8 @@ class NewProjectForm(FlaskForm):
     hidden = BooleanField('Project verbergen')
     hidden_sponsors = BooleanField('Sponsoren verbergen')
     budget = IntegerField('Budget voor dit project', validators=[Optional()])
-    ibans = FieldList(
-        FormField(NewProjectIBANForm),
+    card_numbers = FieldList(
+        FormField(CardNumber),
         min_entries=1,
         max_entries=None,
         validators=[]
@@ -183,12 +160,6 @@ class NewProjectForm(FlaskForm):
         'Opslaan',
         render_kw={
             'class': 'btn btn-info'
-        }
-    )
-    remove = SubmitField(
-        'Verwijderen',
-        render_kw={
-            'class': 'btn btn-danger'
         }
     )
 

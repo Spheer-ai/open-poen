@@ -21,7 +21,7 @@ from app.form_processing import (
     generate_new_payment_form, process_category_form, process_new_payment_form, process_payment_form, create_payment_forms,
     process_transaction_attachment_form, create_edit_attachment_forms,
     process_edit_attachment_form, save_attachment, process_subproject_form,
-    process_bng_link_form, process_bng_callback, get_bng_info, get_bng_payments
+    process_bng_link_form, process_bng_callback, get_bng_info, get_bng_payments, process_new_project_form
 )
 from sqlalchemy.exc import IntegrityError
 
@@ -70,7 +70,7 @@ def index():
     bng_info = {}
 
     # Debugging
-    get_bng_payments()
+    # get_bng_payments()
 
     if current_user.is_authenticated:
         if current_user.admin:
@@ -151,41 +151,15 @@ def index():
     # return the validated version. modal_id is used to pop open the modal
     # on loading the page, if it contains a validated form.
     project_form = NewProjectForm(prefix="project_form")
-    for idx in range(0, len(project_form.ibans)):
-        l = project_form.ibans[idx].iban.label.text
-        project_form.ibans[idx].iban.label.text = l + " " + str(idx + 1)
-    # Save (i.e. create) project
-    if util.validate_on_submit(project_form, request):
-        new_project_data = {}
-        for f in project_form:
-            if f.type != 'SubmitField' and f.type != 'CSRFTokenField':
-                new_project_data[f.short_name] = f.data
-
-        try:
-            # TODO Implement object creation.
-            project = Project(**new_project_data)
-            db.session.add(project)
-            db.session.commit()
-            flash(
-                '<span class="text-default-green">Project "%s" is '
-                'toegevoegd</span>' % (
-                    new_project_data['name']
-                )
-            )
-        except IntegrityError as e:
-            db.session().rollback()
-            app.logger.error(repr(e))
-            flash(
-                '<span class="text-default-red">Project toevoegen mislukt: '
-                'naam "%s" bestaat al, kies een andere naam <span>' % (
-                    new_project_data['name']
-                )
-            )
-        # redirect back to clear form data
-        return redirect(url_for('index'))
-    else:
-        if len(project_form.errors) > 0:
-            modal_id = ["#modal-project-toevoegen"]
+    # We do this to label every card number with an index if the form is returned with errors.
+    for idx in range(0, len(project_form.card_numbers)):
+        l = project_form.card_numbers[idx].card_number.label.text
+        project_form.card_numbers[idx].card_number.label.text = l + " " + str(idx + 1)
+    form_redirect = process_new_project_form(project_form)
+    if form_redirect:
+        return form_redirect
+    if len(project_form.errors) > 0:
+        modal_id = ["#modal-project-toevoegen"]
 
     # BNG
     bng_link_form = BNGLinkForm(prefix="bng_link_form")
@@ -348,7 +322,7 @@ def project(project_id):
     funder_forms = []
     for funder in project.funders:
         funder_forms.append(
-            FunderForm(prefix=f"funder_form", **{
+            FunderForm(prefix="funder_form", **{
                 'name': funder.name,
                 'url': funder.url,
                 'id': funder.id

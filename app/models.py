@@ -132,8 +132,6 @@ class User(UserMixin, db.Model):
     active = db.Column(db.Boolean, default=True)
     image = db.Column(db.Integer, db.ForeignKey('file.id', ondelete='SET NULL'))
 
-    debit_cards = db.relationship('DebitCard', backref='user', lazy='dynamic')
-
     def is_active(self):
         return self.active
 
@@ -215,6 +213,11 @@ class Project(db.Model):
         lazy='dynamic'
     )
     categories = db.relationship('Category', backref='project', lazy='dynamic')
+    debit_cards = db.relationship(
+        'DebitCard',
+        backref='project',
+        lazy='dynamic'
+    )
 
     def set_bank_name(self, bank_name):
         self.bank_name = bank_name
@@ -252,11 +255,6 @@ class Subproject(db.Model):
         backref='subprojects',
         lazy='dynamic'
     )
-    debit_cards = db.relationship(
-        'DebitCard',
-        backref='subproject',
-        lazy='dynamic'
-    )
     payments = db.relationship('Payment', backref='subproject', lazy='dynamic')
     images = db.relationship(
         'File',
@@ -286,10 +284,13 @@ class Subproject(db.Model):
 
 # TODO: Use this for BNG.
 class DebitCard(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    iban = db.Column(db.String(34), db.ForeignKey('subproject.iban'))
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    card_id = db.Column(db.Integer)
+    card_number = db.Column(db.String(22), primary_key=True)
+    payments = db.relationship(
+        'Payment',
+        backref='debit_card',
+        lazy='dynamic'
+    )
+    project_id = db.Column(db.ForeignKey('project.id', ondelete="CASCADE"))
 
 
 # TODO: Make this compatible with BNG payments if necessary.
@@ -334,7 +335,7 @@ class Payment(db.Model):
     remittance_information_structured = db.Column(db.Text())
     # Can be 'inbesteding', 'uitgaven' or 'inkomsten'
     route = db.Column(db.String(12))
-    card_number = db.Column(db.String(22))
+    card_number = db.Column(db.String(22), db.ForeignKey('debit_card.card_number'))
 
     # Fields coming from the user
     short_user_description = db.Column(db.String(50))
