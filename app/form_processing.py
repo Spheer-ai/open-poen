@@ -557,16 +557,7 @@ def process_new_project_form(form):
     # TODO: We don't want this hardcoded.
     new_project_fields = ["name", "description", "contains_subprojects", "hidden", "hidden_sponsors", "budget"]
     new_project_data = {x.short_name: x.data for x in form if x.short_name in new_project_fields}
-
-    try:
-        project = Project(**new_project_data)
-        db.session.add(project)
-        db.session.commit()
-        formatted_flash(f"Project {project.name} is toegevoegd.", color="green")
-    except IntegrityError:
-        db.session().rollback()
-        formatted_flash(f"Het project is niet toegevoegd. Er bestaat al een project met de naam {project.name}.",
-                        color="red")
+    new_project = Project(**new_project_data)
 
     # Of all the cards entered, check whether they already exist. (Debit cards are created as payments are parsed.)
     # If they already exist, we just need to assign them to the project that we are creating. If they are already
@@ -574,42 +565,44 @@ def process_new_project_form(form):
     # never been parsed yet, but that doesn't matter to the user, so we add it in advance.
     card_numbers = [x.card_number.data for x in form.card_numbers]
     already_existing_debit_cards = [x for x in DebitCard.query.all() if x.card_number in card_numbers]
-    if any([x.project_id is not None for x in already_existing_debit_cards]):
-        raise ValueError(("Een van de ingevoerde betaalpassen is al toegewezen aan een ander project. "
-                          "Verwijder deze eerst en probeer het dan nog eens."))
-    for x in already_existing_debit_cards:
-        x.project_id = project.id
-    new_debit_cards = [DebitCard(card_number=x, project_id=project.id) for x in card_numbers
+    already_assigned_debit_cards = [x for x in already_existing_debit_cards if x.project_id is not None]
+    if len(already_existing_debit_cards) > 0:
+        already_existing_debit_cards = ", ".join(already_existing_debit_cards)
+        formatted_flash((f"De volgende passen zijn al gekoppeld aan een project: {already_assigned_debit_cards}. "
+                         "Verwijder deze eerst uit dat project, om ze aan dit project toe te voegen."),
+                        color="red")
+        return
+    new_debit_cards = [DebitCard(card_number=x) for x in card_numbers
                        if x not in [i.card_number for i in already_existing_debit_cards]]
 
-    try:
-        db.session.bulk_save_objects(already_existing_debit_cards + new_debit_cards)
-        db.session.commit()
-    except (ValueError, IntegrityError):
-        db.session.rollback()
-        raise
-
-    funders = [Funder(name=x.form.name.data, url=x.form.url.data, project_id=project.id) for x in form.funders]
-
-    try:
-        db.session.bulk_save_objects(funders)
-        db.session.commit()
-    except (ValueError, IntegrityError):
-        db.session.rollback()
-        raise
+    funders = [Funder(name=x.form.name.data, url=x.form.url.data) for x in form.funders]
 
     # TODO: We don't want this hardcoded.
     new_subproject_fields = ["name", "description", "hidden", "budget"]
     new_subproject_data = [{x.short_name: x.data for x in i
                            if x.short_name in new_subproject_fields} for i in form.subprojects]
-    subprojects = [Subproject(**x, project_id=project.id) for x in new_subproject_data]
+    subprojects = [Subproject(**x) for x in new_subproject_data]
+    if not len(subprojects) == len(set([x.name for x in subprojects])):
+        formatted_flash(("Minstens twee initiatieven hebben dezelfde naam. Geef elk initiatief "
+                         "een unieke naam om een project aan te maken."),
+                        color="red")
+        return
+
+    new_project.debit_cards = already_existing_debit_cards + new_debit_cards
+    new_project.funders = funders
+    new_project.subprojects = subprojects
 
     try:
-        db.session.bulk_save_objects(subprojects)
+        db.session.add(new_project)
         db.session.commit()
-    except (ValueError, IntegrityError):
-        db.session.rollback()
-        raise
+        formatted_flash(f"Project {new_project.name} is toegevoegd.", color="green")
+        return redirect(url_for("index"))
+    except (ValueError, IntegrityError) as e:
+        app.logger.error(repr(e))
+        db.session().rollback()
+        # This should, in practise, be the only case possible that results in the aforementioned exceptions.
+        formatted_flash(f"Het project is niet toegevoegd. Er bestaat al een project met de naam {new_project.name}.",
+                        color="red")
 
 
 def process_bng_link_form(form):
