@@ -591,8 +591,8 @@ def process_new_project_form(form):
     card_numbers = [x.card_number.data for x in form.card_numbers]
     already_existing_debit_cards = [x for x in DebitCard.query.all() if x.card_number in card_numbers]
     already_assigned_debit_cards = [x for x in already_existing_debit_cards if x.project_id is not None]
-    if len(already_existing_debit_cards) > 0:
-        already_existing_debit_cards = ", ".join(already_existing_debit_cards)
+    if len(already_assigned_debit_cards) > 0:
+        already_assigned_debit_cards = ", ".join([x.card_number for x in already_assigned_debit_cards])
         formatted_flash((f"De volgende passen zijn al gekoppeld aan een project: {already_assigned_debit_cards}. "
                          "Verwijder deze eerst uit dat project, om ze aan dit project toe te voegen."),
                         color="red")
