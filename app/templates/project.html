@@ -173,17 +173,6 @@
 
                   {% if project_owner %}
                     <div class="text-center">
-                      {% if project_data['already_authorized'] and project_data['iban'] %}
-                      <p>Rekening {{ project_data['iban'] }} - {{ project_data['iban_name'] }} ({{ project_data['bank_name'] }}) is gekoppeld aan dit project</p>
-                      {% elif project_data['already_authorized'] and not project_data['iban'] %}
-                      <p><i>Er is een {{project_data['bank_name']}} account gekoppeld aan dit project, maar er is nog geen IBAN geselecteerd. Bewerk dit project en selecteer de IBAN die bij dit project hoort.</i></p>
-                      {% else %}
-                        <p>
-                          Koppel een Bunq account aan project <b>{{ project_data.name }}</b>:
-                          <br>
-                          <a href="{{ base_url_auth }}/auth?response_type=code&client_id={{ bunq_client_id }}&redirect_uri=https://{{ server_name }}/&state={{ project_data.bunq_token }}" rel="noopener"><img class="bunq-connect-button" src="{{ url_for('static', filename='images/bunq_Connect_button_svg.svg') }}"></a>
-                        </p>
-                      {% endif %}
 
                       <!-- Button trigger modal -->
                       <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#project-bewerken">
