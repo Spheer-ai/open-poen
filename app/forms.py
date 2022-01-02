@@ -129,10 +129,7 @@ class NewProjectForm(FlaskForm):
     description = TextAreaField('Beschrijving', validators=[DataRequired()])
     contains_subprojects = BooleanField(
         'Uitgaven van dit project gebeuren via subrekeningen en subprojecten',
-        render_kw={
-            'checked': '',
-            'value': 'y'
-        }
+        default="checked"
     )
     hidden = BooleanField('Project verbergen')
     hidden_sponsors = BooleanField('Sponsoren verbergen')

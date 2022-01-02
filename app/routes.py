@@ -168,14 +168,6 @@ def index():
         # DEBUGGING
         bng_link_form.iban.data = "NL34BNGT5532530633"
 
-    # Calculate amounts awarded and spent
-    # total_awarded = all current project balances
-    #               + abs(all spent project amounts)
-    #               - all amounts received from own subprojects (in the
-    #                 case the didn't spend all their money and gave it
-    #                 back)
-    # total_spent = abs(all spend subproject amounts)
-    #             - all amounts paid back by suprojects to their project
     total_awarded = 0
     total_spent = 0
     project_data = []

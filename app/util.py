@@ -7,7 +7,7 @@ from time import sleep
 import locale
 from app import app, db
 from app.email import send_invite
-from app.models import Payment, Project, Subproject, IBAN, User
+from app.models import Payment, Project, Subproject, IBAN, User, DebitCard
 from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 
@@ -39,28 +39,24 @@ def format_currency(num, currency_symbol='€ '):
 
 def calculate_project_amounts(project_id):
     project = Project.query.get(project_id)
-    subprojects = Subproject.query.filter_by(project_id=project_id).all()
-    payments = Payment.query.filter(or_(
-        Payment.project_id == project_id,
-        Payment.subproject_id.in_([x.id for x in subprojects])
-    )).all()
+    payments = db.session.query(Payment).join(DebitCard).join(Project).filter(Project.id == project_id).all()
 
-    project_awarded, aanbesteding, inbesteding = 0, 0, 0
-    project_awarded += sum([x.transaction_amount for x in payments if x.route == "inkomsten"])
+    awarded, expenses, insourcing = 0, 0, 0
+    awarded += sum([x.transaction_amount for x in payments if x.route == "inkomsten"])
     # Make spent a positive number to make the output of this function consistent with
     # previous versions.
-    aanbesteding += -sum([x.transaction_amount for x in payments if x.route == "uitgaven"])
-    inbesteding += -sum([x.transaction_amount for x in payments if x.route == "inbesteding"])
-    
+    expenses += -sum([x.transaction_amount for x in payments if x.route == "uitgaven"])
+    insourcing += -sum([x.transaction_amount for x in payments if x.route == "inbesteding"])
+
     if project.budget:
-        spent = aanbesteding + inbesteding
+        spent = expenses + insourcing
     else:
-        spent = aanbesteding
+        spent = expenses
 
     amounts = {
         'id': project.id,
-        'awarded': project_awarded,
-        'awarded_str': format_currency(project_awarded),
+        'awarded': awarded,
+        'awarded_str': format_currency(awarded),
         'spent': spent
     }
 

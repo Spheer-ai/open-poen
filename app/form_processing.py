@@ -558,20 +558,20 @@ def process_new_project_form(form):
             for x in range(0, funders_to_add):
                 form.funders.append_entry()
             rerender = True
-            del form.funders_amount
         debit_cards_to_add = form.card_numbers_amount.data - len(form.card_numbers)
         if debit_cards_to_add > 0:
             for x in range(0, debit_cards_to_add):
                 form.card_numbers.append_entry()
             rerender = True
-            del form.card_numbers_amount
         subprojects_to_add = form.subprojects_amount.data - len(form.subprojects)
         if subprojects_to_add > 0:
             for x in range(0, subprojects_to_add):
                 form.subprojects.append_entry()
             rerender = True
-            del form.subprojects_amount
         if rerender:
+            del form.funders_amount
+            del form.card_numbers_amount
+            del form.subprojects_amount
             form.errors["rerender"] = "rerender"
             return
 
