@@ -130,7 +130,10 @@ def process_payment_form(request, project_or_subproject, project_owner, user_sub
         if temppayment.subproject:
             payment_form.category_id.choices = temppayment.subproject.make_category_select_options()
         else:
-            payment_form.category_id.choices = temppayment.project.make_category_select_options()
+            #     # If a payment is not manually assigned to a subproject, we have to go by the debit
+            #     # card that is associated with the payment, unless it has been manually added. This,
+            #     # still have to implement. # TODO
+            payment_form.category_id.choices = temppayment.debit_card.project.make_category_select_options()
 
         # Make sure the user is allowed to edit this payment
         # (especially needed when a normal users edits a subproject
@@ -139,7 +142,7 @@ def process_payment_form(request, project_or_subproject, project_owner, user_sub
             return
         # Make sure the transaction amount can't be changed if the transaction is not manual.
         if temppayment.type != "MANUAL":
-            payment_form.amount_value.data = temppayment.amount_value
+            payment_form.transaction_amount.data = temppayment.transaction_amount
     else:
         return
 
@@ -165,18 +168,11 @@ def process_payment_form(request, project_or_subproject, project_owner, user_sub
             )
         # Get data from the form
         else:
-            new_payment_data = {}
-            for f in payment_form:
-                if f.type != 'SubmitField' and f.type != 'CSRFTokenField':
-                    # If the category is edited to be empty again, make
-                    # sure to set it to None instead of ''
-                    if f.short_name == 'category_id':
-                        if f.data == '':
-                            new_payment_data[f.short_name] = None
-                        else:
-                            new_payment_data[f.short_name] = f.data
-                    else:
-                        new_payment_data[f.short_name] = f.data
+            # TODO: We don't want this hardcoded.
+            new_payment_fields = ["short_user_description", "long_user_description", "transaction_amount", "created",
+                                  "hidden", "category_id", "route", "id"]
+            new_payment_data = {x.short_name: x.data for x in payment_form if x.short_name in new_payment_fields}
+            new_payment_data["category_id"] = None if new_payment_data["category_id"] == "" else new_payment_data["category_id"]
 
             try:
                 # Update if the payment already exists
@@ -237,7 +233,7 @@ def create_payment_forms(payments):
             'short_user_description': payment.short_user_description,
             'long_user_description': payment.long_user_description,
             'created': payment.created,
-            'amount_value': payment.amount_value,
+            'transaction_amount': payment.transaction_amount,
             'id': payment.id,
             'hidden': payment.hidden,
             'category_id': "" if payment.category is None else payment.category.id,
@@ -251,7 +247,10 @@ def create_payment_forms(payments):
         if payment.subproject:
             payment_form.category_id.choices = payment.subproject.make_category_select_options()
         else:
-            payment_form.category_id.choices = payment.project.make_category_select_options()
+            # If a payment is not manually assigned to a subproject, we have to go by the debit
+            # card that is associated with the payment, unless it has been manually added. This,
+            # still have to implement. # TODO
+            payment_form.category_id.choices = payment.debit_card.project.make_category_select_options()
 
         payment_form.route.choices = [
             ('inkomsten', 'inkomsten'),
@@ -848,7 +847,8 @@ def parse_and_save_bng_payments(payments):
             **payment,
             route=route,
             created=datetime.now(),
-            card_number=card_number
+            card_number=card_number,
+            type="BNG"
         ))
 
     existing_ids = set([x.transaction_id for x in Payment.query.all()])

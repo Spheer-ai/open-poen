@@ -15,7 +15,7 @@ from app.forms import (
 )
 from app.email import send_password_reset_email
 from app.models import (
-    User, Project, Subproject, Payment, UserStory, IBAN, File, Funder, Category, BNGAccount
+    User, Project, Subproject, Payment, UserStory, IBAN, File, Funder, Category, BNGAccount, DebitCard, payment_attachment
 )
 from app.form_processing import (
     generate_new_payment_form, process_category_form, process_new_payment_form, process_payment_form, create_payment_forms,
@@ -370,30 +370,14 @@ def project(project_id):
         if payment_form_return and type(payment_form_return) != PaymentForm:
             return payment_form_return
 
-        # Populate the payment forms which allows the user to edit it
-        editable_payments = []
-        editable_attachments = []
-        if project.contains_subprojects:
-            if project_owner:
-                editable_payments += project.payments
-                for payment in project.payments:
-                    editable_attachments += payment.attachments
-            for subproject in project.subprojects:
-                if project_owner:
-                    editable_payments += subproject.payments
-                    for payment in subproject.payments:
-                        editable_attachments += payment.attachments
-                # If the user is not an admin/project owner then only allow it
-                # to edit payments from its subprojects
-                elif user_subproject_ids:
-                    for payment in subproject.payments:
-                        if payment.subproject_id in user_subproject_ids:
-                            editable_payments.append(payment)
-                            editable_attachments.append(payment.attachment)
-        else:
-            editable_payments = project.payments
-            for payment in project.payments:
-                editable_attachments += payment.attachments
+        # TODO: Document.
+        if project_owner:
+            editable_payments = db.session.query(Payment).join(DebitCard).join(Project).filter(Project.id == project.id).all()
+            editable_attachments = db.session.query(File).join(payment_attachment).join(Payment).filter(Payment.id.in_([x.id for x in editable_payments])).all()
+        elif user_subproject_ids:
+            # Payments are now always assigned manually to subprojects.
+            # A user that is not project owner or admin is only allowed to edit payments from its subprojects.
+            raise NotImplementedError("Not implemented yet.")
 
         if type(payment_form_return) == PaymentForm:
             payment_id = payment_form_return.id.data
@@ -433,13 +417,8 @@ def project(project_id):
         # Fill in attachment form data which allow a user to edit it
         edit_attachment_forms = create_edit_attachment_forms(editable_attachments)
 
-    payments = []
-    if project.contains_subprojects:
-        payments += project.payments
-        for subproject in project.subprojects:
-            payments += subproject.payments
-    else:
-        payments += project.payments
+    # TODO: Add subproject payments.
+    payments = db.session.query(Payment).join(DebitCard).join(Project).filter(Project.id == project.id).all()
 
     # Process filled in edit project owner form
     edit_project_owner_form = EditProjectOwnerForm(
@@ -579,21 +558,15 @@ def project(project_id):
     project_form.contains_subprojects.render_kw = {'disabled': ''}
 
     # Process filled in category form
-    category_form = ''
     category_form_return = process_category_form(request)
     if category_form_return:
         return category_form_return
 
-    # Retrieve data for each project
-    project_data = {}
     project_owner = False
     if current_user.is_authenticated and (
         current_user.admin or project.has_user(current_user.id)
     ):
         project_owner = True
-
-    already_authorized = False
-    form = ''
 
     # TODO Logic to define already_authorized to indicate if the
     # project already has passes linked to it.
@@ -633,7 +606,6 @@ def project(project_id):
         'description': project.description,
         'hidden': project.hidden,
         'hidden_sponsors': project.hidden_sponsors,
-        'already_authorized': already_authorized,
         'amounts': amounts,
         'contains_subprojects': project.contains_subprojects,
         'category_forms': category_forms,

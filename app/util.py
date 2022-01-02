@@ -46,11 +46,11 @@ def calculate_project_amounts(project_id):
     )).all()
 
     project_awarded, aanbesteding, inbesteding = 0, 0, 0
-    project_awarded += sum([x.amount_value for x in payments if x.route == "inkomsten"])
+    project_awarded += sum([x.transaction_amount for x in payments if x.route == "inkomsten"])
     # Make spent a positive number to make the output of this function consistent with
     # previous versions.
-    aanbesteding += -sum([x.amount_value for x in payments if x.route == "uitgaven"])
-    inbesteding += -sum([x.amount_value for x in payments if x.route == "inbesteding"])
+    aanbesteding += -sum([x.transaction_amount for x in payments if x.route == "uitgaven"])
+    inbesteding += -sum([x.transaction_amount for x in payments if x.route == "inbesteding"])
     
     if project.budget:
         spent = aanbesteding + inbesteding
@@ -100,11 +100,11 @@ def calculate_subproject_amounts(subproject_id):
     ).all()
 
     subproject_awarded, aanbesteding, inbesteding = 0, 0, 0
-    subproject_awarded += sum([x.amount_value for x in payments if x.route == "inkomsten"])
+    subproject_awarded += sum([x.transaction_amount for x in payments if x.route == "inkomsten"])
     # Make spent a positive number to make the output of this function consistent with
     # previous versions.
-    aanbesteding += -sum([x.amount_value for x in payments if x.route == "uitgaven"])
-    inbesteding += -sum([x.amount_value for x in payments if x.route == "inbesteding"])
+    aanbesteding += -sum([x.transaction_amount for x in payments if x.route == "uitgaven"])
+    inbesteding += -sum([x.transaction_amount for x in payments if x.route == "inbesteding"])
     
     if subproject.budget:
         spent = aanbesteding + inbesteding

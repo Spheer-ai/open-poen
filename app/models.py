@@ -336,6 +336,7 @@ class Payment(db.Model):
     # Can be 'inbesteding', 'uitgaven' or 'inkomsten'
     route = db.Column(db.String(12))
     card_number = db.Column(db.String(22), db.ForeignKey('debit_card.card_number'))
+    type = db.Column(db.String(20))
 
     # Fields coming from the user
     short_user_description = db.Column(db.String(50))
@@ -358,15 +359,15 @@ class Payment(db.Model):
         return_value = ''
         # Manually added payments don't have the balance_after_mutation_value
         # field
-        if not self.balance_after_mutation_value == None:
-            return_value = locale.format(
-                "%.2f",
-                self.balance_after_mutation_value,
-                grouping=True,
-                monetary=True
-            )
+        # if not self.balance_after_mutation_value == None:
+        #     return_value = locale.format(
+        #         "%.2f",
+        #         self.balance_after_mutation_value,
+        #         grouping=True,
+        #         monetary=True
+        #     )
         return return_value
-    
+
     def get_export_currency(self):
         return self.get_formatted_currency().replace("\u202f", "")
 
