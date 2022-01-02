@@ -476,7 +476,6 @@
                   {% endif %}
                   <th data-force-hide="true" data-sortable="true" data-field="bedrag" data-sorter="customSort">bedrag €</th>
                   <th data-sortable="true" data-field="verborgen" class="d-none d-xl-table-cell">verborgen</th>
-                  <th data-sortable="true" data-field="verzender" class="d-none d-sm-table-cell">verzender</th>
                   <th data-sortable="true" data-field="ontvanger" class="d-none d-md-table-cell">ontvanger</th>
                   <th data-sortable="true" data-field="omschrijving" class="d-none d-sm-table-cell">omschrijving</th>
                   <th data-sortable="true" data-field="datum" data-sorter="sortByDate" class="d-none d-xl-table-cell">datum</th>
@@ -488,7 +487,6 @@
                   <th class="d-none">bedrag €</th>
                   <th class="d-none">saldo na boeking €</th>
                   <th class="d-none">categorie</th>
-                  <th class="d-none">bankrekening verzender</th>
                   <th class="d-none">bankrekening ontvanger</th>
                   <th class="d-none">route</th>
                   <th class="d-none">type</th>
@@ -544,12 +542,9 @@
                     </td>
                     <td>
                       <div class="cell">
-                        {{ payment.alias_name }}
-                      </div>
-                    </td>
-                    <td>
-                      <div class="cell">
-                        {{ payment.counterparty_alias_name }}
+                        {% if payment.creditor_name %}
+                          {{ payment.creditor_name }}
+                        {% endif %}
                       </div>
                     </td>
                     <td>
@@ -586,12 +581,14 @@
                     </td>
                     <td>
                       <div class="cell">
-                        {{ payment.description }}
+                        {{ payment.remittance_information_structured }}
                       </div>
                     </td>
                     <td>
                       <div class="cell">
-                        {{ payment.long_user_description }}
+                        {% if payment.long_user_description %}
+                          {{ payment.long_user_description }}
+                        {% endif %}
                       </div>
                     </td>
                     <td>
@@ -601,6 +598,7 @@
                     </td>
                     <td>
                       <div class="cell">
+                        <!-- TODO: Implement this for BNG. -->
                         {{ payment.get_export_balance() }}
                       </div>
                     </td>
@@ -611,12 +609,9 @@
                     </td>
                     <td>
                       <div class="cell">
-                        {{ payment.alias_value }}
-                      </div>
-                    </td>
-                    <td>
-                      <div class="cell">
-                        {{ payment.counterparty_alias_value }}
+                        {% if payment.creditor_account %}
+                          {{ payment.creditor_account }}
+                        {% endif %}
                       </div>
                     </td>
                     <td>
@@ -629,7 +624,7 @@
                         {% if payment.type == "MANUAL" %}
                           handmatig
                         {% else %}
-                          bunq
+                          BNG
                         {% endif %}
                       </div>
                     </td>
@@ -638,28 +633,21 @@
                       <div class="detail-row">
                         <div class="row">
                           <div class="col-5">
-                            <b>Verzender</b>
+                            <b>Type</b>
                             <br>
-                            {% if payment.alias_name %}
-                              {{ payment.alias_name }}
-                            {% else %}
-                              <i>Niet ingevuld.</i>
-                            {% endif %}
-                            <br>
-                            <br>
-                            <b>Bankrekening verzender</b>
-                            <br>
-                            {% if payment.alias_value %}
-                              {{ payment.alias_value }}
-                            {% else %}
-                              <i>Niet ingevuld.</i>
+                            {% if payment.type == "BNG" %}
+                              <i>Betaling met betaalpas:</i>
+                              <br>
+                              {{ payment.debit_card.card_number }}
+                            {% elif payment.type == "MANUAL" %}
+                              <i>Handmatige betaling.</i>
                             {% endif %}
                             <br>
                             <br>
                             <b>Ontvanger</b>
                             <br>
-                            {% if payment.counterparty_alias_name %}
-                              {{ payment.counterparty_alias_name }}
+                            {% if payment.creditor_name %}
+                              {{ payment.creditor_name }}
                             {% else %}
                                 <i>Niet ingevuld.</i>
                             {% endif %}
@@ -667,8 +655,8 @@
                             <br>
                             <b>Bankrekening ontvanger</b>
                             <br>
-                            {% if payment.counterparty_alias_value %}
-                              {{ payment.counterparty_alias_value }}
+                            {% if payment.creditor_account %}
+                              {{ payment.creditor_account }}
                             {% else %}
                               <i>Niet ingevuld.</i>
                             {% endif %}
@@ -677,8 +665,8 @@
                             {% if payment.type != 'MANUAL' %}
                               <b>Betaal&shy;omschrijving</b>
                               <br>
-                              {% if payment.description %}
-                                {{ payment.description }}
+                              {% if payment.remittance_information_structured%}
+                                {{ payment.remittance_information_structured}}
                               {% else %}
                                 <i>geen beschrijving</i>
                               {% endif %}
@@ -686,7 +674,9 @@
                               <br>
                               <b>Saldo na boeking</b>
                               <br>
-                              €{{ payment.get_formatted_balance() }}
+                              <!-- TODO: Implement this for BNG. -->
+                              <!-- €{{ payment.get_formatted_balance() }} -->
+                              <i>Nog niet geïmplementeerd.</i>
                               <br>
                               <br>
                             {% endif %}

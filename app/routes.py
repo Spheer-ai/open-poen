@@ -364,8 +364,20 @@ def project(project_id):
 
         # TODO: Document.
         if project_owner:
-            editable_payments = db.session.query(Payment).join(DebitCard).join(Project).filter(Project.id == project.id).all()
-            editable_attachments = db.session.query(File).join(payment_attachment).join(Payment).filter(Payment.id.in_([x.id for x in editable_payments])).all()
+            editable_payments = (
+                db.session.query(Payment).
+                join(DebitCard).
+                join(Project).
+                filter(Project.id == project.id).
+                all()
+            )
+            editable_attachments = (
+                db.session.query(File).
+                join(payment_attachment).
+                join(Payment).
+                filter(Payment.id.in_([x.id for x in editable_payments])).
+                all()
+            )
         elif user_subproject_ids:
             # Payments are now always assigned manually to subprojects.
             # A user that is not project owner or admin is only allowed to edit payments from its subprojects.
