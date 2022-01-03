@@ -170,135 +170,201 @@
               {% else %}
                 <h3 class="text-center totaal">ontvangen inkomsten {{ amounts.awarded_str }}</h3>
               {% endif %}
-
-                  {% if project_owner %}
-                    <div class="text-center">
-
-                      <!-- Button trigger modal -->
-                      <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#project-bewerken">
-                        project bewerken
-                      </button>
-
-                      <!-- Modal -->
-                      <div class="modal fade" id="project-bewerken" tabindex="-1" role="dialog" aria-labelledby="projectBewerkenLabel" aria-hidden="true">
-                        <div class="modal-dialog" role="document">
-                          <div class="modal-content">
-                            <form method="POST">
-                              <div class="modal-header">
-                                <h5 class="modal-title" id="projectBewerkenLabel">Project Bewerken</h5>
-                                <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
-                                  <span aria-hidden="true">&times;</span>
-                                </button>
-                              </div>
-                              <div class="modal-body text-left">
-                                <b>Project owners</b>
-                                <br>
-                                <br>
-                                <!-- Button trigger modal -->
-                                <button type="button" class="btn button-poen-small bg-grey" data-toggle="modal" data-target="#project-owner-toevoegen">
-                                  project owner toevoegen
-                                </button>
-
-                                <br>
-                                <br>
-
-                                {% for project_owner_email, edit_project_owner_form in edit_project_owner_forms[project_data.id].items() %}
-                                  <div>
-                                    <!-- Button trigger modal -->
-                                    <button type="button" class="btn button-poen-small bg-grey-blue" data-toggle="modal" data-target="#project-owner-bewerken-{{ edit_project_owner_form.id.data }}">
-                                      project owner bewerken
-                                    </button>
-                                    {{ project_owner_email }}
-                                  </div>
-                                  <br>
-                                {% endfor %}
-
-                                <hr>
-
-                                {% if not project_data['contains_subprojects'] %}
-                                  <b>Categoriën</b>
-                                  <br>
-                                  <br>
-                                  <!-- Button trigger modal -->
-                                  <button type="button" class="btn button-poen-small bg-grey" data-toggle="modal" data-target="#categorie-toevoegen-{{ project_data.category_form.project_id.data }}">
-                                    categorie toevoegen
-                                  </button>
-                                  <br>
-                                  <br>
-
-                                  {% for category_form in project_data.category_forms %}
-                                    <!-- Button trigger modal -->
-                                    <div>
-                                      <button type="button" class="btn button-poen-small bg-grey-blue" data-toggle="modal" data-target="#categorie-bewerken-{{ category_form.id.data }}">
-                                        categorie bewerken
-                                      </button>
-                                    {{ category_form.name.data }}
-                                    </div>
-                                    <br>
-                                  {% endfor %}
-
-                                  <hr>
-                                {% endif %}
-
-                                <b>Algemene projectinstellingen</b>
-                                <br>
-                                <br>
-
-                                <div>
-                                  {{ project_form.csrf_token }}
-
-                                  {% for f in project_form %}
-                                    {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' %}
-                                      {{ wtf.form_field(f, class="form-control") }}
-                                    {% endif %}
-                                  {% endfor %}
-                                  {{ project_form.id }}
-                                </div>
-                              </div>
-                              <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
-
-                                {% if current_user.admin %}
-                                  <!-- Button trigger modal -->
-                                  <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#project-verwijder-{{ project_data['id'] }}">
-                                    Verwijderen
-                                  </button>
-                                {% endif %}
-
-                                {# Make sure this 'Opslaan' submit button is listed before the 'Verwijderen' submit button to make sure that hitting 'enter' defaults to the 'Opslaan' submit button #}
-                                {{ project_form.submit }}
-
-                                <!-- Modal -->
-                                <div class="modal fade" id="project-verwijder-{{ project_data['id'] }}" tabindex="-1" role="dialog" aria-labelledby="projectVerwijderLabel" aria-hidden="true">
-                                  <div class="modal-dialog" role="document">
-                                    <div class="modal-content">
-                                      <form method="POST">
-                                        <div class="modal-header">
-                                          <h5 class="modal-title" id="projectVerwijderLabel">Project Verwijderen</h5>
-                                          <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
-                                            <span aria-hidden="true">&times;</span>
-                                          </button>
-                                        </div>
-                                        <div class="modal-body">
-                                          <div>
-                                            <p>Weet u zeker dat u project "<b>{{ project_data['name'] }}</b>" wilt verwijderen? Hiermee worden alle transacties van de bijbehorende bankrekening en de door de gebruikers toegevoegde beschrijvingen en plaatjes uit de database van Open Poen verwijderd! Ook worden alle subprojecten die onder dit project vallen verwijderd! Als u een project niet wilt tonen aan het publiek kunt u het project ook 'verbergen' in plaats van verwijderen.</p>
-                                          </div>
-                                        </div>
-                                        <div class="modal-footer">
-                                          <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
-                                          {{ project_form.remove }}
-                                        </div>
-                                      </form>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            </form>
-                          </div>
-                        </div>
+            </div>
+            <div class="project-modals-card bg-white">
+            
+              <div class="text-center">
+                <!-- Button trigger modal -->
+                <button type="button" class="btn btn-info project-modal-btn" data-toggle="modal" data-target="#betaalpas-saldo">
+                  saldo betaalpas(sen)
+                </button>
+                <!-- Modal -->
+                <div class="modal fade" id="betaalpas-saldo" tabindex="-1" role="dialog" aria-labelledby="betaalpasSaldoLabel"
+                  aria-hidden="true">
+                  <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title" id="betaalpasSaldoLabel">Saldo betaalpas(sen)</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
+                          <span aria-hidden="true">&times;</span>
+                        </button>
+                      </div>
+                      <div class="modal-body text-left">
+                        <p>Hier moeten de saldi van de betaalpassen staan.</p>
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Terug</button>
                       </div>
                     </div>
-                  {% endif %}
+                  </div>
+                </div>
+                <!-- Button trigger modal -->
+                <button type="button" class="btn btn-danger project-modal-btn" data-toggle="modal" data-target="#betaalpas-kwijt">
+                  ik ben een betaalpas kwijt
+                </button>
+            
+                <!-- Modal -->
+                <div class="modal fade" id="betaalpas-kwijt" tabindex="-1" role="dialog" aria-labelledby="betaalpasKwijtLabel"
+                  aria-hidden="true">
+                  <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title" id="betaalpasKwijtLabel">Betaalpas Kwijt</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
+                          <span aria-hidden="true">&times;</span>
+                        </button>
+                      </div>
+                      <div class="modal-body text-left">
+                        <p>Je bent een betaalpas kwijt. Wat nu?</p>
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Terug</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+            
+                {% if project_owner %}
+            
+                <!-- Button trigger modal -->
+                <button type="button" class="btn btn-primary project-modal-btn" data-toggle="modal" data-target="#project-bewerken">
+                  project bewerken
+                </button>
+            
+                <!-- Modal -->
+                <div class="modal fade" id="project-bewerken" tabindex="-1" role="dialog" aria-labelledby="projectBewerkenLabel"
+                  aria-hidden="true">
+                  <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                      <form method="POST">
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="projectBewerkenLabel">Project Bewerken</h5>
+                          <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
+                            <span aria-hidden="true">&times;</span>
+                          </button>
+                        </div>
+                        <div class="modal-body text-left">
+                          <b>Project owners</b>
+                          <br>
+                          <br>
+                          <!-- Button trigger modal -->
+                          <button type="button" class="btn button-poen-small bg-grey" data-toggle="modal"
+                            data-target="#project-owner-toevoegen">
+                            project owner toevoegen
+                          </button>
+            
+                          <br>
+                          <br>
+            
+                          {% for project_owner_email, edit_project_owner_form in edit_project_owner_forms[project_data.id].items()
+                          %}
+                          <div>
+                            <!-- Button trigger modal -->
+                            <button type="button" class="btn button-poen-small bg-grey-blue" data-toggle="modal"
+                              data-target="#project-owner-bewerken-{{ edit_project_owner_form.id.data }}">
+                              project owner bewerken
+                            </button>
+                            {{ project_owner_email }}
+                          </div>
+                          <br>
+                          {% endfor %}
+            
+                          <hr>
+            
+                          {% if not project_data['contains_subprojects'] %}
+                          <b>Categoriën</b>
+                          <br>
+                          <br>
+                          <!-- Button trigger modal -->
+                          <button type="button" class="btn button-poen-small bg-grey" data-toggle="modal"
+                            data-target="#categorie-toevoegen-{{ project_data.category_form.project_id.data }}">
+                            categorie toevoegen
+                          </button>
+                          <br>
+                          <br>
+            
+                          {% for category_form in project_data.category_forms %}
+                          <!-- Button trigger modal -->
+                          <div>
+                            <button type="button" class="btn button-poen-small bg-grey-blue" data-toggle="modal"
+                              data-target="#categorie-bewerken-{{ category_form.id.data }}">
+                              categorie bewerken
+                            </button>
+                            {{ category_form.name.data }}
+                          </div>
+                          <br>
+                          {% endfor %}
+            
+                          <hr>
+                          {% endif %}
+            
+                          <b>Algemene projectinstellingen</b>
+                          <br>
+                          <br>
+            
+                          <div>
+                            {{ project_form.csrf_token }}
+            
+                            {% for f in project_form %}
+                            {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' %}
+                            {{ wtf.form_field(f, class="form-control") }}
+                            {% endif %}
+                            {% endfor %}
+                            {{ project_form.id }}
+                          </div>
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
+            
+                          {% if current_user.admin %}
+                          <!-- Button trigger modal -->
+                          <button type="button" class="btn btn-danger" data-toggle="modal"
+                            data-target="#project-verwijder-{{ project_data['id'] }}">
+                            Verwijderen
+                          </button>
+                          {% endif %}
+            
+                          {# Make sure this 'Opslaan' submit button is listed before the 'Verwijderen' submit button to make sure
+                          that hitting 'enter' defaults to the 'Opslaan' submit button #}
+                          {{ project_form.submit }}
+            
+                          <!-- Modal -->
+                          <div class="modal fade" id="project-verwijder-{{ project_data['id'] }}" tabindex="-1" role="dialog"
+                            aria-labelledby="projectVerwijderLabel" aria-hidden="true">
+                            <div class="modal-dialog" role="document">
+                              <div class="modal-content">
+                                <form method="POST">
+                                  <div class="modal-header">
+                                    <h5 class="modal-title" id="projectVerwijderLabel">Project Verwijderen</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
+                                      <span aria-hidden="true">&times;</span>
+                                    </button>
+                                  </div>
+                                  <div class="modal-body">
+                                    <div>
+                                      <p>Weet u zeker dat u project "<b>{{ project_data['name'] }}</b>" wilt verwijderen? Hiermee
+                                        worden alle transacties van de bijbehorende bankrekening en de door de gebruikers
+                                        toegevoegde beschrijvingen en plaatjes uit de database van Open Poen verwijderd! Ook worden
+                                        alle subprojecten die onder dit project vallen verwijderd! Als u een project niet wilt tonen
+                                        aan het publiek kunt u het project ook 'verbergen' in plaats van verwijderen.</p>
+                                    </div>
+                                  </div>
+                                  <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
+                                    {{ project_form.remove }}
+                                  </div>
+                                </form>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+
+              {% endif %}
+              </div>
             </div>
           </div>
 

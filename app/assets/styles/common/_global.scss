@@ -207,6 +207,19 @@ hr {
   margin-bottom: 26px;
 }
 
+.project-modals-card {
+  padding: 20px;
+  border-radius: 35px;
+  margin-bottom: 26px;
+}
+
+.project-modals-card {
+  .project-modal-btn {
+    min-width: 80%;
+    margin-bottom: 6px;
+  }
+}
+
 .amounts-card-title {
   color: $text-color-main;
 
