@@ -292,8 +292,8 @@
                             <div>
                             {% if bng_info %}
                               <div class="bng-info-unit">
-                                <i class="fas fa-link fa-2x fa-fw" style="color: green"></i>
-                                <p>Koppeling is aangemaakt.</p>
+                                <i class="fas fa-link fa-2x fa-fw" style="color: {{ bng_info['created']['color'] }}"></i>
+                                <p>{{ bng_info["created"]["message"] }}</p>
                               </div>
                               <div class="bng-info-unit">
                               <i class="fas fa-wifi fa-2x fa-fw" style="color: {{ bng_info['status']['color'] }}"></i>

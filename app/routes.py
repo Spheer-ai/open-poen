@@ -74,13 +74,7 @@ def index():
 
     if current_user.is_authenticated:
         if current_user.admin:
-            linked_bng_accounts = BNGAccount.query.all()
-            if len(linked_bng_accounts) > 1:
-                # TODO: The decision was made to link only one account for now.
-                # We can implement logic to handle multiple accounts later on.
-                raise NotImplementedError("Multiple BNG accounts linked to Open Poen.")
-            elif len(linked_bng_accounts) > 0:
-                bng_info = get_bng_info(linked_bng_accounts[0])
+            bng_info = get_bng_info(BNGAccount.query.all())
 
     if request.args.get("state"):
         redirect = process_bng_callback(request)
@@ -229,6 +223,10 @@ def index():
 def project(project_id):
     modal_id = None
     payment_id = None
+    bng_info = {}
+
+    if current_user.is_authenticated:
+        bng_info = get_bng_info(BNGAccount.query.all())
 
     project = Project.query.get(project_id)
 
@@ -644,7 +642,8 @@ def project(project_id):
         user_subproject_ids=user_subproject_ids,
         timestamp=util.get_export_timestamp(),
         modal_id=json.dumps(modal_id),
-        payment_id=json.dumps(payment_id)
+        payment_id=json.dumps(payment_id),
+        bng_info=bng_info
     )
 
 

@@ -757,42 +757,45 @@ def get_days_until(date):
     return days_left, color
 
 
-def get_bng_info(bng_account):
-    try:
-        bng_info = bng.retrieve_consent_details(
-            bng_account.consent_id,
-            bng_account.access_token
-        )
-    except ConnectionError as e:
-        app.logger.error(repr(e))
-        formatted_flash(("Er is een BNG-koppeling, maar de status kon niet worden opgehaald. De beheerder van "
-                         "Open Poen is op de hoogte gebracht."), color="red")
-        days_left, days_left_color = get_days_until(bng_account.expires_on)
-        date_last_sync = "12-12-2021"  # TODO Add time of last payment import.
-
-        return {
-            "status": {
-                "color": "red",
-                "message": "Koppeling is offline."
-            },
-            "days_left": {
-                "color": days_left_color,
-                "message": f"Nog {days_left} dagen geldig."
-            },
-            "sync": {
-                "color": "green",
-                "message": f"Laatst gesynchroniseerd op {date_last_sync}."
-            }
-        }
-
-    status = "online" if bng_info["consentStatus"] == "valid" else "offline"
-    status_color = "green" if status == "online" else "red"
-    days_left, days_left_color = get_days_until(
-        datetime.strptime(bng_info["validUntil"], "%Y-%m-%d")
-    )
-    date_last_sync = "12-12-2021"  # TODO Add time of last payment import.
+def get_bng_info(linked_bng_accounts):
+    if len(linked_bng_accounts) > 1:
+        raise NotImplementedError("Open Poen now only supports a single coupling with a BNG account.")
+    elif len(linked_bng_accounts) == 0:
+        created, created_color = "niet aangemaakt", "red"
+        status, status_color = "offline", "red"
+        days_left, days_left_color = 0, "red"
+        # TODO Add time of last payment import.
+        date_last_sync, date_last_sync_color = "12-12-2021", "green"
+    else:
+        bng_account = linked_bng_accounts[0]
+        created_color, created = "green", "aangemaakt"
+        try:
+            bng_info = bng.retrieve_consent_details(
+                bng_account.consent_id,
+                bng_account.access_token
+            )
+        except ConnectionError as e:
+            app.logger.error(repr(e))
+            formatted_flash(("Er is een BNG-koppeling, maar de status kon niet worden opgehaald. De beheerder van "
+                            "Open Poen is op de hoogte gebracht."), color="red")
+            status, status_color = "red", "offline"
+            days_left, days_left_color = get_days_until(bng_account.expires_on)
+            # TODO Add time of last payment import.
+            date_last_sync, date_last_sync_color = "12-12-2021", "green"
+        else:
+            status = "online" if bng_info["consentStatus"] == "valid" else "offline"
+            status_color = "green" if status == "online" else "red"
+            days_left, days_left_color = get_days_until(
+                datetime.strptime(bng_info["validUntil"], "%Y-%m-%d")
+            )
+            # TODO Add time of last payment import.
+            date_last_sync, date_last_sync_color = "12-12-2021", "green"
 
     return {
+        "created": {
+            "color": created_color,
+            "message": f"Koppeling is {created}."
+        },
         "status": {
             "color": status_color,
             "message": f"Koppeling is {status}."
@@ -802,7 +805,7 @@ def get_bng_info(bng_account):
             "message": f"Nog {days_left} dagen geldig."
         },
         "sync": {
-            "color": "green",
+            "color": date_last_sync_color,
             "message": f"Laatst gesynchroniseerd op {date_last_sync}."
         }
     }
