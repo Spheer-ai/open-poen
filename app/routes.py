@@ -66,25 +66,21 @@ def before_request():
 
 @app.route("/", methods=['GET', 'POST'])
 def index():
-    modal_id = None
+    modal_id = None  # This is used to pop open a modal on page load in case of
+    # form errors.
     bng_info = {}
-
-    # Debugging
-    # get_bng_payments()
 
     if current_user.is_authenticated:
         if current_user.admin:
             bng_info = get_bng_info(BNGAccount.query.all())
 
     if request.args.get("state"):
-        redirect = process_bng_callback(request)
-        if redirect:
-            return redirect
+        bng_redirect = process_bng_callback(request)
+        if bng_redirect:
+            return bng_redirect
 
-    # Process filled in edit admin form
     edit_admin_form = EditAdminForm(prefix="edit_admin_form")
 
-    # Update admin
     if util.validate_on_submit(edit_admin_form, request):
         admins = User.query.filter_by(id=edit_admin_form.id.data)
         new_admin_data = {}
@@ -92,18 +88,15 @@ def index():
             if f.type != 'SubmitField' and f.type != 'CSRFTokenField':
                 new_admin_data[f.short_name] = f.data
 
-        # Update if the admin exists
         if len(admins.all()):
             admins.update(new_admin_data)
             db.session.commit()
-            flash('<span class="text-default-green">gebruiker is bijgewerkt</span>')
+            util.formatted_flash("Gebruiker is bijgewerkt.", color="green")
 
-        # redirect back to clear form data
-        return redirect(url_for('index'))
+        return redirect(url_for('index'))  # To clear form data.
     else:
         util.flash_form_errors(edit_admin_form, request)
 
-    # Populate the edit admin forms which allows the user to edit it
     edit_admin_forms = {}
     for admin in User.query.filter_by(admin=True).order_by('email'):
         edit_admin_forms[admin.email] = EditAdminForm(
@@ -114,10 +107,8 @@ def index():
             }
         )
 
-    # Process filled in add user form
     add_user_form = AddUserForm(prefix="add_user_form")
 
-    # Add user (either admin or project owner)
     if util.validate_on_submit(add_user_form, request):
         new_user_data = {}
         for f in add_user_form:
@@ -126,24 +117,17 @@ def index():
 
         try:
             util.add_user(**new_user_data)
-            flash(
-                '<span class="text-default-green">"%s" is uitgenodigd als admin of '
-                'project owner (of toegevoegd als admin of project owner als de '
-                'gebruiker al bestond)' % (
-                    new_user_data['email']
-                )
+            util.formatted_flash((
+                f"{new_user_data['email']} is uitgenodigd als admin of project owner. "
+                "(Of zodanig toegevoegd als de gebruiker al bestond.)"), color="green"
             )
         except ValueError as e:
             flash(str(e))
 
-        # redirect back to clear form data
-        return redirect(url_for('index'))
+        return redirect(url_for('index'))  # To clear form data.
     else:
         util.flash_form_errors(add_user_form, request)
 
-    # Create an empty form, or fill it with a submitted form so that we can
-    # return the validated version. modal_id is used to pop open the modal
-    # on loading the page, if it contains a validated form.
     project_form = NewProjectForm(prefix="project_form")
     form_redirect = process_new_project_form(project_form)
     if form_redirect:
@@ -151,21 +135,16 @@ def index():
     if len(project_form.errors) > 0:
         modal_id = ["#modal-project-toevoegen"]
 
-    # BNG
     bng_link_form = BNGLinkForm(prefix="bng_link_form")
     form_redirect = process_bng_link_form(bng_link_form)
     if form_redirect:
         return form_redirect
     if len(bng_link_form.errors) > 0:
         modal_id = ["#modal-bng-koppeling-beheren"]
-    else:
-        # DEBUGGING
-        bng_link_form.iban.data = "NL34BNGT5532530633"
 
     total_awarded = 0
     total_spent = 0
     project_data = []
-    # Retrieve data for each project
     for project in Project.query.all():
         project_owner = False
         if current_user.is_authenticated and (
@@ -176,9 +155,7 @@ def index():
         if project.hidden and not project_owner:
             continue
 
-        # Retrieve the amounts for this project
         amounts = util.calculate_project_amounts(project.id)
-        # Use budget for the awarded amount if available
         if project.budget:
             total_awarded += project.budget
         else:
