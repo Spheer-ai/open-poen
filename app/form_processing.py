@@ -135,6 +135,9 @@ def process_payment_form(request, project_or_subproject, project_owner, user_sub
             #     # still have to implement. # TODO
             payment_form.category_id.choices = temppayment.debit_card.project.make_category_select_options()
 
+        if temppayment.debit_card.project.contains_subprojects:
+            payment_form.subproject_id.choices = temppayment.debit_card.project.make_subproject_select_options()
+
         # Make sure the user is allowed to edit this payment
         # (especially needed when a normal users edits a subproject
         # payment on a project page)
@@ -170,9 +173,10 @@ def process_payment_form(request, project_or_subproject, project_owner, user_sub
         else:
             # TODO: We don't want this hardcoded.
             new_payment_fields = ["short_user_description", "long_user_description", "transaction_amount", "created",
-                                  "hidden", "category_id", "route", "id"]
+                                  "hidden", "category_id", "subproject_id", "route", "id"]
             new_payment_data = {x.short_name: x.data for x in payment_form if x.short_name in new_payment_fields}
             new_payment_data["category_id"] = None if new_payment_data["category_id"] == "" else new_payment_data["category_id"]
+            new_payment_data["subproject_id"] = None if new_payment_data["subproject_id"] == "" else new_payment_data["subproject_id"]
 
             try:
                 # Update if the payment already exists
@@ -237,6 +241,7 @@ def create_payment_forms(payments):
             'id': payment.id,
             'hidden': payment.hidden,
             'category_id': "" if payment.category is None else payment.category.id,
+            'subproject_id': "" if payment.subproject is None else payment.subproject.id,
             'route': payment.route
         })
 
@@ -251,6 +256,9 @@ def create_payment_forms(payments):
             # card that is associated with the payment, unless it has been manually added. This,
             # still have to implement. # TODO
             payment_form.category_id.choices = payment.debit_card.project.make_category_select_options()
+
+        if payment.debit_card.project.contains_subprojects:
+            payment_form.subproject_id.choices = payment.debit_card.project.make_subproject_select_options()
 
         payment_form.route.choices = [
             ('inkomsten', 'inkomsten'),

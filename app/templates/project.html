@@ -899,10 +899,16 @@
                               <br>
                             {% endif %}
 
-                            {% if project.contains_subprojects %}
+                            {% if project.contains_subprojects and payment.id in payment_forms %}
+                              {{ wtf.form_field(payment_forms[payment.id]['subproject_id'], class="form-control") }}
+                            {% elif project.contains_subprojects %}
                               <b>Initiatief</b>
                               <br>
-                              <a href="{{ url_for('subproject', project_id=project.id, subproject_id=payment.subproject.id) }}"><i>{{ payment.subproject.name }}</i></a>
+                              {% if payment.subproject is not none %}
+                                <a href="{{ url_for('subproject', project_id=project.id, subproject_id=payment.subproject.id) }}"><i>{{ payment.subproject.name }}</i></a>
+                              {% else %}
+                                <i>Hoofdproject</i>
+                              {% endif %}
                               <br>
                               <br>
                             {% endif %}

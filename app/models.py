@@ -235,6 +235,12 @@ class Project(db.Model):
             select_options.append((str(category.id), category.name))
         return select_options
 
+    def make_subproject_select_options(self):
+        select_options = [('', 'Hoofdproject')]
+        for subproject in self.subprojects.all():
+            select_options.append((str(subproject.id), subproject.name))
+        return select_options
+
 
 class Subproject(db.Model):
     id = db.Column(db.Integer, primary_key=True)

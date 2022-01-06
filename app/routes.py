@@ -570,16 +570,6 @@ def project(project_id):
     ):
         project_owner = True
 
-    # TODO Logic to define already_authorized to indicate if the
-    # project already has passes linked to it.
-    # TODO? Generate state token for BNG.
-    # Populate the project's form which allows the user to edit
-    # it
-    # We don't allow editing of the 'contains_subprojects'
-    # value after a project is created, but we do need to pass the
-    # value in the form, so simply disable it
-    # TODO: This will no also disable it when the form is returned
-    # with errors, right? Fix this.
     # TODO: If this project is BNG enabled, allow the user to add, remove
     # or change passes.
 
@@ -681,7 +671,6 @@ def subproject(project_id, subproject_id):
             use_square_borders=app.config['USE_SQUARE_BORDERS'],
             footer=app.config['FOOTER']
         )
-
 
     subproject_form = SubprojectForm(prefix="subproject_form")
     form_redirect = process_subproject_form(subproject_form)

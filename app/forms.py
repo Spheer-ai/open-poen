@@ -321,6 +321,7 @@ class PaymentForm(FlaskForm):
     created = DateField('Datum (notatie: 31-12-2020)', format="%d-%m-%Y")
     hidden = BooleanField('Transactie verbergen')
     category_id = SelectField('Categorie', validators=[Optional()], choices=[])
+    subproject_id = SelectField('Initiatief', validators=[], choices=[])
     route = SelectField('Route', choices=['inbesteding', 'uitgaven', 'inkomsten'])
     id = IntegerField(widget=HiddenInput())
 
