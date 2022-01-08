@@ -284,7 +284,17 @@
                           <br>
                           <br>
 
-                          <!-- TODO: Edit betaalpassen -->
+                          {% for card_number, edit_debit_card_form in edit_debit_card_forms.items() %}
+                          <div>
+                            <!-- Button trigger modal -->
+                            <button type="button" class="btn button-poen-small bg-grey-blue" data-toggle="modal"
+                              data-target="#betaalpas-bewerken-{{ edit_debit_card_form.id.data }}">
+                              betaalpas bewerken
+                            </button>
+                            {{ card_number }}
+                          </div>
+                          <br>
+                          {% endfor %}
 
                           <hr>
             
@@ -1071,33 +1081,6 @@
       </div>
     </div>
 
-    <div class="modal fade" id="betaalpas-toevoegen" tabindex="-1" role="dialog" aria-labelledby="betaalpasToevoegenLabel" aria-hidden="true">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content">
-          <form method="POST">
-            <div class="modal-header">
-              <h5 class="modal-title" id="betaalpasToevoegenLabel">Betaalpas toevoegen</h5>
-              <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
-                <span aria-hidden="true">&times;</span>
-              </button>
-            </div>
-            <div class="modal-body">
-              <p>Voeg een betaalpas toe aan dit project. Betalingen die worden gedaan met deze betaalpas worden automatisch aan dit project gekoppeld.</p>
-              <div>
-                {{ add_debit_card_form.csrf_token }}
-
-                {{ wtf.form_field(add_debit_card_form.card_number, class="form-control") }}
-              </div>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
-              {{ add_debit_card_form.submit }}
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-
     {% for project_owner_email, edit_project_owner_form in edit_project_owner_forms[project_data.id].items() %}
       <!-- Modal for 'Project owner bewerken' -->
       <div class="modal fade" id="project-owner-bewerken-{{ edit_project_owner_form.id.data }}" tabindex="-1" role="dialog" aria-labelledby="projectOwnerBewerkenLabel" aria-hidden="true">
@@ -1131,6 +1114,67 @@
           </div>
         </div>
       </div>
+    {% endfor %}
+
+    <div class="modal fade" id="betaalpas-toevoegen" tabindex="-1" role="dialog" aria-labelledby="betaalpasToevoegenLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <form method="POST">
+            <div class="modal-header">
+              <h5 class="modal-title" id="betaalpasToevoegenLabel">Betaalpas toevoegen</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <p>Voeg een betaalpas toe aan dit project. Betalingen die worden gedaan met deze betaalpas worden automatisch aan dit project gekoppeld.</p>
+              <div>
+                {{ add_debit_card_form.csrf_token }}
+                {{ wtf.form_field(add_debit_card_form.card_number, class="form-control") }}
+                {{ add_debit_card_form.project_id }}
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
+              {{ add_debit_card_form.submit }}
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    {% for card_number, edit_debit_card_form in edit_debit_card_forms.items() %}
+    <div class="modal fade" id="betaalpas-bewerken-{{ edit_debit_card_form.id.data }}" tabindex="-1" role="dialog" aria-labelledby="debitCardBewerkenLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <form method="POST">
+            <div class="modal-header">
+              <h5 class="modal-title" id="debitCardBewerkenLabel">Betaalpas Bewerken</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <div>
+                {{ edit_debit_card_form.csrf_token }}
+
+                {% for f in edit_debit_card_form %}
+                  {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' %}
+                    {{ wtf.form_field(f, class="form-control") }}
+                  {% endif %}
+                {% endfor %}
+                {{ edit_debit_card_form.id }}
+                {{ edit_debit_card_form.project_id }}  
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
+              {{ edit_debit_card_form.submit }}
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
     {% endfor %}
 
     {% if not project_data['contains_subprojects'] %}

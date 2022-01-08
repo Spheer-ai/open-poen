@@ -172,6 +172,18 @@ class User(UserMixin, db.Model):
     def __repr__(self):
         return '<User {}>'.format(self.email)
 
+    @property
+    def redirect_after_edit(self):
+        return redirect(url_for("index"))
+
+    @property
+    def redirect_after_create(self):
+        return redirect(url_for("index"))
+
+    @property
+    def redirect_after_delete(self):
+        return redirect(url_for("index"))
+
 
 class Project(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -328,6 +340,18 @@ class DebitCard(db.Model):
         lazy='dynamic'
     )
     project_id = db.Column(db.ForeignKey('project.id', ondelete="SET NULL"))
+
+    @property
+    def redirect_after_edit(self):
+        return redirect(url_for("project", project_id=self.project_id))
+
+    @property
+    def redirect_after_create(self):
+        return redirect(url_for("project", project_id=self.project_id))
+
+    @property
+    def redirect_after_delete(self):
+        return redirect(url_for("project", project_id=self.project_id))
 
 
 # TODO: Make this compatible with BNG payments if necessary.

@@ -20,7 +20,7 @@ from app.models import (
 from app.form_processing import (
     generate_new_payment_form, process_category_form, process_form, process_new_payment_form, process_payment_form, create_payment_forms,
     process_transaction_attachment_form, create_edit_attachment_forms,
-    process_edit_attachment_form, save_attachment, process_subproject_form,
+    process_edit_attachment_form, save_attachment,
     process_bng_link_form, process_bng_callback, get_bng_info, get_bng_payments, process_new_project_form
 )
 from sqlalchemy.exc import IntegrityError
@@ -70,34 +70,12 @@ def index():
     # form errors.
     bng_info = {}
 
-    # get_bng_payments()
-
-    if current_user.is_authenticated:
-        if current_user.admin:
-            bng_info = get_bng_info(BNGAccount.query.all())
-
-    if request.args.get("state"):
-        bng_redirect = process_bng_callback(request)
-        if bng_redirect:
-            return bng_redirect
-
+    # ADMIN
+    # --------------------------------------------------------------------------------
     edit_admin_form = EditAdminForm(prefix="edit_admin_form")
-
-    if util.validate_on_submit(edit_admin_form, request):
-        admins = User.query.filter_by(id=edit_admin_form.id.data)
-        new_admin_data = {}
-        for f in edit_admin_form:
-            if f.type != 'SubmitField' and f.type != 'CSRFTokenField':
-                new_admin_data[f.short_name] = f.data
-
-        if len(admins.all()):
-            admins.update(new_admin_data)
-            db.session.commit()
-            util.formatted_flash("Gebruiker is bijgewerkt.", color="green")
-
-        return redirect(url_for('index'))  # To clear form data.
-    else:
-        util.flash_form_errors(edit_admin_form, request)
+    form_redirect = process_form(edit_admin_form, User)
+    if form_redirect:
+        return form_redirect
 
     edit_admin_forms = {}
     for admin in User.query.filter_by(admin=True).order_by('email'):
@@ -109,8 +87,9 @@ def index():
             }
         )
 
+    # AddUserForm is a misleading name, because it is rendered in index.html with a flag
+    # for admin = True, so users submitted here are always added as an admin.
     add_user_form = AddUserForm(prefix="add_user_form")
-
     if util.validate_on_submit(add_user_form, request):
         new_user_data = {}
         for f in add_user_form:
@@ -130,12 +109,25 @@ def index():
     else:
         util.flash_form_errors(add_user_form, request)
 
+    # PROJECT
+    # --------------------------------------------------------------------------------
     project_form = NewProjectForm(prefix="project_form")
     form_redirect = process_new_project_form(project_form)
     if form_redirect:
         return form_redirect
     if len(project_form.errors) > 0:
         modal_id = ["#modal-project-toevoegen"]
+
+    # BNG
+    # --------------------------------------------------------------------------------
+    if current_user.is_authenticated:
+        if current_user.admin:
+            bng_info = get_bng_info(BNGAccount.query.all())
+
+    if request.args.get("state"):
+        bng_redirect = process_bng_callback(request)
+        if bng_redirect:
+            return bng_redirect
 
     bng_link_form = BNGLinkForm(prefix="bng_link_form")
     form_redirect = process_bng_link_form(bng_link_form)
@@ -144,6 +136,8 @@ def index():
     if len(bng_link_form.errors) > 0:
         modal_id = ["#modal-bng-koppeling-beheren"]
 
+    # PROJECT DATA
+    # --------------------------------------------------------------------------------
     total_awarded = 0
     total_spent = 0
     project_data = []
@@ -220,31 +214,27 @@ def project(project_id):
 
     # A project owner is either an admin or a user that is part of this
     # project
-    project_owner = False
+    is_project_owner = False
     if current_user.is_authenticated and (
         current_user.admin or project.has_user(current_user.id)
     ):
-        project_owner = True
+        is_project_owner = True
 
-    if project.hidden and not project_owner:
+    if project.hidden and not is_project_owner:
         return render_template(
             '404.html',
             use_square_borders=app.config['USE_SQUARE_BORDERS'],
             footer=app.config['FOOTER']
         )
 
-    # Process filled in funder form.
+    # FUNDER
+    # --------------------------------------------------------------------------------
     funder_form = FunderForm(prefix="funder_form")
     funder_form.project_id.data = project.id
     form_redirect = process_form(funder_form, Funder)
     if form_redirect:
         return form_redirect
-    # Purposefully not popping up the modal on errors, because this form can have
-    # multiple versions on the same page. This requires extra logic to determine
-    # which form contained the error.
 
-    # Populate the funder forms which allows the user to edit
-    # it
     funder_forms = []
     for funder in project.funders:
         funder_forms.append(
@@ -255,8 +245,10 @@ def project(project_id):
             })
         )
 
+    # SUBPROJECT
+    # --------------------------------------------------------------------------------
     subproject_form = SubprojectForm(prefix="subproject_form")
-    form_redirect = process_subproject_form(subproject_form)
+    form_redirect = process_form(subproject_form, Subproject)
     if form_redirect:
         return form_redirect
     if len(subproject_form.errors) > 0:
@@ -268,17 +260,19 @@ def project(project_id):
 
     # Retrieve any subprojects a normal logged in user is part of
     user_subproject_ids = []
-    if project.contains_subprojects and current_user.is_authenticated and not project_owner:
+    if project.contains_subprojects and current_user.is_authenticated and not is_project_owner:
         for subproject in project.subprojects:
             if subproject.has_user(current_user.id):
                 user_subproject_ids.append(subproject.id)
 
+    # PAYMENT AND ATTACHMENT
+    # --------------------------------------------------------------------------------
     new_payment_form = ''
     # Filled with all categories for each subproject; used by some JavaScript
     # to update the categories in the select field when the user selects
     # another subproject to add the new payment to.
     categories_dict = {}
-    if project_owner:
+    if is_project_owner:
         categories_dict = {x.id: x.make_category_select_options()
                            for x in project.subprojects}
 
@@ -289,19 +283,16 @@ def project(project_id):
         if len(new_payment_form.errors) > 0:
             modal_id = ["#modal-transactie-toevoegen"]
 
-    # Process/create (filled in) payment form
     payment_forms = {}
     transaction_attachment_form = ''
     edit_attachment_forms = {}
     edit_attachment_form = ''
-    if project_owner or user_subproject_ids:
-        # Process filled in payment form
-        payment_form_return = process_payment_form(request, project, project_owner, user_subproject_ids, is_subproject=False)
+    if is_project_owner or user_subproject_ids:
+        payment_form_return = process_payment_form(request, project, is_project_owner, user_subproject_ids, is_subproject=False)
         if payment_form_return and type(payment_form_return) != PaymentForm:
             return payment_form_return
 
-        # TODO: Document.
-        if project_owner:
+        if is_project_owner:
             editable_payments = (
                 db.session.query(Payment).
                 join(DebitCard).
@@ -330,21 +321,19 @@ def project(project_id):
         if type(payment_form_return) == PaymentForm:
             payment_forms[payment_form_return.id.data] = payment_form_return
 
-        # Process new transaction attachment form
         transaction_attachment_form = TransactionAttachmentForm(
             prefix="transaction_attachment_form"
         )
         transaction_attachment_form_return = process_transaction_attachment_form(
             request,
             transaction_attachment_form,
-            project_owner,
+            is_project_owner,
             user_subproject_ids,
             project.id
         )
         if transaction_attachment_form_return:
             return transaction_attachment_form_return
 
-        # Process transaction attachment edit form
         edit_attachment_form = EditAttachmentForm(
             prefix="edit_attachment_form"
         )
@@ -356,18 +345,18 @@ def project(project_id):
         if edit_attachment_form_return:
             return edit_attachment_form_return
 
-        # Fill in attachment form data which allow a user to edit it
         edit_attachment_forms = create_edit_attachment_forms(editable_attachments)
 
-    # TODO: Add subproject payments.
+    # TODO: Add manual payments that are not linked to a debit card.
     payments = db.session.query(Payment).join(DebitCard).join(Project).filter(Project.id == project.id).all()
 
-    # Process filled in edit project owner form
+    # PROJECT OWNER
+    # TODO: This really should be refactored to use process_form.
+    # --------------------------------------------------------------------------------
     edit_project_owner_form = EditProjectOwnerForm(
         prefix="edit_project_owner_form"
     )
 
-    # Update project owner
     if util.validate_on_submit(edit_project_owner_form, request):
         edited_project_owner = User.query.filter_by(
             id=edit_project_owner_form.id.data
@@ -384,7 +373,6 @@ def project(project_id):
                 else:
                     new_project_owner_data[f.short_name] = f.data
 
-        # Update if the project owner exists
         if len(edited_project_owner.all()):
             edited_project_owner.update(new_project_owner_data)
             if remove_from_project:
@@ -398,14 +386,11 @@ def project(project_id):
             db.session.commit()
             flash('<span class="text-default-green">gebruiker is bijgewerkt</span>')
 
-        # redirect back to clear form data
         return redirect(url_for('project', project_id=project.id))
     else:
         if len(edit_project_owner_form.errors) > 0:
             modal_id = ["#project-bewerken", "#project-owner-toevoegen"]
 
-    # Populate the edit project owner forms which allows the user to
-    # edit it
     edit_project_owner_forms = {}
     temp_edit_project_owner_forms = {}
     for project_owner in project.users:
@@ -421,10 +406,8 @@ def project(project_id):
         )
     edit_project_owner_forms[project.id] = temp_edit_project_owner_forms
 
-    # Process filled in add user form
     add_user_form = AddUserForm(prefix="add_user_form")
 
-    # Add user (either admin or project owner)
     if util.validate_on_submit(add_user_form, request):
         new_user_data = {}
         for f in add_user_form:
@@ -443,13 +426,14 @@ def project(project_id):
         except ValueError as e:
             flash(str(e))
 
-        # redirect back to clear form data
         return redirect(url_for('project', project_id=project.id))
     else:
         if len(add_user_form.errors) > 0:
             modal_id = ["#project-bewerken", "#project-owner-toevoegen"]
 
-    # Process filled in project form
+    # PROJECT
+    # Notice how it's not allowed to change contains_subprojects after creation.
+    # --------------------------------------------------------------------------------
     project_form = EditProjectForm(prefix="project_form")
     project_form.contains_subprojects.data = project.contains_subprojects
     form_redirect = process_form(project_form, Project)
@@ -468,31 +452,29 @@ def project(project_id):
             'id': project.id,
             'contains_subprojects': project.contains_subprojects
         })
-
     project_form.contains_subprojects.render_kw = {'disabled': ''}
 
+    # DEBIT CARD
+    # --------------------------------------------------------------------------------
     add_debit_card_form = DebitCardForm()
     form_redirect = process_form(add_debit_card_form, DebitCard)
     if form_redirect:
         return form_redirect
     add_debit_card_form.project_id.data = project.id
 
-    # Process filled in category form
+    edit_debit_card_forms = {}
+    for debit_card in DebitCard.query.filter_by(project_id=project.id):
+        edit_debit_card_forms[debit_card.card_number] = DebitCardForm(**{
+            "id": debit_card.id,
+            "card_number": debit_card.card_number,
+            "project_id": debit_card.project_id})
+
+    # CATEGORY
+    # --------------------------------------------------------------------------------
     category_form_return = process_category_form(request)
     if category_form_return:
         return category_form_return
 
-    project_owner = False
-    if current_user.is_authenticated and (
-        current_user.admin or project.has_user(current_user.id)
-    ):
-        project_owner = True
-
-    # TODO: If this project is BNG enabled, allow the user to add, remove
-    # or change passes.
-
-    # Populate the category forms which allows the user to
-    # edit it
     category_forms = []
     if not project.contains_subprojects:
         for category in Category.query.filter_by(
@@ -507,7 +489,8 @@ def project(project_id):
                 )
             )
 
-    # Retrieve the amounts for this project
+    # PROJECT DATA
+    # --------------------------------------------------------------------------------
     amounts = util.calculate_project_amounts(project.id)
 
     project_data = {
@@ -547,12 +530,13 @@ def project(project_id):
         edit_attachment_forms=edit_attachment_forms,
         funder_forms=funder_forms,
         new_funder_form=funder_form,
-        project_owner=project_owner,
+        project_owner=is_project_owner,  # TODO: Always use "is_project_owner" instead of "project_owner"
         user_subproject_ids=user_subproject_ids,
         timestamp=util.get_export_timestamp(),
         modal_id=json.dumps(modal_id),
         payment_id=json.dumps(payment_id),
-        bng_info=bng_info
+        bng_info=bng_info,
+        edit_debit_card_forms=edit_debit_card_forms
     )
 
 
@@ -560,8 +544,11 @@ def project(project_id):
     "/project/<project_id>/subproject/<subproject_id>", methods=['GET', 'POST']
 )
 def subproject(project_id, subproject_id):
-    modal_id = None
-    payment_id = None
+    modal_id = None  # This is used to pop open a modal on page load in case of
+    # form errors.
+    payment_id = None  # This is used to pop open the right detail view of a
+    # payment in the bootstrap table of payments in case of form errors.
+
     subproject = Subproject.query.get(subproject_id)
 
     if not subproject:
@@ -571,7 +558,6 @@ def subproject(project_id, subproject_id):
             footer=app.config['FOOTER']
         )
 
-    # Check if the user is logged in and is part of this subproject
     user_in_subproject = False
     if current_user.is_authenticated and subproject.has_user(current_user.id):
         user_in_subproject = True
@@ -591,6 +577,8 @@ def subproject(project_id, subproject_id):
             footer=app.config['FOOTER']
         )
 
+    # SUBPROJECT
+    # --------------------------------------------------------------------------------
     subproject_form = SubprojectForm(prefix="subproject_form")
     form_redirect = process_form(subproject_form, Subproject)
     if form_redirect:
@@ -613,6 +601,8 @@ def subproject(project_id, subproject_id):
         if subproject.has_user(current_user.id):
             user_subproject_ids.append(subproject.id)
 
+    # PAYMENT AND ATTACHMENT
+    # --------------------------------------------------------------------------------
     new_payment_form = ''
     if project_owner:
         new_payment_form = generate_new_payment_form(project=None, subproject=subproject)
@@ -622,7 +612,6 @@ def subproject(project_id, subproject_id):
         if len(new_payment_form.errors) > 0:
             modal_id = ["#transactie-toevoegen"]
 
-    # Process filled in payment form
     payment_form_return = process_payment_form(request, subproject, project_owner, user_subproject_ids, is_subproject=True)
     if payment_form_return and type(payment_form_return) != PaymentForm:
         return payment_form_return
@@ -633,128 +622,12 @@ def subproject(project_id, subproject_id):
         payment_id = payment_form_return.id.data
         editable_payments = [x for x in editable_payments if x.id != payment_form_return.id.data]
 
-    # Populate the payment forms which allows the user to edit it
     payment_forms = {}
     if project_owner or user_in_subproject:
         payment_forms = create_payment_forms(subproject.payments)
 
     if type(payment_form_return) == PaymentForm:
         payment_forms[payment_form_return.id.data] = payment_form_return
-
-    # Process filled in category form
-    category_form_return = process_category_form(request)
-    if category_form_return:
-        return category_form_return
-
-    # Populate the category forms which allows the user to
-    # edit it
-    category_forms = []
-    for category in Category.query.filter_by(
-            subproject_id=subproject.id).order_by('name'):
-        category_forms.append(
-            CategoryForm(
-                prefix="category_form", **{
-                    'id': category.id,
-                    'name': category.name,
-                    'subproject_id': subproject.id,
-                    'project_id': subproject.project.id
-                }
-            )
-        )
-
-    # Process filled in edit user form
-    edit_user_form = EditUserForm(
-        prefix="edit_user_form"
-    )
-
-    # Update user
-    if edit_user_form.validate_on_submit():
-        users = User.query.filter_by(
-            id=edit_user_form.id.data
-        )
-        new_user_data = {}
-        remove_from_subproject = False
-        remove_from_subproject_id = 0
-        for f in edit_user_form:
-            if f.type != 'SubmitField' and f.type != 'CSRFTokenField':
-                if f.short_name == 'remove_from_subproject':
-                    remove_from_subproject = f.data
-                elif f.short_name == 'subproject_id':
-                    remove_from_subproject_id = f.data
-                else:
-                    new_user_data[f.short_name] = f.data
-
-        # Update if the user exists
-        if len(users.all()):
-            users.update(new_user_data)
-            if remove_from_subproject:
-                # We need to get the user using '.first()' otherwise we
-                # can't remove the project because of garbage collection
-                initiatiefnemer = users.first()
-                initiatiefnemer.subprojects.remove(
-                    Subproject.query.get(remove_from_subproject_id)
-                )
-
-            db.session.commit()
-            flash('<span class="text-default-green">gebruiker is bijgewerkt</span>')
-
-        # redirect back to clear form data
-        return redirect(
-            url_for(
-                'subproject',
-                project_id=subproject.project.id,
-                subproject_id=subproject.id
-            )
-        )
-    else:
-        util.flash_form_errors(edit_user_form, request)
-
-    # Populate the edit user forms which allows the user to edit it
-    edit_user_forms = {}
-    for user in subproject.users:
-        edit_user_forms[user.email] = (
-            EditUserForm(
-                prefix="edit_user_form", **{
-                    'hidden': user.hidden,
-                    'active': user.active,
-                    'id': user.id,
-                    'subproject_id': subproject.id
-                }
-            )
-        )
-
-    # Process filled in add user form
-    add_user_form = AddUserForm(prefix="add_user_form")
-
-    # Add user
-    if util.validate_on_submit(add_user_form, request):
-        new_user_data = {}
-        for f in add_user_form:
-            if f.type != 'SubmitField' and f.type != 'CSRFTokenField':
-                new_user_data[f.short_name] = f.data
-
-        try:
-            util.add_user(**new_user_data)
-            flash(
-                '<span class="text-default-green">"%s" is uitgenodigd als initiatiefnemer '
-                '(of toegevoegd als initiatiefnemer als de gebruiker al '
-                'bestond)' % (
-                    new_user_data['email']
-                )
-            )
-        except ValueError as e:
-            flash(str(e))
-
-        # redirect back to clear form data
-        return redirect(
-            url_for(
-                'subproject',
-                project_id=subproject.project.id,
-                subproject_id=subproject.id
-            )
-        )
-    else:
-        util.flash_form_errors(add_user_form, request)
 
     transaction_attachment_form = ''
     edit_attachment_forms = {}
@@ -794,12 +667,123 @@ def subproject(project_id, subproject_id):
             attachments += payment.attachments
         edit_attachment_forms = create_edit_attachment_forms(attachments)
 
-    # Retrieve the amounts for this subproject
+    # CATEGORY
+    # --------------------------------------------------------------------------------
+    category_form_return = process_category_form(request)
+    if category_form_return:
+        return category_form_return
+
+    category_forms = []
+    for category in Category.query.filter_by(
+            subproject_id=subproject.id).order_by('name'):
+        category_forms.append(
+            CategoryForm(
+                prefix="category_form", **{
+                    'id': category.id,
+                    'name': category.name,
+                    'subproject_id': subproject.id,
+                    'project_id': subproject.project.id
+                }
+            )
+        )
+
+    # SUBPROJECT OWNER
+    # TODO: This really should be refactored to use process_form.
+    # --------------------------------------------------------------------------------
+    edit_user_form = EditUserForm(
+        prefix="edit_user_form"
+    )
+
+    if edit_user_form.validate_on_submit():
+        users = User.query.filter_by(
+            id=edit_user_form.id.data
+        )
+        new_user_data = {}
+        remove_from_subproject = False
+        remove_from_subproject_id = 0
+        for f in edit_user_form:
+            if f.type != 'SubmitField' and f.type != 'CSRFTokenField':
+                if f.short_name == 'remove_from_subproject':
+                    remove_from_subproject = f.data
+                elif f.short_name == 'subproject_id':
+                    remove_from_subproject_id = f.data
+                else:
+                    new_user_data[f.short_name] = f.data
+
+        if len(users.all()):
+            users.update(new_user_data)
+            if remove_from_subproject:
+                # We need to get the user using '.first()' otherwise we
+                # can't remove the project because of garbage collection
+                initiatiefnemer = users.first()
+                initiatiefnemer.subprojects.remove(
+                    Subproject.query.get(remove_from_subproject_id)
+                )
+
+            db.session.commit()
+            flash('<span class="text-default-green">gebruiker is bijgewerkt</span>')
+
+        # redirect back to clear form data
+        return redirect(
+            url_for(
+                'subproject',
+                project_id=subproject.project.id,
+                subproject_id=subproject.id
+            )
+        )
+    else:
+        util.flash_form_errors(edit_user_form, request)
+
+    edit_user_forms = {}
+    for user in subproject.users:
+        edit_user_forms[user.email] = (
+            EditUserForm(
+                prefix="edit_user_form", **{
+                    'hidden': user.hidden,
+                    'active': user.active,
+                    'id': user.id,
+                    'subproject_id': subproject.id
+                }
+            )
+        )
+
+    add_user_form = AddUserForm(prefix="add_user_form")
+
+    if util.validate_on_submit(add_user_form, request):
+        new_user_data = {}
+        for f in add_user_form:
+            if f.type != 'SubmitField' and f.type != 'CSRFTokenField':
+                new_user_data[f.short_name] = f.data
+
+        try:
+            util.add_user(**new_user_data)
+            flash(
+                '<span class="text-default-green">"%s" is uitgenodigd als initiatiefnemer '
+                '(of toegevoegd als initiatiefnemer als de gebruiker al '
+                'bestond)' % (
+                    new_user_data['email']
+                )
+            )
+        except ValueError as e:
+            flash(str(e))
+
+        # redirect back to clear form data
+        return redirect(
+            url_for(
+                'subproject',
+                project_id=subproject.project.id,
+                subproject_id=subproject.id
+            )
+        )
+    else:
+        util.flash_form_errors(add_user_form, request)
+
     amounts = util.calculate_subproject_amounts(subproject_id)
 
     budget = ''
     if subproject.budget:
         budget = util.format_currency(subproject.budget)
+
     return render_template(
         'subproject.html',
         use_square_borders=app.config['USE_SQUARE_BORDERS'],

@@ -11,11 +11,22 @@ from wtforms import (
     SelectField, TextAreaField, DecimalField, DateField, RadioField, Form
 )
 from wtforms.fields.html5 import EmailField
+from app.models import DebitCard
 
 allowed_extensions = [
     'jpg', 'jpeg', 'png', 'txt', 'pdf', 'ods', 'xls', 'xlsx', 'odt', 'doc',
     'docx'
 ]
+
+
+def validate_card_number(form, field):
+    present_debit_card = DebitCard.query.filter_by(card_number=field.data).first()
+    if present_debit_card is None:
+        return
+    if present_debit_card.project_id is None:
+        return
+    else:
+        raise ValidationError(f"De betaalpas {field.data} is al gekoppeld aan een ander project.")
 
 
 def validate_iban(form, field):
@@ -114,7 +125,7 @@ class NewProjectFunderForm(FlaskForm):
 
 
 class DebitCardForm(FlaskForm):
-    card_number = StringField("Pasnummer", validators=[DataRequired()])
+    card_number = StringField("Pasnummer", validators=[DataRequired(), validate_card_number])
     id = IntegerField(widget=HiddenInput(), validators=[Optional()])
     project_id = IntegerField(widget=HiddenInput(), validators=[Optional()])
     submit = SubmitField(

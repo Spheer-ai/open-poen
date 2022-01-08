@@ -412,67 +412,6 @@ def process_edit_attachment_form(request, edit_attachment_form, project_id=0, su
         flash_form_errors(edit_attachment_form, request)
 
 
-def process_subproject_form(form):
-    """Returns a truthy value in the form of a redirect or None when no redirect
-    is necessary."""
-
-    if form.id.data and form.project_id.data:
-        action = "UPDATE"
-    elif not form.id.data and form.project_id.data:
-        action = "CREATE"
-    else:
-        action = None
-    if form.remove.data:
-        action = "DELETE"
-
-    if action == "DELETE":
-        Subproject.query.filter_by(id=form.id.data).delete()
-        db.session.commit()
-        formatted_flash('Subproject "%s" is verwijderd' % form.name.data, color="green")
-        return redirect(url_for("project", project_id=form.project_id.data))
-
-    if not util.validate_on_submit(form, request):
-        return None
-
-    new_subproject_data = {}
-    for f in form:
-        if f.type != 'SubmitField' and f.type != 'CSRFTokenField':
-            new_subproject_data[f.short_name] = f.data
-
-    if action == "CREATE":
-        try:
-            subproject = Subproject(**new_subproject_data)
-            db.session.add(subproject)
-            db.session.commit()
-            formatted_flash(f"Initiatief {new_subproject_data['name']} is aangemaakt.", color="green")
-        except (ValueError, IntegrityError) as e:
-            db.session().rollback()
-            app.logger.error(repr(e))
-            formatted_flash(f"Initiatief toevoegen mislukt: naam {new_subproject_data['name']} bestaat al.", color="red")
-        return redirect(url_for("project", project_id=form.project_id.data))
-    if action == "UPDATE":
-        try:
-            subprojects = Subproject.query.filter_by(
-                id=form.id.data
-            )
-            if len(subprojects.all()):
-                subprojects.update(new_subproject_data)
-                db.session.commit()
-                formatted_flash(f"Subproject {new_subproject_data['name']} is bijgewerkt.", color="green")
-        except (ValueError, IntegrityError) as e:
-            db.session().rollback()
-            app.logger.error(repr(e))
-            formatted_flash(f"Initiatief bijwerken mislukt: naam {new_subproject_data['name']} bestaat al.", color="red")
-        return redirect(url_for(
-            "subproject",
-            project_id=form.project_id.data,
-            subproject_id=form.id.data
-        ))
-
-    if action is None:
-        raise ValidationError("No action taken for submitted valid subproject form.")
-
-
 def process_new_payment_form(form, project, subproject):
     if not util.validate_on_submit(form, request):
         return None
@@ -599,13 +538,6 @@ def process_new_project_form(form):
     # never been parsed yet, but that doesn't matter to the user, so we add it in advance.
     card_numbers = [x.card_number.data for x in form.card_numbers]
     already_existing_debit_cards = [x for x in DebitCard.query.all() if x.card_number in card_numbers]
-    already_assigned_debit_cards = [x for x in already_existing_debit_cards if x.project_id is not None]
-    if len(already_assigned_debit_cards) > 0:
-        already_assigned_debit_cards = ", ".join([x.card_number for x in already_assigned_debit_cards])
-        formatted_flash((f"De volgende passen zijn al gekoppeld aan een project: {already_assigned_debit_cards}. "
-                         "Verwijder deze eerst uit dat project, om ze aan dit project toe te voegen."),
-                        color="red")
-        return
     new_debit_cards = [DebitCard(card_number=x) for x in card_numbers
                        if x not in [i.card_number for i in already_existing_debit_cards]]
 
@@ -748,6 +680,7 @@ def process_bng_callback(request):
         app.logger.error(repr(e))
         formatted_flash(("Het opslaan van de betalingen is mislukt. De beheerder van Open Poen is op de hoogte "
                          "gesteld."), color="red")
+        return
 
     return redirect(url_for("index"))
 
