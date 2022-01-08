@@ -1,3 +1,5 @@
+from flask.helpers import url_for
+from werkzeug.utils import redirect
 from app import app, db, login_manager
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -241,6 +243,18 @@ class Project(db.Model):
             select_options.append((str(subproject.id), subproject.name))
         return select_options
 
+    @property
+    def redirect_after_edit(self):
+        return redirect(url_for("project", project_id=self.id))
+
+    @property
+    def redirect_after_create(self):
+        return redirect(url_for("index"))
+
+    @property
+    def redirect_after_delete(self):
+        return redirect(url_for("index"))
+
 
 class Subproject(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -287,10 +301,27 @@ class Subproject(db.Model):
             select_options.append((str(category.id), category.name))
         return select_options
 
+    @property
+    def redirect_after_edit(self):
+        return redirect(url_for(
+            'subproject',
+            project_id=self.project_id,
+            subproject_id=self.id
+        ))
+
+    @property
+    def redirect_after_create(self):
+        return redirect(url_for("project", project_id=self.project_id))
+
+    @property
+    def redirect_after_delete(self):
+        return redirect(url_for("project", project_id=self.project_id))
+
 
 # TODO: Use this for BNG.
 class DebitCard(db.Model):
-    card_number = db.Column(db.String(22), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
+    card_number = db.Column(db.String(22), unique=True, nullable=False)
     payments = db.relationship(
         'Payment',
         backref='debit_card',
@@ -393,6 +424,18 @@ class Funder(db.Model):
         secondary=funder_image,
         lazy='dynamic'
     )
+
+    @property
+    def redirect_after_edit(self):
+        return redirect(url_for('project', project_id=self.project_id))
+
+    @property
+    def redirect_after_create(self):
+        return redirect(url_for("project", project_id=self.project_id))
+
+    @property
+    def redirect_after_delete(self):
+        return redirect(url_for("project", project_id=self.project_id))
 
 
 # Make these BNG accounts?

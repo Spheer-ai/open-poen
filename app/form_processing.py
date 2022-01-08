@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from flask import flash, redirect, url_for, request
+from flask.templating import render_template
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.sql.schema import FetchedValue
 from werkzeug.utils import secure_filename
 import os
 
@@ -24,6 +24,8 @@ from tempfile import TemporaryDirectory
 import zipfile
 import json
 from dateutil.parser import parse
+
+fields_to_exclude = ["SubmitField", "CSRFTokenField"]
 
 
 def return_redirect(project_id, subproject_id):
@@ -927,3 +929,50 @@ def get_bng_payments():
             payments = payments["transactions"]["booked"]
 
     parse_and_save_bng_payments(payments)
+
+
+def process_form(form, object):
+    if not util.validate_on_submit(form, request):
+        return
+
+    if hasattr(form, "remove") and form.remove.data:
+        instance = object.query.get(form.id.data)
+        db.session.delete(instance)
+        db.session.commit()
+        util.formatted_flash("Object verwijderd.", color="green")
+        return instance.redirect_after_delete
+
+    data = {x.short_name: x.data for x in form if x.type not in fields_to_exclude}
+
+    if hasattr(form, "id") and form.id.data is not None:
+        instance = object.query.get(data["id"])
+        if not instance:
+            util.formatted_flash("Object bestaat niet.", color="red")
+            return render_template(
+                "404.html",
+                use_square_borders=app.config["USE_SQURAE_BORDERS"],
+                footer=app.config["FOOTER"]
+            )
+        try:
+            for key, value in data.items():
+                setattr(instance, key, value)
+            db.session.commit()
+            util.formatted_flash("Object is aangepast.", color="green")
+            return instance.redirect_after_edit
+        except (ValueError, IntegrityError) as e:
+            app.logger.error(repr(e))
+            db.session().rollback()
+            util.formatted_flash("Object aanpassen mislukt.", color="red")
+            return instance.redirect_after_edit
+    else:
+        instance = object(**data)
+        try:
+            db.session.add(instance)
+            db.session.commit()
+            util.formatted_flash("Object is aangemaakt.", color="green")
+            return instance.redirect_after_create
+        except (ValueError, IntegrityError) as e:
+            app.logger.error(repr(e))
+            db.session().rollback()
+            util.formatted_flash("Object aanmaken mislukt.", color="red")
+            return instance.redirect_after_create

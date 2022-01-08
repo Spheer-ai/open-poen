@@ -113,8 +113,22 @@ class NewProjectFunderForm(FlaskForm):
     )
 
 
-class CardNumber(FlaskForm):
+class DebitCardForm(FlaskForm):
     card_number = StringField("Pasnummer", validators=[DataRequired()])
+    id = IntegerField(widget=HiddenInput(), validators=[Optional()])
+    project_id = IntegerField(widget=HiddenInput(), validators=[Optional()])
+    submit = SubmitField(
+        'Opslaan',
+        render_kw={
+            'class': 'btn btn-info'
+        }
+    )
+    remove = SubmitField(
+        'Verwijderen',
+        render_kw={
+            'class': 'btn btn-danger'
+        }
+    )
 
 
 class NewProjectSubprojectForm(FlaskForm):
@@ -136,7 +150,7 @@ class NewProjectForm(FlaskForm):
     budget = IntegerField('Budget voor dit project', validators=[Optional()])
     card_numbers_amount = IntegerField("Aantal toe te voegen betaalpassen.", default=0)
     card_numbers = FieldList(
-        FormField(CardNumber),
+        FormField(DebitCardForm),
         min_entries=0,
         max_entries=None,
         validators=[]
@@ -407,6 +421,7 @@ class FunderForm(FlaskForm):
         'URL', validators=[DataRequired(), URL(), Length(max=2000)]
     )
     id = IntegerField(widget=HiddenInput())
+    project_id = IntegerField(widget=HiddenInput())
 
     submit = SubmitField(
         'Opslaan',

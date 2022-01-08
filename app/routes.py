@@ -7,7 +7,7 @@ from wtforms.validators import ValidationError
 
 from app import app, db
 from app.forms import (
-    ResetPasswordRequestForm, ResetPasswordForm, LoginForm, NewProjectForm,
+    DebitCardForm, ResetPasswordRequestForm, ResetPasswordForm, LoginForm, NewProjectForm,
     EditProjectForm, SubprojectForm, TransactionAttachmentForm,
     EditAttachmentForm, FunderForm, AddUserForm, EditAdminForm,
     EditProjectOwnerForm, EditUserForm, EditProfileForm, CategoryForm,
@@ -18,7 +18,7 @@ from app.models import (
     User, Project, Subproject, Payment, UserStory, IBAN, File, Funder, Category, BNGAccount, DebitCard, payment_attachment
 )
 from app.form_processing import (
-    generate_new_payment_form, process_category_form, process_new_payment_form, process_payment_form, create_payment_forms,
+    generate_new_payment_form, process_category_form, process_form, process_new_payment_form, process_payment_form, create_payment_forms,
     process_transaction_attachment_form, create_edit_attachment_forms,
     process_edit_attachment_form, save_attachment, process_subproject_form,
     process_bng_link_form, process_bng_callback, get_bng_info, get_bng_payments, process_new_project_form
@@ -69,6 +69,8 @@ def index():
     modal_id = None  # This is used to pop open a modal on page load in case of
     # form errors.
     bng_info = {}
+
+    # get_bng_payments()
 
     if current_user.is_authenticated:
         if current_user.admin:
@@ -198,8 +200,10 @@ def index():
 
 @app.route("/project/<project_id>", methods=['GET', 'POST'])
 def project(project_id):
-    modal_id = None
-    payment_id = None
+    modal_id = None  # This is used to pop open a modal on page load in case of
+    # form errors.
+    payment_id = None  # This is used to pop open the right detail view of a
+    # payment in the bootstrap table of payments in case of form errors.
     bng_info = {}
 
     if current_user.is_authenticated:
@@ -231,54 +235,13 @@ def project(project_id):
 
     # Process filled in funder form.
     funder_form = FunderForm(prefix="funder_form")
-
-    # Remove funder
-    if funder_form.remove.data:
-        Funder.query.filter_by(id=funder_form.id.data).delete()
-        db.session.commit()
-        flash(
-            '<span class="text-default-green">Sponsor "%s" is verwijderd</span>' % (
-                funder_form.name.data
-            )
-        )
-        # redirect back to clear form data
-        return redirect(url_for('project', project_id=project_id))
-
-    # Save or update funder
-    if util.validate_on_submit(funder_form, request):
-        funders = Funder.query.filter_by(id=funder_form.id.data)
-        new_funder_data = {}
-        for f in funder_form:
-            if f.type != 'SubmitField' and f.type != 'CSRFTokenField':
-                new_funder_data[f.short_name] = f.data
-
-        # Update if the funder already exists
-        if len(funders.all()):
-            funders.update(new_funder_data)
-            db.session.commit()
-            flash(
-                '<span class="text-default-green">Sponsor "%s" is '
-                'bijgewerkt</span>' % (
-                    new_funder_data['name']
-                )
-            )
-        # Otherwise, save a new funder
-        else:
-            funder = Funder(**new_funder_data)
-            funder.project_id = project_id
-            db.session.add(funder)
-            db.session.commit()
-            flash(
-                '<span class="text-default-green">Sponsor "%s" is '
-                'toegevoegd</span>' % (
-                    new_funder_data['name']
-                )
-            )
-
-        # redirect back to clear form data
-        return redirect(url_for('project', project_id=project_id))
-    else:
-        util.flash_form_errors(funder_form, request)
+    funder_form.project_id.data = project.id
+    form_redirect = process_form(funder_form, Funder)
+    if form_redirect:
+        return form_redirect
+    # Purposefully not popping up the modal on errors, because this form can have
+    # multiple versions on the same page. This requires extra logic to determine
+    # which form contained the error.
 
     # Populate the funder forms which allows the user to edit
     # it
@@ -488,40 +451,12 @@ def project(project_id):
 
     # Process filled in project form
     project_form = EditProjectForm(prefix="project_form")
-
-    # Remove project
-    if project_form.remove.data and current_user.admin:
-        Project.query.filter_by(id=project.id).delete()
-        db.session.commit()
-        util.formatted_flash(f"Project {project.name} is verwijderd.", color="green")
-        return redirect(url_for('index'))
-
-    if util.validate_on_submit(project_form, request):
-        project_data = {}
-        # This property is not allowed to be changed after project creation.
-        project_form.contains_subprojects.data = project.contains_subprojects
-        # TODO: We don't want this hardcoded.
-        project_fields = ["name", "description", "contains_subprojects", "hidden", "hidden_sponsors", "budget", "id"]
-        project_data = {x.short_name: x.data for x in project_form if x.short_name in project_fields}
-
-        project_to_edit = Project.query.filter_by(id=project.id)
-        if len(project_to_edit.all()) == 0:
-            util.formatted_flash("Het project is niet aangepast, omdat dit project niet (meer) bestaat.", color="red")
-            redirect(url_for("index"))
-        try:
-            project_to_edit.update(project_data)
-            db.session.commit()
-            util.formatted_flash(f"Project {project_data['name']} is bijgewerkt.", color="green")
-            redirect(url_for("project", project_id=project.id))
-        except (ValueError, IntegrityError) as e:
-            app.logger.error(repr(e))
-            db.session().rollback()
-            util.formatted_flash(("Project bijwerken is mislukt. Er bestaat al een project met deze naam: "
-                                  f"{project_data['name']}."),
-                                 color="red")
-    else:
-        if len(project_form.errors) > 0:
-            modal_id = ["#project-bewerken"]
+    project_form.contains_subprojects.data = project.contains_subprojects
+    form_redirect = process_form(project_form, Project)
+    if form_redirect:
+        return form_redirect
+    if len(project_form.errors) > 0:
+        modal_id = ["#project-bewerken"]
 
     if not util.form_in_request(project_form, request):
         project_form = EditProjectForm(prefix="project_form", **{
@@ -535,6 +470,12 @@ def project(project_id):
         })
 
     project_form.contains_subprojects.render_kw = {'disabled': ''}
+
+    add_debit_card_form = DebitCardForm()
+    form_redirect = process_form(add_debit_card_form, DebitCard)
+    if form_redirect:
+        return form_redirect
+    add_debit_card_form.project_id.data = project.id
 
     # Process filled in category form
     category_form_return = process_category_form(request)
@@ -597,6 +538,7 @@ def project(project_id):
         project_form=project_form,
         edit_project_owner_forms=edit_project_owner_forms,
         add_user_form=add_user_form,
+        add_debit_card_form=add_debit_card_form,
         subproject_form=subproject_form,
         new_payment_form=new_payment_form,
         categories_dict=categories_dict,
@@ -650,12 +592,12 @@ def subproject(project_id, subproject_id):
         )
 
     subproject_form = SubprojectForm(prefix="subproject_form")
-    form_redirect = process_subproject_form(subproject_form)
+    form_redirect = process_form(subproject_form, Subproject)
     if form_redirect:
         return form_redirect
     if len(subproject_form.errors) > 0:
         modal_id = ["#subproject-bewerken"]
-    else:    
+    else:
         subproject_form = SubprojectForm(prefix='subproject_form', **{
             'name': subproject.name,
             'description': subproject.description,
