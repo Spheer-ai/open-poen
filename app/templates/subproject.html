@@ -432,7 +432,9 @@
                       </td>
                       <td>
                         <div class="cell">
-                          {{ payment.counterparty_alias_name }}
+                          {% if payment.creditor_name %}
+                            {{ payment.creditor_name }}
+                          {% endif %}
                         </div>
                       </td>
                       <td>
@@ -469,12 +471,14 @@
                       </td>
                       <td>
                         <div class="cell">
-                          {{ payment.description }}
+                          {{ payment.remittance_information_structured }}
                         </div>
                       </td>
                       <td>
                         <div class="cell">
-                          {{ payment.long_user_description }}
+                          {% if payment.long_user_description %}
+                            {{ payment.long_user_description }}
+                          {% endif %}
                         </div>
                       </td>
                       <td>
@@ -494,7 +498,9 @@
                       </td>
                       <td>
                         <div class="cell">
-                          {{ payment.counterparty_alias_value }}
+                          {% if payment.creditor_account %}
+                            {{ payment.creditor_account }}
+                          {% endif %}
                         </div>
                       </td>
                       <td>
@@ -507,7 +513,7 @@
                           {% if payment.type == "MANUAL" %}
                             handmatig
                           {% else %}
-                            bunq
+                            BNG
                           {% endif %}
                         </div>
                       </td>
