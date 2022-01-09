@@ -6,6 +6,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from time import time
 import jwt
 import locale
+from sqlalchemy.exc import IntegrityError
 
 
 # Association table between Project and User
@@ -198,6 +199,21 @@ class User(UserMixin, db.Model, DefaultCRUD):
     def redirect_after_delete(self):
         return redirect(url_for("index"))
 
+    @property
+    def message_after_edit(self):
+        return f"Gebruiker {self.email} is aangepast."
+
+    @property
+    def message_after_create(self):
+        return f"Gebruiker {self.email} is aangemaakt."
+
+    @property
+    def message_after_delete(self):
+        return f"Gebruiker {self.email} is verwijderd."
+
+    def message_after_error(self, error, data):
+        return "Aanpassen mislukt vanwege een onbekende fout. De beheerder van Open Poen is op de hoogte gesteld."
+
 
 class Project(db.Model, DefaultCRUD):
     id = db.Column(db.Integer, primary_key=True)
@@ -218,7 +234,8 @@ class Project(db.Model, DefaultCRUD):
         'Subproject',
         backref='project',
         lazy='dynamic',
-        order_by='Subproject.name.asc()'
+        order_by='Subproject.name.asc()',
+        cascade="all,delete,delete-orphan"
     )
     users = db.relationship(
         'User',
@@ -280,6 +297,24 @@ class Project(db.Model, DefaultCRUD):
     @property
     def redirect_after_delete(self):
         return redirect(url_for("index"))
+    
+    @property
+    def message_after_edit(self):
+        return f"Project {self.name} is aangepast."
+
+    @property
+    def message_after_create(self):
+        return f"Project {self.name} is aangemaakt."
+    
+    @property
+    def message_after_delete(self):
+        return f"Project {self.name} is verwijderd."
+
+    def message_after_error(self, error, data):
+        if type(error) == IntegrityError:
+            return f"Aanpassen mislukt. De naam {data['name']} is al gebruikt voor een ander project."
+        else:
+            return "Aanpassen mislukt vanwege een onbekende fout. De beheerder van Open Poen is op de hoogte gesteld."
 
 
 class Subproject(db.Model, DefaultCRUD):
@@ -307,7 +342,12 @@ class Subproject(db.Model, DefaultCRUD):
         secondary=subproject_image,
         lazy='dynamic'
     )
-    categories = db.relationship('Category', backref='subproject', lazy='dynamic')
+    categories = db.relationship(
+        'Category',
+        backref='subproject',
+        lazy='dynamic',
+        cascade="all,delete,delete-orphan"
+    )
 
     # Subproject names must be unique within a project
     __table_args__ = (
@@ -328,6 +368,18 @@ class Subproject(db.Model, DefaultCRUD):
         return select_options
 
     @property
+    def message_after_edit(self):
+        return f"Initiatief {self.name} is aangepast."
+
+    @property
+    def message_after_create(self):
+        return f"Initiatief {self.name} is aangemaakt."
+
+    @property
+    def message_after_delete(self):
+        return f"Initiatief {self.name} is verwijderd."
+
+    @property
     def redirect_after_edit(self):
         return redirect(url_for(
             'subproject',
@@ -343,6 +395,12 @@ class Subproject(db.Model, DefaultCRUD):
     def redirect_after_delete(self):
         return redirect(url_for("project", project_id=self.project_id))
 
+    def message_after_error(self, error, data):
+        if type(error) == IntegrityError:
+            return f"Aanpassen mislukt. De naam {data['name']} is al gebruikt voor een ander initiatief in dit project."
+        else:
+            return "Aanpassen mislukt vanwege een onbekende fout. De beheerder van Open Poen is op de hoogte gesteld."
+
 
 # TODO: Use this for BNG.
 class DebitCard(db.Model, DefaultCRUD):
@@ -355,6 +413,14 @@ class DebitCard(db.Model, DefaultCRUD):
     )
     project_id = db.Column(db.ForeignKey('project.id', ondelete="SET NULL"))
     last_used_project_id = db.Column(db.Integer)
+
+    @property
+    def message_after_edit(self):
+        return f"Betaalpas {self.card_number} is ontkoppeld."
+
+    @property
+    def message_after_create(self):
+        return f"Betaalpas {self.card_number} is toegevoegd."
 
     @property
     def redirect_after_edit(self):
@@ -381,6 +447,9 @@ class DebitCard(db.Model, DefaultCRUD):
             db.session.commit()
         else:
             return super(DebitCard, self).update(data)
+
+    def message_after_error(self, error, data):
+        return "Aanpassen mislukt vanwege een onbekende fout. De beheerder van Open Poen is op de hoogte gesteld."
 
 
 # TODO: Make this compatible with BNG payments if necessary.
@@ -489,6 +558,21 @@ class Funder(db.Model, DefaultCRUD):
     @property
     def redirect_after_delete(self):
         return redirect(url_for("project", project_id=self.project_id))
+    
+    @property
+    def message_after_edit(self):
+        return f"Sponsor {self.name} is aangepast."
+
+    @property
+    def message_after_create(self):
+        return f"Sponsor {self.name} is aangemaakt."
+    
+    @property
+    def message_after_delete(self):
+        return f"Sponsor {self.name} is verwijderd."
+
+    def message_after_error(self, error, data):
+        return "Aanpassen mislukt vanwege een onbekende fout. De beheerder van Open Poen is op de hoogte gesteld."
 
 
 # Make these BNG accounts?

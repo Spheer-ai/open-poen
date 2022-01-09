@@ -872,7 +872,7 @@ def process_form(form, object):
         instance = object.query.get(form.id.data)
         db.session.delete(instance)
         db.session.commit()
-        util.formatted_flash("Object verwijderd.", color="green")
+        util.formatted_flash(instance.message_after_delete, color="green")
         return instance.redirect_after_delete
 
     data = {x.short_name: x.data for x in form if x.type not in fields_to_exclude}
@@ -880,7 +880,7 @@ def process_form(form, object):
     if hasattr(form, "id") and form.id.data is not None:
         instance = object.query.get(data["id"])
         if not instance:
-            util.formatted_flash("Object bestaat niet.", color="red")
+            util.formatted_flash("Verwijderen mislukt. Dit object bestaat niet.", color="red")
             return render_template(
                 "404.html",
                 use_square_borders=app.config["USE_SQURAE_BORDERS"],
@@ -888,18 +888,20 @@ def process_form(form, object):
             )
         try:
             instance.update(data)
+            util.formatted_flash(instance.message_after_edit, color="green")
             return instance.redirect_after_edit
         except (ValueError, IntegrityError) as e:
             app.logger.error(repr(e))
             db.session().rollback()
-            util.formatted_flash("Object aanpassen mislukt.", color="red")
+            util.formatted_flash(instance.message_after_error(e, data), color="red")
             return instance.redirect_after_edit
     else:
+        instance = object.create(data)
         try:
-            instance = object.create(data)
+            util.formatted_flash(instance.message_after_create, color="green")
             return instance.redirect_after_create
         except (ValueError, IntegrityError) as e:
             app.logger.error(repr(e))
             db.session().rollback()
-            util.formatted_flash("Object aanmaken mislukt.", color="red")
+            util.formatted_flash(instance.message_after_error(e, data), color="red")
             return

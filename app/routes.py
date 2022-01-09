@@ -228,20 +228,38 @@ def project(project_id):
         )
 
     # FUNDER
+    # TODO: All edit funder forms are identical (same prefix). This means it's not
+    # possible to open up the modal for the form that has errors. It also means that
+    # all elements of funder_forms are identitcal when edit_funder_form returns an
+    # error We need to implement. Something nicely and not hacky as I did in payments.
     # --------------------------------------------------------------------------------
-    funder_form = FunderForm(prefix="funder_form")
-    funder_form.project_id.data = project.id
-    form_redirect = process_form(funder_form, Funder)
+    add_funder_form = FunderForm(prefix="add_funder_form")
+    add_funder_form.project_id.data = project.id
+    form_redirect = process_form(add_funder_form, Funder)
     if form_redirect:
         return form_redirect
+    if len(add_funder_form.errors) > 0:
+        util.formatted_flash("Sponsor niet toegevoegd vanwege:", color="red")
+        for _, errors in add_funder_form.errors.items():
+            [util.formatted_flash(error, color="red") for error in errors]
+
+    edit_funder_form = FunderForm(prefix="edit_funder_form")
+    form_redirect = process_form(edit_funder_form, Funder)
+    if form_redirect:
+        return form_redirect
+    if len(edit_funder_form.errors) > 0:
+        util.formatted_flash("Sponsor niet aangepast vanwege:", color="red")
+        for _, errors in edit_funder_form.errors.items():
+            [util.formatted_flash(error, color="red") for error in errors]
 
     funder_forms = []
     for funder in project.funders:
         funder_forms.append(
-            FunderForm(prefix="funder_form", **{
+            FunderForm(prefix="edit_funder_form", **{
                 'name': funder.name,
                 'url': funder.url,
-                'id': funder.id
+                'id': funder.id,
+                'project_id': funder.project_id
             })
         )
 
@@ -539,7 +557,7 @@ def project(project_id):
         transaction_attachment_form=transaction_attachment_form,
         edit_attachment_forms=edit_attachment_forms,
         funder_forms=funder_forms,
-        new_funder_form=funder_form,
+        new_funder_form=add_funder_form,
         project_owner=is_project_owner,  # TODO: Always use "is_project_owner" instead of "project_owner"
         user_subproject_ids=user_subproject_ids,
         timestamp=util.get_export_timestamp(),
