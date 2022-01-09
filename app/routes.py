@@ -7,7 +7,7 @@ from wtforms.validators import ValidationError
 
 from app import app, db
 from app.forms import (
-    DebitCardForm, ResetPasswordRequestForm, ResetPasswordForm, LoginForm, NewProjectForm,
+    DebitCardForm, EditDebitCardForm, ResetPasswordRequestForm, ResetPasswordForm, LoginForm, NewProjectForm,
     EditProjectForm, SubprojectForm, TransactionAttachmentForm,
     EditAttachmentForm, FunderForm, AddUserForm, EditAdminForm,
     EditProjectOwnerForm, EditUserForm, EditProfileForm, CategoryForm,
@@ -456,18 +456,28 @@ def project(project_id):
 
     # DEBIT CARD
     # --------------------------------------------------------------------------------
-    add_debit_card_form = DebitCardForm()
+    add_debit_card_form = DebitCardForm(prefix="add_debit_card_form")
     form_redirect = process_form(add_debit_card_form, DebitCard)
     if form_redirect:
         return form_redirect
+    if len(add_debit_card_form.errors) > 0:
+        modal_id = ["#project-bewerken", "#betaalpas-toevoegen"]
     add_debit_card_form.project_id.data = project.id
+
+    edit_debit_card_form = EditDebitCardForm(prefix="edit_debit_card_form")
+    form_redirect = process_form(edit_debit_card_form, DebitCard)
+    if form_redirect:
+        return form_redirect
 
     edit_debit_card_forms = {}
     for debit_card in DebitCard.query.filter_by(project_id=project.id):
-        edit_debit_card_forms[debit_card.card_number] = DebitCardForm(**{
-            "id": debit_card.id,
-            "card_number": debit_card.card_number,
-            "project_id": debit_card.project_id})
+        edit_debit_card_forms[debit_card.card_number] = EditDebitCardForm(
+            prefix="edit_debit_card_form",
+            **{
+                "id": debit_card.id,
+                "card_number": debit_card.card_number,
+                "project_id": debit_card.project_id
+            })
 
     # CATEGORY
     # --------------------------------------------------------------------------------

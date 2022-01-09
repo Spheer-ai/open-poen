@@ -124,20 +124,26 @@ class NewProjectFunderForm(FlaskForm):
     )
 
 
-class DebitCardForm(FlaskForm):
-    card_number = StringField("Pasnummer", validators=[DataRequired(), validate_card_number])
+class EditDebitCardForm(FlaskForm):
+    remove_from_project = BooleanField(
+        'Ontkoppel betaalpas van dit project'
+    )
     id = IntegerField(widget=HiddenInput(), validators=[Optional()])
-    project_id = IntegerField(widget=HiddenInput(), validators=[Optional()])
     submit = SubmitField(
         'Opslaan',
         render_kw={
             'class': 'btn btn-info'
         }
     )
-    remove = SubmitField(
-        'Verwijderen',
+
+
+class DebitCardForm(FlaskForm):
+    card_number = StringField("Pasnummer", validators=[DataRequired(), validate_card_number])
+    project_id = IntegerField(widget=HiddenInput(), validators=[Optional()])
+    submit = SubmitField(
+        'Opslaan',
         render_kw={
-            'class': 'btn btn-danger'
+            'class': 'btn btn-info'
         }
     )
 

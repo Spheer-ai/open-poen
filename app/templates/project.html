@@ -1158,11 +1158,7 @@
               <div>
                 {{ edit_debit_card_form.csrf_token }}
 
-                {% for f in edit_debit_card_form %}
-                  {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' %}
-                    {{ wtf.form_field(f, class="form-control") }}
-                  {% endif %}
-                {% endfor %}
+                {{ wtf.form_field(edit_debit_card_form.remove_from_project, class="form-control") }}
                 {{ edit_debit_card_form.id }}
                 {{ edit_debit_card_form.project_id }}  
               </div>

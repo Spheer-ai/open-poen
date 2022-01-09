@@ -113,6 +113,20 @@ user_story_image = db.Table(
 )
 
 
+class DefaultCRUD(object):
+    def update(self, data):
+        for key, value in data.items():
+            setattr(self, key, value)
+        db.session.commit()
+
+    @classmethod
+    def create(cls, data):
+        instance = cls(**data)
+        db.session.add(instance)
+        db.session.commit()
+        return instance
+
+
 class BNGAccount(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
@@ -122,7 +136,7 @@ class BNGAccount(db.Model):
     iban = db.Column(db.String(34), unique=True)
 
 
-class User(UserMixin, db.Model):
+class User(UserMixin, db.Model, DefaultCRUD):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), index=True, unique=True)
     password_hash = db.Column(db.String(128))
@@ -185,7 +199,7 @@ class User(UserMixin, db.Model):
         return redirect(url_for("index"))
 
 
-class Project(db.Model):
+class Project(db.Model, DefaultCRUD):
     id = db.Column(db.Integer, primary_key=True)
     bank_name = db.Column(db.String(64), index=True)
     # This has to become a BNG token.
@@ -268,7 +282,7 @@ class Project(db.Model):
         return redirect(url_for("index"))
 
 
-class Subproject(db.Model):
+class Subproject(db.Model, DefaultCRUD):
     id = db.Column(db.Integer, primary_key=True)
     project_id = db.Column(
         db.Integer, db.ForeignKey('project.id', ondelete='CASCADE')
@@ -331,7 +345,7 @@ class Subproject(db.Model):
 
 
 # TODO: Use this for BNG.
-class DebitCard(db.Model):
+class DebitCard(db.Model, DefaultCRUD):
     id = db.Column(db.Integer, primary_key=True)
     card_number = db.Column(db.String(22), unique=True, nullable=False)
     payments = db.relationship(
@@ -340,18 +354,33 @@ class DebitCard(db.Model):
         lazy='dynamic'
     )
     project_id = db.Column(db.ForeignKey('project.id', ondelete="SET NULL"))
+    last_used_project_id = db.Column(db.Integer)
 
     @property
     def redirect_after_edit(self):
-        return redirect(url_for("project", project_id=self.project_id))
+        project_id = self.project_id if self.project_id else self.last_used_project_id
+        return redirect(url_for("project", project_id=project_id))
 
     @property
     def redirect_after_create(self):
         return redirect(url_for("project", project_id=self.project_id))
 
-    @property
-    def redirect_after_delete(self):
-        return redirect(url_for("project", project_id=self.project_id))
+    @classmethod
+    def create(cls, data):
+        present_debit_card = cls.query.filter_by(card_number=data["card_number"]).first()
+        if present_debit_card:
+            present_debit_card.update(data)
+            return present_debit_card
+        else:
+            return super(DebitCard, cls).create(data)
+
+    def update(self, data):
+        if data.get("remove_from_project"):
+            self.last_used_project_id = self.project.id
+            del self.project
+            db.session.commit()
+        else:
+            return super(DebitCard, self).update(data)
 
 
 # TODO: Make this compatible with BNG payments if necessary.
@@ -436,7 +465,7 @@ class Payment(db.Model):
         return self.get_formatted_balance().replace("\u202f", "")
 
 
-class Funder(db.Model):
+class Funder(db.Model, DefaultCRUD):
     id = db.Column(db.Integer, primary_key=True)
     project_id = db.Column(
         db.Integer, db.ForeignKey('project.id', ondelete='CASCADE')

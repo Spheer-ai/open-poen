@@ -887,10 +887,7 @@ def process_form(form, object):
                 footer=app.config["FOOTER"]
             )
         try:
-            for key, value in data.items():
-                setattr(instance, key, value)
-            db.session.commit()
-            util.formatted_flash("Object is aangepast.", color="green")
+            instance.update(data)
             return instance.redirect_after_edit
         except (ValueError, IntegrityError) as e:
             app.logger.error(repr(e))
@@ -898,14 +895,11 @@ def process_form(form, object):
             util.formatted_flash("Object aanpassen mislukt.", color="red")
             return instance.redirect_after_edit
     else:
-        instance = object(**data)
         try:
-            db.session.add(instance)
-            db.session.commit()
-            util.formatted_flash("Object is aangemaakt.", color="green")
+            instance = object.create(data)
             return instance.redirect_after_create
         except (ValueError, IntegrityError) as e:
             app.logger.error(repr(e))
             db.session().rollback()
             util.formatted_flash("Object aanmaken mislukt.", color="red")
-            return instance.redirect_after_create
+            return
