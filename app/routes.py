@@ -497,6 +497,19 @@ def project(project_id):
                 "project_id": debit_card.project_id
             })
 
+    debit_cards = db.session.query(DebitCard).join(Project).filter(Project.id == project.id).all()
+    # TODO: Implement.
+    debit_card_donuts = [
+        {
+            "card_number": x.card_number,
+            "awarded_str": "€ 100",
+            "spent_str": "€ 25",
+            "left_str": "€ 75",
+            "percentage": 25
+        }
+        for x in debit_cards
+    ]
+
     # CATEGORY
     # --------------------------------------------------------------------------------
     category_form_return = process_category_form(request)
@@ -564,7 +577,8 @@ def project(project_id):
         modal_id=json.dumps(modal_id),
         payment_id=json.dumps(payment_id),
         bng_info=bng_info,
-        edit_debit_card_forms=edit_debit_card_forms
+        edit_debit_card_forms=edit_debit_card_forms,
+        debit_card_donuts=debit_card_donuts
     )
 
 

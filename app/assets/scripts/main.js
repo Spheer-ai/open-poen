@@ -167,6 +167,10 @@ window.createDonuts = function() {
   $('.donut').each(function() {window.donut(this)});
 }
 
+$('#betaalpas-saldo').on('shown.bs.modal', function () {
+  $('.betaalpas-donut').each(function() {window.donut(this)})
+})
+
 createDonuts();
 
 // We render a template with a modal_id if if we want the modal to

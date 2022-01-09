@@ -192,7 +192,26 @@
                         </button>
                       </div>
                       <div class="modal-body text-left">
-                        <p>Hier moeten de saldi van de betaalpassen staan.</p>
+                        {% for debit_card_donut in debit_card_donuts %}
+                        <div class="betaalpas-unit bg-grey-blue">
+                        <h3 class="text-center">{{ debit_card_donut.card_number }}</h3>
+                        <div class="row">
+                          <div class="col-4 text-right small-gutter">
+                            <br>
+                            <h3 class="text-blue">resterend</h3>
+                            <h2>{{ debit_card_donut.left_str }}</h2>
+                          </div>
+                          <div class="col-4 text-center donut betaalpas-donut" data-percentage="{{ debit_card_donut.percentage }}">
+                          </div>
+                          <div class="col-4 small-gutter">
+                            <br>
+                            <h3 class="text-red">uitgegeven</h3>
+                            <h2>{{ debit_card_donut.spent_str }}</h2>
+                          </div>
+                        </div>
+                        <h3 class="text-center">Totaal: {{ debit_card_donut.awarded_str }}</h3>
+                        </div>
+                        {% endfor %}
                       </div>
                       <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Terug</button>
