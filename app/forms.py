@@ -11,11 +11,22 @@ from wtforms import (
     SelectField, TextAreaField, DecimalField, DateField, RadioField, Form
 )
 from wtforms.fields.html5 import EmailField
+from app.models import DebitCard
 
 allowed_extensions = [
     'jpg', 'jpeg', 'png', 'txt', 'pdf', 'ods', 'xls', 'xlsx', 'odt', 'doc',
     'docx'
 ]
+
+
+def validate_card_number(form, field):
+    present_debit_card = DebitCard.query.filter_by(card_number=field.data).first()
+    if present_debit_card is None:
+        return
+    if present_debit_card.project_id is None:
+        return
+    else:
+        raise ValidationError(f"De betaalpas {field.data} is al gekoppeld aan een ander project.")
 
 
 def validate_iban(form, field):
@@ -113,8 +124,28 @@ class NewProjectFunderForm(FlaskForm):
     )
 
 
-class CardNumber(FlaskForm):
-    card_number = StringField("Pasnummer", validators=[DataRequired()])
+class EditDebitCardForm(FlaskForm):
+    remove_from_project = BooleanField(
+        'Ontkoppel betaalpas van dit project'
+    )
+    id = IntegerField(widget=HiddenInput(), validators=[Optional()])
+    submit = SubmitField(
+        'Opslaan',
+        render_kw={
+            'class': 'btn btn-info'
+        }
+    )
+
+
+class DebitCardForm(FlaskForm):
+    card_number = StringField("Pasnummer", validators=[DataRequired(), validate_card_number])
+    project_id = IntegerField(widget=HiddenInput(), validators=[Optional()])
+    submit = SubmitField(
+        'Opslaan',
+        render_kw={
+            'class': 'btn btn-info'
+        }
+    )
 
 
 class NewProjectSubprojectForm(FlaskForm):
@@ -136,7 +167,7 @@ class NewProjectForm(FlaskForm):
     budget = IntegerField('Budget voor dit project', validators=[Optional()])
     card_numbers_amount = IntegerField("Aantal toe te voegen betaalpassen.", default=0)
     card_numbers = FieldList(
-        FormField(CardNumber),
+        FormField(DebitCardForm),
         min_entries=0,
         max_entries=None,
         validators=[]
@@ -321,6 +352,7 @@ class PaymentForm(FlaskForm):
     created = DateField('Datum (notatie: 31-12-2020)', format="%d-%m-%Y")
     hidden = BooleanField('Transactie verbergen')
     category_id = SelectField('Categorie', validators=[Optional()], choices=[])
+    subproject_id = SelectField('Initiatief', validators=[], choices=[])
     route = SelectField('Route', choices=['inbesteding', 'uitgaven', 'inkomsten'])
     id = IntegerField(widget=HiddenInput())
 
@@ -406,6 +438,7 @@ class FunderForm(FlaskForm):
         'URL', validators=[DataRequired(), URL(), Length(max=2000)]
     )
     id = IntegerField(widget=HiddenInput())
+    project_id = IntegerField(widget=HiddenInput())
 
     submit = SubmitField(
         'Opslaan',

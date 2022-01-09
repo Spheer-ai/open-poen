@@ -296,6 +296,16 @@ hr {
   overflow-y: auto;
 }
 
+.betaalpas-unit {
+  padding: 20px;
+  border-radius: 35px;
+  margin-bottom: 26px;
+  h3 {
+    margin-top: 12px;
+    margin-bottom: 12px;
+  }
+}
+
 @media (max-width: 1199px) {
   .poen-lead {
     min-height: 420px;

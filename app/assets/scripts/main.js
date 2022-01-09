@@ -71,7 +71,7 @@ window.detailFormatter = function(index, row) {
 }
 
 // Create a donut with of the spent percentage
-window.donut = function(thisObj) {
+window.donut = function(thisObj, col1, col2) {
   // Clear HTML, otherwise you generate more donuts when resizing the window
   $(thisObj).html('');
 
@@ -87,7 +87,7 @@ window.donut = function(thisObj) {
   var radius = Math.min(width, height) / 2;
 
   var color = d3.scale.ordinal()
-    .range(["#b82466", "#265ed4"]);
+    .range([col1, col2]);
 
   var arc = d3.svg.arc()
     .outerRadius(radius)
@@ -164,8 +164,12 @@ window.donut = function(thisObj) {
 }
 
 window.createDonuts = function() {
-  $('.donut').each(function() {window.donut(this)});
+  $('.donut').each(function() {window.donut(this, "#b82466", "#265ed4")});
 }
+
+$('#betaalpas-saldo').on('shown.bs.modal', function () {
+  $('.betaalpas-donut').each(function() {window.donut(this, "#004699", "#009de6")})
+})
 
 createDonuts();
 

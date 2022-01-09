@@ -115,6 +115,7 @@
                                           {% endif %}
                                         {% endfor %}
                                         {{ funder_form.id }}
+                                        {{ funder_form.project_id }}
                                       </div>
                                     </div>
                                     <div class="modal-footer">
@@ -191,7 +192,26 @@
                         </button>
                       </div>
                       <div class="modal-body text-left">
-                        <p>Hier moeten de saldi van de betaalpassen staan.</p>
+                        {% for debit_card_donut in debit_card_donuts %}
+                        <div class="betaalpas-unit bg-grey-blue">
+                        <h3 class="text-center">{{ debit_card_donut.card_number }}</h3>
+                        <div class="row">
+                          <div class="col-4 text-right small-gutter">
+                            <br>
+                            <h3 style="color: #009de6">resterend</h3>
+                            <h2>{{ debit_card_donut.left_str }}</h2>
+                          </div>
+                          <div class="col-4 text-center donut betaalpas-donut" data-percentage="{{ debit_card_donut.percentage }}">
+                          </div>
+                          <div class="col-4 small-gutter">
+                            <br>
+                            <h3 style="color: #004699">uitgegeven</h3>
+                            <h2>{{ debit_card_donut.spent_str }}</h2>
+                          </div>
+                        </div>
+                        <h3 class="text-center">Totaal: {{ debit_card_donut.awarded_str }}</h3>
+                        </div>
+                        {% endfor %}
                       </div>
                       <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Terug</button>
@@ -258,8 +278,7 @@
                           <br>
                           <br>
             
-                          {% for project_owner_email, edit_project_owner_form in edit_project_owner_forms[project_data.id].items()
-                          %}
+                          {% for project_owner_email, edit_project_owner_form in edit_project_owner_forms[project_data.id].items() %}
                           <div>
                             <!-- Button trigger modal -->
                             <button type="button" class="btn button-poen-small bg-grey-blue" data-toggle="modal"
@@ -271,6 +290,32 @@
                           <br>
                           {% endfor %}
             
+                          <hr>
+
+                          <b>Betaalpassen</b>
+                          <br>
+                          <br>
+                          <!-- Button trigger modal -->
+                          <button type="button" class="btn button-poen-small bg-grey" data-toggle="modal"
+                            data-target="#betaalpas-toevoegen">
+                            betaalpas toevoegen
+                          </button>
+
+                          <br>
+                          <br>
+
+                          {% for card_number, edit_debit_card_form in edit_debit_card_forms.items() %}
+                          <div>
+                            <!-- Button trigger modal -->
+                            <button type="button" class="btn button-poen-small bg-grey-blue" data-toggle="modal"
+                              data-target="#betaalpas-bewerken-{{ edit_debit_card_form.id.data }}">
+                              betaalpas bewerken
+                            </button>
+                            {{ card_number }}
+                          </div>
+                          <br>
+                          {% endfor %}
+
                           <hr>
             
                           {% if not project_data['contains_subprojects'] %}
@@ -899,10 +944,16 @@
                               <br>
                             {% endif %}
 
-                            {% if project.contains_subprojects %}
+                            {% if project.contains_subprojects and payment.id in payment_forms %}
+                              {{ wtf.form_field(payment_forms[payment.id]['subproject_id'], class="form-control") }}
+                            {% elif project.contains_subprojects %}
                               <b>Initiatief</b>
                               <br>
-                              <a href="{{ url_for('subproject', project_id=project.id, subproject_id=payment.subproject.id) }}"><i>{{ payment.subproject.name }}</i></a>
+                              {% if payment.subproject is not none %}
+                                <a href="{{ url_for('subproject', project_id=project.id, subproject_id=payment.subproject.id) }}"><i>{{ payment.subproject.name }}</i></a>
+                              {% else %}
+                                <i>Hoofdproject</i>
+                              {% endif %}
                               <br>
                               <br>
                             {% endif %}
@@ -1083,6 +1134,63 @@
           </div>
         </div>
       </div>
+    {% endfor %}
+
+    <div class="modal fade" id="betaalpas-toevoegen" tabindex="-1" role="dialog" aria-labelledby="betaalpasToevoegenLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <form method="POST">
+            <div class="modal-header">
+              <h5 class="modal-title" id="betaalpasToevoegenLabel">Betaalpas toevoegen</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <p>Voeg een betaalpas toe aan dit project. Betalingen die worden gedaan met deze betaalpas worden automatisch aan dit project gekoppeld.</p>
+              <div>
+                {{ add_debit_card_form.csrf_token }}
+                {{ wtf.form_field(add_debit_card_form.card_number, class="form-control") }}
+                {{ add_debit_card_form.project_id }}
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
+              {{ add_debit_card_form.submit }}
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    {% for card_number, edit_debit_card_form in edit_debit_card_forms.items() %}
+    <div class="modal fade" id="betaalpas-bewerken-{{ edit_debit_card_form.id.data }}" tabindex="-1" role="dialog" aria-labelledby="debitCardBewerkenLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <form method="POST">
+            <div class="modal-header">
+              <h5 class="modal-title" id="debitCardBewerkenLabel">Betaalpas Bewerken</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <div>
+                {{ edit_debit_card_form.csrf_token }}
+
+                {{ wtf.form_field(edit_debit_card_form.remove_from_project, class="form-control") }}
+                {{ edit_debit_card_form.id }}
+                {{ edit_debit_card_form.project_id }}  
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
+              {{ edit_debit_card_form.submit }}
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
     {% endfor %}
 
     {% if not project_data['contains_subprojects'] %}
