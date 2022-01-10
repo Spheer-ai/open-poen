@@ -5,6 +5,7 @@ from flask import (
 from flask_login import login_required, login_user, logout_user, current_user
 
 from app import app, db
+from app.bng.main import get_bng_payments
 from app.forms import (
     DebitCardForm, EditDebitCardForm, ResetPasswordRequestForm, ResetPasswordForm, LoginForm, NewProjectForm,
     EditProjectForm, SubprojectForm, TransactionAttachmentForm,

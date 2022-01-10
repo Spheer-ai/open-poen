@@ -133,7 +133,8 @@ class BNGAccount(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     consent_id = db.Column(db.String(36))
     access_token = db.Column(db.String(2048))
-    expires_on = db.Column(db.DateTime(timezone=True))
+    expires_on = db.Column(db.DateTime())
+    last_import_on = db.Column(db.DateTime())
     iban = db.Column(db.String(34), unique=True)
 
 

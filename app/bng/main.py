@@ -3,8 +3,6 @@ from flask import redirect, url_for
 from sqlalchemy.exc import IntegrityError
 import os
 
-from wtforms.validators import ValidationError
-
 from app import app, db
 from app.models import DebitCard, Payment, BNGAccount
 from app.util import formatted_flash
@@ -19,6 +17,7 @@ from tempfile import TemporaryDirectory
 import zipfile
 import json
 from dateutil.parser import parse
+import pytz
 
 
 def process_bng_callback(request):
@@ -28,13 +27,13 @@ def process_bng_callback(request):
 
     try:
         access_code = request.args.get("code")
-        if not access_code: raise ValidationError("Toegangscode ontbreekt in callback.")
+        if not access_code: raise TypeError("Toegangscode ontbreekt in callback.")
         token_info = jwt.decode(
             request.args.get("state"),
             app.config["SECRET_KEY"],
             algorithms="HS256"
         )
-    except ValidationError as e:
+    except TypeError as e:
         app.logger.error(repr(e))
         formatted_flash(("Er ging iets mis terwijl je toegang verleende aan BNG bank. De beheerder van Open Poen "
                          "is op de hoogte gesteld. Probeer het later nog eens, of neem contact op met de beheerder."),
@@ -55,11 +54,13 @@ def process_bng_callback(request):
                         color="red")
         return
 
+    # We're saving this as a naive datetime with the right timezone to avoid having to configure Postgres.
+    expires_on = datetime.now(pytz.timezone("Europe/Amsterdam")) + timedelta(seconds=int(expires_in))
     new_bng_account = BNGAccount(
         user_id=token_info["user_id"],
         consent_id=token_info["consent_id"],
         access_token=access_token,
-        expires_on=datetime.now() + timedelta(seconds=int(expires_in)),
+        expires_on=expires_on.replace(tzinfo=None),
         iban=token_info["iban"]
     )
     db.session.add(new_bng_account)
@@ -68,7 +69,8 @@ def process_bng_callback(request):
 
     try:
         get_bng_payments()
-    except (NotImplementedError, ValidationError, ValueError, IntegrityError, ConnectionError) as e:
+        app.logger.info("Succesfully retrieved payments from BNG.")
+    except (NotImplementedError, ValueError, IntegrityError, ConnectionError) as e:
         app.logger.error(repr(e))
         formatted_flash(("Het opslaan van de betalingen is mislukt. De beheerder van Open Poen is op de hoogte "
                          "gesteld."), color="red")
@@ -79,7 +81,7 @@ def process_bng_callback(request):
 
 def get_days_until(date):
     # TODO: Handle timezones gracefully.
-    time_left = date.replace(tzinfo=None) - datetime.now()
+    time_left = date - datetime.now()
     days_left = time_left.days
     if days_left < 0:
         days_left = 0
@@ -95,15 +97,28 @@ def get_days_until(date):
 def get_bng_info(linked_bng_accounts):
     if len(linked_bng_accounts) > 1:
         raise NotImplementedError("Open Poen now only supports a single coupling with a BNG account.")
-    elif len(linked_bng_accounts) == 0:
+
+    date_last_sync_message, date_last_sync_color = "Er heeft nog geen synchronisatie plaatsgevonden.", "grey"
+
+    if len(linked_bng_accounts) == 0:
         created, created_color = "niet aangemaakt", "red"
         status, status_color = "offline", "red"
         days_left, days_left_color = 0, "red"
-        # TODO Add time of last payment import.
-        date_last_sync, date_last_sync_color = "12-12-2021", "green"
-    else:
+
+    if len(linked_bng_accounts) == 1:
         bng_account = linked_bng_accounts[0]
         created_color, created = "green", "aangemaakt"
+        if bng_account.last_import_on is not None:
+            date_last_sync = bng_account.last_import_on.strftime("%d-%m-%Y, %H:%M")
+            date_last_sync_message = f"Laatst gesynchroniseerd op {date_last_sync}."
+            diff = datetime.now(pytz.timezone("Europe/Amsterdam")).replace(tzinfo=None) - bng_account.last_import_on
+            diff_in_hours = diff.seconds / 60 / 60
+            if diff_in_hours < 3:
+                date_last_sync_color = "green"
+            elif diff_in_hours < 8:
+                date_last_sync_color = "orange"
+            else:
+                date_last_sync_color = "red"
         try:
             bng_info = api.retrieve_consent_details(
                 bng_account.consent_id,
@@ -115,16 +130,12 @@ def get_bng_info(linked_bng_accounts):
                             "Open Poen is op de hoogte gebracht."), color="red")
             status, status_color = "red", "offline"
             days_left, days_left_color = get_days_until(bng_account.expires_on)
-            # TODO Add time of last payment import.
-            date_last_sync, date_last_sync_color = "12-12-2021", "green"
         else:
             status = "online" if bng_info["consentStatus"] == "valid" else "offline"
             status_color = "green" if status == "online" else "red"
             days_left, days_left_color = get_days_until(
                 datetime.strptime(bng_info["validUntil"], "%Y-%m-%d")
             )
-            # TODO Add time of last payment import.
-            date_last_sync, date_last_sync_color = "12-12-2021", "green"
 
     return {
         "created": {
@@ -141,7 +152,7 @@ def get_bng_info(linked_bng_accounts):
         },
         "sync": {
             "color": date_last_sync_color,
-            "message": f"Laatst gesynchroniseerd op {date_last_sync}."
+            "message": date_last_sync_message
         }
     }
 
@@ -215,7 +226,6 @@ def parse_and_save_bng_payments(payments):
 
 
 def get_bng_payments():
-    # TODO: Error handling.
     bng_account = BNGAccount.query.all()
     if len(bng_account) > 1:
         raise NotImplementedError("Op dit moment ondersteunen we slechts één BNG-koppeling.")
@@ -230,9 +240,9 @@ def get_bng_payments():
     if len(account_info["accounts"]) > 1:
         raise NotImplementedError("Op dit moment ondersteunen we slechts één consent per BNG-koppeling.")
     elif len(account_info["accounts"]) == 0:
-        raise ValidationError("Het zou niet mogelijk moeten zijn om wel een account te hebben, maar geen consent.")
+        raise TypeError("Het zou niet mogelijk moeten zijn om wel een account te hebben, maar geen consent.")
 
-    date_from = datetime.today() - timedelta(days=14)
+    date_from = datetime.today() - timedelta(days=365)
 
     # TODO: Make this part asynchronous?
     # TODO: What to do with booking status? Are we interested in pending?
@@ -252,9 +262,15 @@ def get_bng_payments():
             z.extractall(d)
         payment_json_files = [x for x in os.listdir(d) if x.endswith(".json")]
         if len(payment_json_files) != 1:
-            raise ValidationError("The downloaded transaction zip does not contain a json file.")
+            raise TypeError("The downloaded transaction zip does not contain a json file.")
         with open(os.path.join(d, payment_json_files[0])) as f:
             payments = json.load(f)
             payments = payments["transactions"]["booked"]
 
     parse_and_save_bng_payments(payments)
+
+    # We save it as a naive datetime object, but in the right timezone, to avoid having to use timezones
+    # in Postgres.
+    bng_account.last_import_on = datetime.now(pytz.timezone("Europe/Amsterdam")).replace(tzinfo=None)
+    db.session.add(bng_account)
+    db.session.commit()

@@ -4,6 +4,25 @@ from flask import url_for
 from pprint import pprint
 import click
 from app import util
+from app.bng import get_bng_payments
+from sqlalchemy.exc import IntegrityError
+
+
+@app.cli.group()
+def bng():
+    """BNG related commands"""
+    pass
+
+
+@bng.command()
+def get_new_payments_all():
+    """Get all payments from the coupled BNG account"""
+    try:
+        get_bng_payments()
+        app.logger.info("Succesfully retrieved payments from BNG.")
+    except (NotImplementedError, ValueError, IntegrityError, ConnectionError) as e:
+        app.logger.error(repr(e) + "\n" + "Failed to retrieve payments from BNG.")
+        return
 
 
 # Database commands
