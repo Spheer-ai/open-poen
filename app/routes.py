@@ -3,7 +3,6 @@ from flask import (
     send_from_directory
 )
 from flask_login import login_required, login_user, logout_user, current_user
-from wtforms.validators import ValidationError
 
 from app import app, db
 from app.forms import (
@@ -15,16 +14,15 @@ from app.forms import (
 )
 from app.email import send_password_reset_email
 from app.models import (
-    User, Project, Subproject, Payment, UserStory, IBAN, File, Funder, Category, BNGAccount, DebitCard, payment_attachment
+    User, Project, Subproject, Payment, UserStory, File, Funder, Category, BNGAccount, DebitCard, payment_attachment
 )
 from app.form_processing import (
     generate_new_payment_form, process_category_form, process_form, process_new_payment_form, process_payment_form, create_payment_forms,
     process_transaction_attachment_form, create_edit_attachment_forms,
     process_edit_attachment_form, save_attachment,
-    process_bng_link_form, process_bng_callback, get_bng_info, get_bng_payments, process_new_project_form
+    process_bng_link_form, process_new_project_form
 )
-from sqlalchemy.exc import IntegrityError
-
+from app.bng import process_bng_callback, get_bng_info
 import json
 from app import util
 
@@ -230,8 +228,8 @@ def project(project_id):
     # FUNDER
     # TODO: All edit funder forms are identical (same prefix). This means it's not
     # possible to open up the modal for the form that has errors. It also means that
-    # all elements of funder_forms are identitcal when edit_funder_form returns an
-    # error We need to implement. Something nicely and not hacky as I did in payments.
+    # all elements of funder_forms are identical when edit_funder_form returns an
+    # error. We need to implement something nicely and not hacky as I did in payments.
     # --------------------------------------------------------------------------------
     add_funder_form = FunderForm(prefix="add_funder_form")
     add_funder_form.project_id.data = project.id
@@ -666,7 +664,7 @@ def subproject(project_id, subproject_id):
 
     payment_forms = {}
     if project_owner or user_in_subproject:
-        payment_forms = create_payment_forms(subproject.payments)
+        payment_forms = create_payment_forms(subproject.payments)  # TODO: Should this not use editable_payments?
 
     if type(payment_form_return) == PaymentForm:
         payment_forms[payment_form_return.id.data] = payment_form_return
@@ -854,6 +852,7 @@ def subproject(project_id, subproject_id):
         modal_id=json.dumps(modal_id),
         payment_id=json.dumps(payment_id)
     )
+
 
 @app.route("/over", methods=['GET'])
 def over():

@@ -11,8 +11,6 @@ from Crypto.Signature import PKCS1_v1_5
 from Crypto.PublicKey import RSA
 from urllib.parse import urlparse
 from urllib.parse import urlencode
-from cryptography import x509
-from cryptography.hazmat.backends import default_backend
 from app import app
 
 # TODO: Set dynamically.
@@ -38,21 +36,6 @@ else:
     CLIENT_ID = app.config["CLIENT_ID"]
     TLS_CERTS = SIGNING_CERTS = app.config["PRODUCTION_CERTS"]
     KEYID_FDN = app.config["PRODUCTION_KEYID_FDN"]
-
-
-def get_cert_data(cert):
-    with open(cert, "rb") as f:
-        x = x509.load_pem_x509_certificate(f.read(), default_backend())
-    # Why does this not start with two zeros as in get_signature?
-    # See: 00E8B54055D929413F
-    serial_number = '%x' % x.serial_number
-    # Discrepancies:
-    # '2.5.4.97=PSDNL-AUT-SANDBOX'                     ---> 'OID.2.5.4.97=PSDNL-AUT-SANDBOX'?
-    # ST=South-Holland                                 ---> S=South-Holland
-    # '1.2.840.113549.1.9.1=klantenservice@bngbank.nl' ---> E=klantenservice@bngbank.nl
-    # 'CN=xs2a_sandbox_bngbank_client_signing'         ---> CA=CN=xs2a_sandbox_bngbank_client_signing
-    issuer = str(x.issuer).replace("<Name(", "").replace(")>", "").split(",")
-    return serial_number, issuer
 
 
 def get_current_rfc_1123_date():
@@ -293,24 +276,3 @@ def read_transaction_details(consent_id, access_token, account_id, transaction_i
 
     r = requests.get(url, data="", headers=headers, cert=TLS_CERTS)
     return r.json()
-
-
-if __name__ == "__main__":
-    # sandbox_signing = get_cert_data("xs2a_sandbox_bngbank_client_signing.cer")
-    # own_signing = get_cert_data("test_public.cer")
-    # get_cert_data(TLS_CERTS[0])
-
-    consent_id = create_consent(
-        iban="NL34BNGT5532530633",
-        valid_until=datetime(2022, 1, 1)
-    )
-    access_token = retrieve_access_token()
-    consent_details = retrieve_consent_details(consent_id, access_token)
-    account_information = read_account_information(consent_id, access_token)
-    # Because we will always link one account per municipality... Right?
-    assert len(account_information["accounts"]) == 1
-    account_id = account_information["accounts"][0]["resourceId"]
-    transactions = read_transaction_list(consent_id, access_token, account_id, date_from="2018-01-01")
-    transaction_id = transactions["transactions"]["booked"][0]["transactionId"]
-    # Does not seem to contain more info than what is already returned by read_transaction_list.
-    transaction_details = read_transaction_details(consent_id, access_token, account_id, transaction_id)
