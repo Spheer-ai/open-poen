@@ -172,6 +172,8 @@
                 <h3 class="text-center totaal">ontvangen inkomsten {{ amounts.awarded_str }}</h3>
               {% endif %}
             </div>
+
+            {% if project_owner or user_subproject_ids %}
             <div class="project-modals-card bg-white">
             
               <div class="text-center">
@@ -433,10 +435,11 @@
                   <i class="fas fa-sync-alt fa-2x fa-fw" style="color: {{ bng_info['sync']['color'] }}"></i>
                   <p>{{ bng_info["sync"]["message"] }}</p>
                 </div>
-              
               </div>
               {% endif %}
+
             </div>
+            {% endif %}
           </div>
 
           <div class="lead-side-col col-6 col-lg-3 col-xxl-4 order-9 d-flex flex-column justify-content-between">

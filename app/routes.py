@@ -317,17 +317,22 @@ def project(project_id):
                 filter(Project.id == project.id).
                 all()
             )
-            editable_attachments = (
-                db.session.query(File).
-                join(payment_attachment).
-                join(Payment).
-                filter(Payment.id.in_([x.id for x in editable_payments])).
+        elif user_subproject_ids:
+            # A user that is not project owner or admin is only allowed to edit payments from its subprojects.
+            editable_payments = (
+                db.session.query(Payment).
+                join(Subproject).
+                filter(Subproject.id.in_(user_subproject_ids)).
                 all()
             )
-        elif user_subproject_ids:
-            # Payments are now always assigned manually to subprojects.
-            # A user that is not project owner or admin is only allowed to edit payments from its subprojects.
-            raise NotImplementedError("Not implemented yet.")
+
+        editable_attachments = (
+            db.session.query(File).
+            join(payment_attachment).
+            join(Payment).
+            filter(Payment.id.in_([x.id for x in editable_payments])).
+            all()
+        )
 
         if type(payment_form_return) == PaymentForm:
             payment_id = payment_form_return.id.data
