@@ -58,18 +58,18 @@
                 <br>
                 <!-- Button trigger modal -->
                 <div class="text-center">
-                  <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#subproject-bewerken">
-                    initiatief bewerken
+                  <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#subproject-beheren">
+                    initiatief beheren
                   </button>
                 </div>
 
                 <!-- Modal -->
-                <div class="modal fade text-left" id="subproject-bewerken" tabindex="-1" role="dialog" aria-labelledby="subprojectBewerkenLabel" aria-hidden="true">
+                <div class="modal fade text-left" id="subproject-beheren" tabindex="-1" role="dialog" aria-labelledby="subprojectbeherenLabel" aria-hidden="true">
                   <div class="modal-dialog" role="document">
                     <div class="modal-content">
                       <form method="POST">
                         <div class="modal-header">
-                          <h5 class="modal-title" id="subprojectBewerkenLabel">Initiatief Bewerken</h5>
+                          <h5 class="modal-title" id="subprojectbeherenLabel">Initiatief beheren</h5>
                           <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
                             <span aria-hidden="true">&times;</span>
                           </button>
@@ -88,8 +88,8 @@
                           {% for category_form in category_forms %}
                             <!-- Button trigger modal -->
                             <div>
-                              <button type="button" class="btn button-poen-small bg-grey-blue" data-toggle="modal" data-target="#categorie-bewerken-{{ category_form.id.data }}">
-                                categorie bewerken
+                              <button type="button" class="btn button-poen-small bg-grey-blue" data-toggle="modal" data-target="#categorie-beheren-{{ category_form.id.data }}">
+                                categorie beheren
                               </button>
                             {{ category_form.name.data }}
                             </div>
@@ -220,18 +220,18 @@
                         {% for user_email, edit_user_form in edit_user_forms.items() %}
                           <div>
                             <!-- Button trigger modal -->
-                            <button type="button" class="btn button-poen-small bg-grey-blue" data-toggle="modal" data-target="#initiatiefnemer-bewerken-{{ edit_user_form.id.data }}">
-                              initiatiefnemer bewerken
+                            <button type="button" class="btn button-poen-small bg-grey-blue" data-toggle="modal" data-target="#initiatiefnemer-beheren-{{ edit_user_form.id.data }}">
+                              initiatiefnemer beheren
                             </button>
                             {{ user_email }}
 
                             <!-- Modal -->
-                            <div class="modal fade" id="initiatiefnemer-bewerken-{{ edit_user_form.id.data }}" tabindex="-1" role="dialog" aria-labelledby="initiatiefnemerBewerkenLabel" aria-hidden="true">
+                            <div class="modal fade" id="initiatiefnemer-beheren-{{ edit_user_form.id.data }}" tabindex="-1" role="dialog" aria-labelledby="initiatiefnemerbeherenLabel" aria-hidden="true">
                               <div class="modal-dialog" role="document">
                                 <div class="modal-content">
                                   <form method="POST">
                                     <div class="modal-header">
-                                      <h5 class="modal-title" id="initiatiefnemerBewerkenLabel">Initiatiefnemer Bewerken</h5>
+                                      <h5 class="modal-title" id="initiatiefnemerbeherenLabel">Initiatiefnemer beheren</h5>
                                       <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
                                         <span aria-hidden="true">&times;</span>
                                       </button>
@@ -812,13 +812,13 @@
     </div>
 
     {% for category_form in category_forms %}
-      <!-- Modal for categorie bewerken -->
-      <div class="modal fade" id="categorie-bewerken-{{ category_form.id.data }}" tabindex="-1" role="dialog" aria-labelledby="categorieBewerkenLabel" aria-hidden="true">
+      <!-- Modal for categorie beheren -->
+      <div class="modal fade" id="categorie-beheren-{{ category_form.id.data }}" tabindex="-1" role="dialog" aria-labelledby="categoriebeherenLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
           <div class="modal-content">
             <form method="POST">
               <div class="modal-header">
-                <h5 class="modal-title" id="categorieBewerkenLabel">Categorie Bewerken</h5>
+                <h5 class="modal-title" id="categoriebeherenLabel">Categorie beheren</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
                   <span aria-hidden="true">&times;</span>
                 </button>
