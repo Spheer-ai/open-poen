@@ -356,23 +356,6 @@
                                       <span class="w-100 fa-layers-text text-color-main">{{ attachment.mimetype.split('/')[1] }}</span>
                                     </div>
                                   </a>
-                                  <div class="modal fade" id="pdf{{loop.counter}}" tabindex="-1" role="dialog" aria-labelledby="{{ attachment.filename }}">
-                                    <div class="modal-dialog wide-modal" role="document">
-                                      <div class="modal-content" style="height: 90vh">
-                                        <div class="modal-header">
-                                          <h5 class="modal-title" id="{{ attachment.filename }}">{{ attachment.filename }}</h5>
-                                          <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
-                                            <span aria-hidden="true">&times;</span>
-                                          </button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <object data="{{ url_for('upload', filename='transaction-attachment/' + attachment.filename) }}" type="application/pdf" width="100%" height="100%"> 
-                                            <p style="font-size: 14em">Je hebt geen PDF-viewer geïnstalleerd op je browser. Klik <a href="{{ url_for('upload', filename='transaction-attachment/' + attachment.filename) }}">hier</a> om de PDF te downloaden.</p>
-                                            </object>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
                                   {% endif %}
                                 </div>
                               </div>
@@ -384,6 +367,37 @@
                   </div>
                 </div>
               </div>
+
+              {% for payment in subproject.payments|sort(attribute='created', reverse=true) %}
+                {% if not payment.hidden or (project_owner or user_in_subproject) %}
+                  {% for attachment in payment.attachments %}
+                    {% if attachment.mimetype not in ['image/jpeg', 'image/jpg', 'image/png'] %}
+                      <div class="modal fade" id="pdf{{loop.counter}}" tabindex="-1" role="dialog"
+                        aria-labelledby="{{ attachment.filename }}">
+                        <div class="modal-dialog wide-modal" role="document">
+                          <div class="modal-content" style="height: 90vh">
+                            <div class="modal-header">
+                              <h5 class="modal-title" id="{{ attachment.filename }}">{{ attachment.filename }}</h5>
+                              <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
+                                <span aria-hidden="true">&times;</span>
+                              </button>
+                            </div>
+                            <div class="modal-body">
+                              <object data="{{ url_for('upload', filename='transaction-attachment/' + attachment.filename) }}"
+                                type="application/pdf" width="100%" height="100%">
+                                <p style="font-size: 14em">Je hebt geen PDF-viewer geïnstalleerd op je browser. Klik <a
+                                    href="{{ url_for('upload', filename='transaction-attachment/' + attachment.filename) }}">hier</a> om de
+                                  PDF te downloaden.</p>
+                              </object>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    {% endif %}
+                  {% endfor %}
+                {% endif %}
+              {% endfor %}
+
             </div>
             <table class="payment-table" data-pagination="true" data-locale="nl-NL" data-toolbar="#toolbar" data-cookie="true" data-cookie-id-table="project-{{ subproject.project.id }}-subproject-{{ subproject.id }}" data-detail-view="true" data-detail-view-by-click="true" data-detail-view-icon="false" data-detail-formatter="detailFormatter" data-show-export="true" data-export-data-type="all" data-export-types="['csv', 'txt', 'json', 'xml', 'sql']" data-export-options='{"fileName": "{{ timestamp }}-{{ subproject.project.name | replace(' ', '_') }}-{{ subproject.name | replace(' ', '_')  }}", "preventInjection": false}'>
               <thead>
