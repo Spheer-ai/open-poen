@@ -940,15 +940,9 @@
 {% endblock %}
 
 {% block scripts %}
-  {% if modal_id is not none %}
-    <script>
-      window.modal_id = {{ modal_id|safe }};
-    </script>
-  {% endif %}\
-  {% if payment_id is not none %}
-    <script>
-      window.paymentId = {{ payment_id|safe }};
-    </script>
-  {% endif %}
+<script>
+  window.modal_id = {{ modal_id|safe }};
+  window.paymentId = {{ payment_id|safe }};
+</script>
   {{ super() }}
 {% endblock %}

@@ -1142,16 +1142,10 @@
 {% endblock %}
 
 {% block scripts %}
-  <script>var categories_dict = "{{ categories_dict|tojson }}";</script>
-  {% if modal_id is not none %}
-    <script>
-      window.modal_id = {{ modal_id|safe }};
-    </script>
-  {% endif %}\
-  {% if payment_id is not none %}
-    <script>
-      window.paymentId = {{ payment_id|safe }};
-    </script>
-  {% endif %}
+  <script>
+    categories_dict = {{ categories_dict|tojson }};
+    window.modal_id = {{ modal_id|safe }};
+    window.paymentId = {{ payment_id|safe }};
+  </script>
   {{ super() }}
 {% endblock %}
