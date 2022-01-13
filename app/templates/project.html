@@ -485,12 +485,6 @@
                         aria-labelledby="{{ attachment.filename }}">
                         <div class="modal-dialog wide-modal" role="document">
                           <div class="modal-content" style="height: 90vh">
-                            <div class="modal-header">
-                              <h5 class="modal-title" id="{{ attachment.filename }}">{{ attachment.filename }}</h5>
-                              <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
-                                <span aria-hidden="true">&times;</span>
-                              </button>
-                            </div>
                             <div class="modal-body">
                               <object data="{{ url_for('upload', filename='transaction-attachment/' + attachment.filename) }}"
                                 type="application/pdf" width="100%" height="100%">
