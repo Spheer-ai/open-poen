@@ -581,7 +581,7 @@
                     </td>
                     <td>
                       <div class="cell">
-                        {% if payment.amount_value >= 0 %}
+                        {% if payment.amount_value >= 0 and payment.type != "MANUAL" %}
                           {{ payment.counterparty_alias_name }}
                         {% else %}
                           {{ payment.alias_name }}
@@ -590,7 +590,7 @@
                     </td>
                     <td>
                       <div class="cell">
-                        {% if payment.amount_value <= 0 %}
+                        {% if payment.amount_value <= 0 or payment.type == "MANUAL" %}
                           {{ payment.counterparty_alias_name }}
                         {% else %}
                           {{ payment.alias_name }}
@@ -656,7 +656,7 @@
                     </td>
                     <td>
                       <div class="cell">
-                        {% if payment.amount_value >= 0 %}
+                        {% if payment.amount_value >= 0 and payment.type != "MANUAL" %}
                           {{ payment.counterparty_alias_value }}
                         {% else %}
                           {{ payment.alias_value }}
@@ -665,7 +665,7 @@
                     </td>
                     <td>
                       <div class="cell">
-                        {% if payment.amount_value <= 0 %}
+                        {% if payment.amount_value <= 0 or payment.type == "MANUAL" %}
                           {{ payment.counterparty_alias_value }}
                         {% else %}
                           {{ payment.alias_value }}
@@ -693,9 +693,9 @@
                           <div class="col-5">
                             <b>Verzender</b>
                             <br>
-                            {% if payment.counterparty_alias_name and payment.amount_value >= 0 %}
+                            {% if payment.counterparty_alias_name and (payment.amount_value >= 0 and payment.type != "MANUAL") %}
                               {{ payment.counterparty_alias_name }}
-                            {% elif payment.alias_name and payment.amount_value <= 0 %}
+                            {% elif payment.alias_name %}
                               {{ payment.alias_name }}
                             {% else %}
                               <i>Niet ingevuld.</i>
@@ -704,9 +704,9 @@
                             <br>
                             <b>Bankrekening verzender</b>
                             <br>
-                            {% if payment.counterparty_alias_value and payment.amount_value >= 0 %}
+                            {% if payment.counterparty_alias_value and (payment.amount_value >= 0 and payment.type != "MANUAL") %}
                               {{ payment.counterparty_alias_value }}
-                            {% elif payment.alias_value and payment.amount_value <= 0 %}
+                            {% elif payment.alias_value %}
                               {{ payment.alias_value }}
                             {% else %}
                               <i>Niet ingevuld.</i>
@@ -715,9 +715,9 @@
                             <br>
                             <b>Ontvanger</b>
                             <br>
-                            {% if payment.counterparty_alias_name and payment.amount_value <= 0 %}
+                            {% if payment.counterparty_alias_name and (payment.amount_value <= 0 or payment.type == "MANUAL") %}
                               {{ payment.counterparty_alias_name }}
-                            {% elif payment.alias_name and payment.amount_value >= 0 %}
+                            {% elif payment.alias_name and (payment.amount_value >= 0 and payment.type != "MANUAL") %}
                               {{ payment.alias_name }}
                             {% else %}
                               <i>Niet ingevuld.</i>
@@ -726,9 +726,9 @@
                             <br>
                             <b>Bankrekening ontvanger</b>
                             <br>
-                            {% if payment.counterparty_alias_value and payment.amount_value <= 0 %}
+                            {% if payment.counterparty_alias_value and (payment.amount_value <= 0 or payment.type == "MANUAL") %}
                               {{ payment.counterparty_alias_value }}
-                            {% elif payment.alias_value and payment.amount_value >= 0 %}
+                            {% elif payment.alias_value and (payment.amount_value >= 0 and payment.type != "MANUAL") %}
                               {{ payment.alias_value }}
                             {% else %}
                               <i>Niet ingevuld.</i>
