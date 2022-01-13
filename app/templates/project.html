@@ -572,12 +572,20 @@
                     </td>
                     <td>
                       <div class="cell">
-                        {{ payment.alias_name }}
+                        {% if payment.amount_value >= 0 %}
+                          {{ payment.counterparty_alias_name }}
+                        {% else %}
+                          {{ payment.alias_name }}
+                        {% endif %}
                       </div>
                     </td>
                     <td>
                       <div class="cell">
-                        {{ payment.counterparty_alias_name }}
+                        {% if payment.amount_value <= 0 %}
+                          {{ payment.counterparty_alias_name }}
+                        {% else %}
+                          {{ payment.alias_name }}
+                        {% endif %}
                       </div>
                     </td>
                     <td>
@@ -639,12 +647,20 @@
                     </td>
                     <td>
                       <div class="cell">
-                        {{ payment.alias_value }}
+                        {% if payment.amount_value >= 0 %}
+                          {{ payment.counterparty_alias_value }}
+                        {% else %}
+                          {{ payment.alias_value }}
+                        {% endif %}
                       </div>
                     </td>
                     <td>
                       <div class="cell">
-                        {{ payment.counterparty_alias_value }}
+                        {% if payment.amount_value <= 0 %}
+                          {{ payment.counterparty_alias_value }}
+                        {% else %}
+                          {{ payment.alias_value }}
+                        {% endif %}
                       </div>
                     </td>
                     <td>
@@ -668,7 +684,9 @@
                           <div class="col-5">
                             <b>Verzender</b>
                             <br>
-                            {% if payment.alias_name %}
+                            {% if payment.counterparty_alias_name and payment.amount_value >= 0 %}
+                              {{ payment.counterparty_alias_name }}
+                            {% elif payment.alias_name and payment.amount_value <= 0 %}
                               {{ payment.alias_name }}
                             {% else %}
                               <i>Niet ingevuld.</i>
@@ -677,7 +695,9 @@
                             <br>
                             <b>Bankrekening verzender</b>
                             <br>
-                            {% if payment.alias_value %}
+                            {% if payment.counterparty_alias_value and payment.amount_value >= 0 %}
+                              {{ payment.counterparty_alias_value }}
+                            {% elif payment.alias_value and payment.amount_value <= 0 %}
                               {{ payment.alias_value }}
                             {% else %}
                               <i>Niet ingevuld.</i>
@@ -686,17 +706,21 @@
                             <br>
                             <b>Ontvanger</b>
                             <br>
-                            {% if payment.counterparty_alias_name %}
+                            {% if payment.counterparty_alias_name and payment.amount_value <= 0 %}
                               {{ payment.counterparty_alias_name }}
+                            {% elif payment.alias_name and payment.amount_value >= 0 %}
+                              {{ payment.alias_name }}
                             {% else %}
-                                <i>Niet ingevuld.</i>
+                              <i>Niet ingevuld.</i>
                             {% endif %}
                             <br>
                             <br>
                             <b>Bankrekening ontvanger</b>
                             <br>
-                            {% if payment.counterparty_alias_value %}
+                            {% if payment.counterparty_alias_value and payment.amount_value <= 0 %}
                               {{ payment.counterparty_alias_value }}
+                            {% elif payment.alias_value and payment.amount_value >= 0 %}
+                              {{ payment.alias_value }}
                             {% else %}
                               <i>Niet ingevuld.</i>
                             {% endif %}
@@ -859,9 +883,11 @@
                             {% if project.contains_subprojects %}
                               <b>Initiatief</b>
                               <br>
-                              <a href="{{ url_for('subproject', project_id=project.id, subproject_id=payment.subproject.id) }}"><i>{{ payment.subproject.name }}</i></a>
-                              <br>
-                              <br>
+                              {% if payment.subproject is not none %}
+                                <p><a href="{{ url_for('subproject', project_id=project.id, subproject_id=payment.subproject.id) }}"><i>{{ payment.subproject.name }}</i></a></p>
+                              {% else %}
+                                <p>Hoofdproject</p>
+                              {% endif %}
                             {% endif %}
 
                             {# Show either the short or long description to not logged in visitors, otherwise allow a logger in user with access to this payment to edit the short and long descriptions #}
