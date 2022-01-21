@@ -5,7 +5,6 @@ from flask import (
 from flask_login import login_required, login_user, logout_user, current_user
 
 from app import app, db
-from app.bng.main import get_bng_payments
 from app.forms import (
     DebitCardForm, EditDebitCardForm, ResetPasswordRequestForm, ResetPasswordForm, LoginForm, NewProjectForm,
     EditProjectForm, SubprojectForm, TransactionAttachmentForm,
@@ -23,7 +22,7 @@ from app.form_processing import (
     process_edit_attachment_form, save_attachment,
     process_bng_link_form, process_new_project_form
 )
-from app.bng import process_bng_callback, get_bng_info
+from app.bng import process_bng_callback, get_bng_info, get_bng_payments
 import json
 from app import util
 
@@ -68,6 +67,8 @@ def index():
     modal_id = None  # This is used to pop open a modal on page load in case of
     # form errors.
     bng_info = {}
+
+    # get_bng_payments()
 
     # ADMIN
     # --------------------------------------------------------------------------------
@@ -283,6 +284,7 @@ def project(project_id):
                 user_subproject_ids.append(subproject.id)
 
     # PAYMENT AND ATTACHMENT
+    # TODO: Refactor this.
     # --------------------------------------------------------------------------------
     new_payment_form = ''
     # Filled with all categories for each subproject; used by some JavaScript
@@ -502,7 +504,8 @@ def project(project_id):
             })
 
     debit_cards = db.session.query(DebitCard).join(Project).filter(Project.id == project.id).all()
-    # TODO: Implement.
+
+    # TODO: Implement. This is dummy code.
     debit_card_donuts = [
         {
             "card_number": x.card_number,
@@ -648,6 +651,7 @@ def subproject(project_id, subproject_id):
             user_subproject_ids.append(subproject.id)
 
     # PAYMENT AND ATTACHMENT
+    # TODO: Refactor.
     # --------------------------------------------------------------------------------
     new_payment_form = ''
     if project_owner:

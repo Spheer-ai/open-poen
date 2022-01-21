@@ -642,7 +642,7 @@ def process_form(form, object):
             util.formatted_flash("Verwijderen mislukt. Dit object bestaat niet.", color="red")
             return render_template(
                 "404.html",
-                use_square_borders=app.config["USE_SQURAE_BORDERS"],
+                use_square_borders=app.config["USE_SQUARE_BORDERS"],
                 footer=app.config["FOOTER"]
             )
         try:
