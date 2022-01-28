@@ -101,9 +101,7 @@ def get_bng_info(linked_bng_accounts):
     date_last_sync_message, date_last_sync_color = "Er heeft nog geen synchronisatie plaatsgevonden.", "grey"
 
     if len(linked_bng_accounts) == 0:
-        created, created_color = "niet aangemaakt", "red"
-        status, status_color = "offline", "red"
-        days_left, days_left_color = 0, "red"
+        return {}
 
     if len(linked_bng_accounts) == 1:
         bng_account = linked_bng_accounts[0]
