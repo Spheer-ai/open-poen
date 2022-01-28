@@ -581,7 +581,7 @@ def process_bng_link_form(form):
 
         # TODO: This returns a 401 now for the Sandbox, but I don't see how there is
         # anything wrong with my request.
-        # bng.delete_consent(bng_account.consent_id, bng_account.access_token)
+        bng.delete_consent(bng_account.consent_id, bng_account.access_token)
 
         db.session.delete(bng_account)
         db.session.commit()

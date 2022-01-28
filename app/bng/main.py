@@ -187,7 +187,7 @@ def parse_and_save_bng_payments(payments):
         # Get the card number, if one was used. This is used to identify what payments where done for
         # what project later on. These numbers always start with 6731924.
         try:
-            card_number = re.search("6731924\d*", payment["remittance_information_structured"]).group(0)
+            card_number = re.search("6731924\d*", payment["remittance_information_unstructured"]).group(0)
         except AttributeError:
             card_number = None
         # To simplify things, we always save empty strings as None (NULL).
