@@ -448,7 +448,7 @@
                       </td>
                       <td>
                         <div class="cell">
-                          {{ payment.created.strftime('%d-%m-\'%y') }}
+                          {{ payment.booking_date.strftime('%d-%m-\'%y') }}
                         </div>
                       </td>
                       <td>
@@ -572,7 +572,7 @@
                                 {% if not (payment.id in payment_forms and 'created' in payment_forms[payment.id]) %}
                                 <b>Transactiedatum</b>
                                 <br>
-                                {{ payment.created.strftime('%d-%m-\'%y') }}
+                                {{ payment.booking_date.strftime('%d-%m-\'%y') }}
                                 <br>
                                 <br>
                                 {% endif %}
