@@ -612,7 +612,6 @@
                   <th class="d-none">betaalomschrijving</th>
                   <th class="d-none">lange omschrijving</th>
                   <th class="d-none">bedrag €</th>
-                  <th class="d-none">saldo na boeking €</th>
                   <th class="d-none">categorie</th>
                   <th class="d-none">bankrekening ontvanger</th>
                   <th class="d-none">route</th>
@@ -669,8 +668,10 @@
                     </td>
                     <td>
                       <div class="cell">
-                        {% if payment.creditor_name %}
+                        {% if payment.creditor_name and payment.route == "uitgaven" %}
                           {{ payment.creditor_name }}
+                        {% elif payment.route == "inkomsten" %}
+                          Betaalpas: {{ payment.debit_card.card_number }}
                         {% endif %}
                       </div>
                     </td>
@@ -725,12 +726,6 @@
                     </td>
                     <td>
                       <div class="cell">
-                        <!-- TODO: Implement this for BNG. -->
-                        {{ payment.get_export_balance() }}
-                      </div>
-                    </td>
-                    <td>
-                      <div class="cell">
                         {{ payment.category.name }}
                       </div>
                     </td>
@@ -762,32 +757,23 @@
                           <div class="col-5">
                             <b>Type</b>
                             <br>
-                            {% if payment.type == "BNG" %}
-                              <i>Betaling met betaalpas:</i>
-                              <br>
-                              {{ payment.debit_card.card_number }}
+                            {% if payment.type == "BNG" and payment.route == "uitgaven" %}
+                              <i>Betaling met betaalpas.</i>
+                            {% elif payment.type == "BNG" and payment.route == "inkomsten" %}
+                              <i>Topup naar betaalpas.</i>
                             {% elif payment.type == "MANUAL" %}
-                              <i>Topup naar betaalpas:</i>
-                              <br>
-                              {{ payment.debit_card.card_number }}
+                              <i>Handmatige topup naar betaalpas.</i>
                             {% endif %}
                             <br>
                             <br>
                             <b>Ontvanger</b>
                             <br>
-                            {% if payment.creditor_name %}
+                            {% if payment.creditor_name and payment.route == "uitgaven" %}
                               {{ payment.creditor_name }}
-                            {% else %}
-                                <i>Niet ingevuld.</i>
-                            {% endif %}
-                            <br>
-                            <br>
-                            <b>Bankrekening ontvanger</b>
-                            <br>
-                            {% if payment.creditor_account %}
-                              {{ payment.creditor_account }}
-                            {% else %}
+                            {% elif not payment.creditor_name and payment.route == "uitgaven" %}
                               <i>Niet ingevuld.</i>
+                            {% elif payment.route == "inkomsten" %}
+                              Betaalpas: {{ payment.debit_card.card_number }}
                             {% endif %}
                             <br>
                             <br>
@@ -801,13 +787,6 @@
                               {% endif %}
                               <br>
                               <br>
-                              <b>Saldo na boeking</b>
-                              <br>
-                              <!-- TODO: Implement this for BNG. -->
-                              <!-- €{{ payment.get_formatted_balance() }} -->
-                              <i>Nog niet geïmplementeerd.</i>
-                              <br>
-                              <br>
                             {% endif %}
                             {% if not (payment.id in payment_forms and 'booking_date' in payment_forms[payment.id]) %}
                               <b>Transactiedatum</b>
@@ -816,7 +795,12 @@
                               <br>
                               <br>
                             {% endif %}
-                            <b>bedrag €</b>
+                            <b>Route</b>
+                            <br>
+                            {{ payment.route }}
+                            <br>
+                            <br>
+                            <b>Bedrag €</b>
                             {% if payment.transaction_amount >= 0 %}
                               <h6 class="text-blue">+{{ payment.get_formatted_currency() }}</h6>
                             {% else %}
@@ -921,16 +905,6 @@
 
                             {% if 'transaction_amount' in payment_forms[payment.id] and payment.type == "MANUAL" %}
                             {{ wtf.form_field(payment_forms[payment.id]['transaction_amount'], class="form-control") }}
-                            {% endif %}
-
-                            {% if payment.id in payment_forms %}
-                              {{ wtf.form_field(payment_forms[payment.id]['route'], class="form-control") }}
-                            {% else %}
-                              <b>Route</b>
-                              <br>
-                              {{ payment.route }}
-                              <br>
-                              <br>
                             {% endif %}
 
                             {% if payment.id in payment_forms %}

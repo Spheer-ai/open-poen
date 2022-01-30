@@ -145,25 +145,13 @@ def process_payment_form(request, project_or_subproject, project_owner, user_sub
     else:
         return
 
-    payment_form.route.choices = [
-        ('inkomsten', 'inkomsten'),
-        ('inbesteding', 'inbesteding'),
-        ('uitgaven', 'uitgaven')
-    ]
-
-    # When the user removes a manually added payment, the route selection
-    # field will have no value and validate_on_submit will fail, so add a
-    # default value
-    if payment_form.route.data == 'None':
-        payment_form.route.data = 'inkomsten'
-
     if payment_form.validate_on_submit():
         # Remove payment
         if payment_form.remove.data:
             Payment.query.filter_by(id=payment_form.id.data).delete()
             db.session.commit()
             flash(
-                '<span class="text-default-green">Transactie is verwijderd</span>'
+                '<span class="text-default-green">Topup is verwijderd</span>'
             )
         # Get data from the form
         else:
@@ -195,13 +183,13 @@ def process_payment_form(request, project_or_subproject, project_owner, user_sub
                     payments.update(new_payment_data)
                     db.session.commit()
                     flash(
-                        '<span class="text-default-green">Transactie is bijgewerkt</span>'
+                        '<span class="text-default-green">Topup is bijgewerkt</span>'
                     )
             except IntegrityError as e:
                 db.session().rollback()
                 app.logger.error(repr(e))
                 flash(
-                    '<span class="text-default-red">Transactie bijwerken mislukt<span>'
+                    '<span class="text-default-red">Topup bijwerken mislukt<span>'
                 )
 
         if is_subproject:
@@ -255,12 +243,6 @@ def create_payment_forms(payments):
 
         if payment.debit_card.project.contains_subprojects:
             payment_form.subproject_id.choices = payment.debit_card.project.make_subproject_select_options()
-
-        payment_form.route.choices = [
-            ('inkomsten', 'inkomsten'),
-            ('inbesteding', 'inbesteding'),
-            ('uitgaven', 'uitgaven')
-        ]
 
         payment_forms[payment.id] = payment_form
     return payment_forms
@@ -410,17 +392,6 @@ def process_new_payment_form(form, project, subproject):
     if not util.validate_on_submit(form, request):
         return None
 
-    if project:
-        redirect_url = url_for("project", project_id=project.id)
-    elif subproject:
-        redirect_url = url_for(
-            "subproject",
-            project_id=subproject.project.id,
-            subproject_id=subproject.id
-        )
-    else:
-        raise ValidationError("No project or subproject supplied.")
-
     new_payment = {}
     for f in form:
         if f.type != 'SubmitField' and f.type != 'CSRFTokenField':
@@ -435,28 +406,20 @@ def process_new_payment_form(form, project, subproject):
     new_payment.created = datetime.now()
     new_payment.route = "inkomsten"
 
-    if project is not None:
-        if form.card_number.data not in [x.card_number for x in project.debit_cards.all()]:
-            formatted_flash("Topup toevoegen mislukt. Deze betaalpas is niet gekoppeld aan dit project.", "red")
-            return redirect(redirect_url)
-    if subproject is not None:
-        if form.card_number.data not in [x.card_number for x in subproject.project.debit_cards.all()]:
-            formatted_flash("Topup toevoegen mislukt. Deze betaalpas is niet gekoppeld aan dit project.", "red")
-            return redirect(redirect_url)
-
-    # Payments are not allowed to have both a project and a subproject id.
-    if new_payment.project_id and new_payment.subproject_id:
-        raise ValidationError("Project and subproject ID are mutually exclusive.")
+    if form.card_number.data not in [x.card_number for x in project.debit_cards.all()]:
+        formatted_flash((f"Topup toevoegen mislukt. Betaalpas {form.card_number.data} "
+                         "is niet gekoppeld aan dit project."), "red")
+        return redirect(url_for("project", project_id=project.id))
 
     try:
         db.session.add(new_payment)
         db.session.commit()
-        formatted_flash("Transactie is toegevoegd", "green")
+        formatted_flash("Topup is toegevoegd", "green")
     except (ValueError, IntegrityError) as e:
         db.session.rollback()
         app.logger.error(repr(e))
-        formatted_flash("Transactie toevoegen mislukt.", "red")
-        return redirect(redirect_url)
+        formatted_flash("Topup toevoegen mislukt.", "red")
+        return redirect(url_for("project", project_id=project.id))
     if data_file is not None:
         save_attachment(
             data_file,
@@ -464,7 +427,7 @@ def process_new_payment_form(form, project, subproject):
             new_payment,
             'transaction-attachment'
         )
-    return redirect(redirect_url)
+    return redirect(url_for("project", project_id=project.id))
 
 
 def process_new_project_form(form):

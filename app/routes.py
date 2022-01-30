@@ -304,7 +304,7 @@ def project(project_id):
         if form_redirect:
             return form_redirect
         if len(new_payment_form.errors) > 0:
-            modal_id = ["#modal-transactie-toevoegen"]
+            modal_id = ["#modal-topup-toevoegen"]
 
     payment_forms = {}
     transaction_attachment_form = ''

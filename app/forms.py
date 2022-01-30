@@ -20,6 +20,8 @@ allowed_extensions = [
 
 
 def validate_new_card_number(form, field):
+    """A debit card can only be added to a project if it does not already exist, or if it exists, but is not
+    already coupled to a project."""
     present_debit_card = DebitCard.query.filter_by(card_number=field.data).first()
     if present_debit_card is None:
         return
@@ -34,6 +36,11 @@ def validate_iban(form, field):
         return
     else:
         raise ValidationError(f"{field.data} is niet een BNG-rekening.")
+
+
+def validate_topup_amount(form, field):
+    if field.data <= 0:
+        raise ValidationError(f"{field.data} is niet een positief bedrag. Topups moeten meer dan 0 € zijn.")
 
 
 class BNGLinkForm(FlaskForm):
@@ -256,7 +263,10 @@ class FlexibleDecimalField(DecimalField):
 
 # Add a new payment manually
 class NewPaymentForm(FlaskForm):
-    transaction_amount = FlexibleDecimalField('Bedrag (moet positief zijn voor topups.)')
+    transaction_amount = FlexibleDecimalField(
+        'Bedrag (moet positief zijn voor topups.)',
+        validators=[validate_topup_amount]
+    )
 
     booking_date = DateField('Datum (notatie: dd-mm-jjjj)', format="%d-%m-%Y")
 
@@ -317,7 +327,6 @@ class PaymentForm(FlaskForm):
     hidden = BooleanField('Transactie verbergen')
     category_id = SelectField('Categorie', validators=[Optional()], choices=[])
     subproject_id = SelectField('Initiatief', validators=[Optional()], choices=[])
-    route = SelectField('Route', choices=['inbesteding', 'uitgaven', 'inkomsten'])
     id = IntegerField(widget=HiddenInput())
 
     submit = SubmitField(
