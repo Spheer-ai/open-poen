@@ -658,15 +658,6 @@ def subproject(project_id, subproject_id):
     # PAYMENT AND ATTACHMENT
     # TODO: Refactor.
     # --------------------------------------------------------------------------------
-    new_payment_form = ''
-    if project_owner:
-        new_payment_form = NewPaymentForm(prefix="new_payment_form")
-        form_redirect = process_new_payment_form(new_payment_form, project=None, subproject=subproject)
-        if form_redirect:
-            return form_redirect
-        if len(new_payment_form.errors) > 0:
-            modal_id = ["#transactie-toevoegen"]
-
     payment_form_return = process_payment_form(request, subproject, project_owner, user_subproject_ids, is_subproject=True)
     if payment_form_return and type(payment_form_return) != PaymentForm:
         return payment_form_return
@@ -847,7 +838,6 @@ def subproject(project_id, subproject_id):
         amounts=amounts,
         budget=budget,
         subproject_form=subproject_form,
-        new_payment_form=new_payment_form,
         payment_forms=payment_forms,
         transaction_attachment_form=transaction_attachment_form,
         edit_attachment_forms=edit_attachment_forms,

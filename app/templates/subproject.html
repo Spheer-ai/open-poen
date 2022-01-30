@@ -283,48 +283,6 @@
         <div class="row">
           <div class="col-12">
             <div id="toolbar">
-              {% if project_owner %}
-                <!-- Button trigger modal -->
-                <button type="button" class="btn button-poen-small button-toolbar bg-grey-blue mx-auto" data-toggle="modal" data-target="#transactie-toevoegen">
-                  + transactie
-                </button>
-
-                <!-- Modal -->
-                <div class="modal fade" id="transactie-toevoegen" tabindex="-1" role="dialog" aria-labelledby="transactieToevoegenLabel" aria-hidden="true">
-                  <div class="modal-dialog" role="document">
-                    <div class="modal-content">
-                      <form method="POST" enctype="multipart/form-data">
-                        <div class="modal-header">
-                          <h5 class="modal-title" id="transactieToevoegenLabel">Transactie Toevoegen</h5>
-                          <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
-                            <span aria-hidden="true">&times;</span>
-                          </button>
-                        </div>
-                        <div class="modal-body">
-                          {{ new_payment_form.csrf_token }}
-
-                          {% for f in new_payment_form %}
-                            {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' and f.name != 'new_payment_form-created'%}
-                                {{ wtf.form_field(f, class="form-control") }}
-                            {% endif %}
-                            {% if f.name == 'new_payment_form-created' %}
-                            {# The datepicker requires special formatting. #}
-                                {{ wtf.form_field(f, class="form-control datepicker") }}
-                            {% endif %}
-                          {% endfor %}
-                          {{ new_payment_form.project_id }}
-                          {{ new_payment_form.subproject_id }}
-                        </div>
-                        <div class="modal-footer">
-                          <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
-                          {{ new_payment_form.submit() }}
-                        </div>
-                      </form>
-                    </div>
-                  </div>
-                </div>
-              {% endif %}
-
               <!-- Button trigger modal -->
               <button type="button" class="btn button-poen-small button-toolbar bg-grey-blue mx-auto" data-toggle="modal" data-target="#alle-media">
                alle media
@@ -342,7 +300,7 @@
                     </div>
                     <div class="modal-body">
                       <div class="row">
-                        {% for payment in subproject.payments|sort(attribute='created', reverse=true) %}
+                        {% for payment in subproject.payments|sort(attribute='booking_date', reverse=true) %}
                           {% if not payment.hidden or (project_owner or user_in_subproject) %}
                             {% for attachment in payment.attachments %}
                               <div class="col-6 col-sm-2">
@@ -396,7 +354,7 @@
                 </tr>
               </thead>
               <tbody>
-                {% for payment in subproject.payments|sort(attribute='created', reverse=true) %}
+                {% for payment in subproject.payments|sort(attribute='booking_date', reverse=true) %}
                   {% set bonnen = [] %}
                   {% set media = [] %}
                   {% for attachment in payment.attachments %}
@@ -569,7 +527,7 @@
                                   <br>
                                   <br>
                                 {% endif %}
-                                {% if not (payment.id in payment_forms and 'created' in payment_forms[payment.id]) %}
+                                {% if not (payment.id in payment_forms and 'booking_date' in payment_forms[payment.id]) %}
                                 <b>Transactiedatum</b>
                                 <br>
                                 {{ payment.booking_date.strftime('%d-%m-\'%y') }}
@@ -675,8 +633,8 @@
                                   {{ payment_forms[payment.id].id }}
                                 {% endif %}
 
-                                {% if 'created' in payment_forms[payment.id] %}
-                                {{ wtf.form_field(payment_forms[payment.id]['created'], class="form-control table-datepicker") }}
+                                {% if 'booking_date' in payment_forms[payment.id] %}
+                                {{ wtf.form_field(payment_forms[payment.id]['booking_date'], class="form-control table-datepicker") }}
                                 {% endif %}
 
                                 {% if 'transaction_amount' in payment_forms[payment.id] and payment.type == "MANUAL" %}
