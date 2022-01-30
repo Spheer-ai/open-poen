@@ -151,7 +151,11 @@ def index():
         if project.hidden and not project_owner:
             continue
 
-        amounts = util.calculate_project_amounts(project.id)
+        amounts = util.calculate_amounts(
+            Project,
+            project.id,
+            db.session.query(Payment).join(DebitCard).join(Project).filter(Project.id == project.id).all()
+        )
         if project.budget:
             total_awarded += project.budget
         else:
@@ -508,18 +512,11 @@ def project(project_id):
             })
 
     debit_cards = db.session.query(DebitCard).join(Project).filter(Project.id == project.id).all()
-
-    # TODO: Implement. This is dummy code.
-    debit_card_donuts = [
-        {
-            "card_number": x.card_number,
-            "awarded_str": "€ 100",
-            "spent_str": "€ 25",
-            "left_str": "€ 75",
-            "percentage": 25
-        }
-        for x in debit_cards
-    ]
+    debit_card_donuts = [{**util.calculate_amounts(
+        DebitCard,
+        x.id,
+        db.session.query(Payment).join(DebitCard).filter(DebitCard.id == x.id).all()
+    ), "card_number": x.card_number} for x in debit_cards]
 
     # CATEGORY
     # --------------------------------------------------------------------------------
@@ -543,7 +540,11 @@ def project(project_id):
 
     # PROJECT DATA
     # --------------------------------------------------------------------------------
-    amounts = util.calculate_project_amounts(project.id)
+    amounts = util.calculate_amounts(
+        Project,
+        project.id,
+        db.session.query(Payment).join(DebitCard).join(Project).filter(Project.id == project.id).all()
+    )
 
     project_data = {
         'id': project.id,
@@ -824,7 +825,11 @@ def subproject(project_id, subproject_id):
     else:
         util.flash_form_errors(add_user_form, request)
 
-    amounts = util.calculate_subproject_amounts(subproject_id)
+    amounts = util.calculate_amounts(
+        Subproject,
+        subproject_id,
+        Payment.query.filter(Payment.subproject_id == subproject_id).all()
+    )
 
     budget = ''
     if subproject.budget:

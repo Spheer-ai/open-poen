@@ -37,9 +37,8 @@ def format_currency(num, currency_symbol='€ '):
     )
 
 
-def calculate_project_amounts(project_id):
-    project = Project.query.get(project_id)
-    payments = db.session.query(Payment).join(DebitCard).join(Project).filter(Project.id == project_id).all()
+def calculate_amounts(model, id, payments):
+    instance = model.query.get(id)
 
     awarded, expenses, insourcing = 0, 0, 0
     awarded += sum([x.transaction_amount for x in payments if x.route == "inkomsten"])
@@ -48,13 +47,16 @@ def calculate_project_amounts(project_id):
     expenses += -sum([x.transaction_amount for x in payments if x.route == "uitgaven"])
     insourcing += -sum([x.transaction_amount for x in payments if x.route == "inbesteding"])
 
-    if project.budget:
+    if not hasattr(instance, "budget"):  # Hack to make this function work with debit cards.
+        instance.budget = None
+
+    if instance.budget:
         spent = expenses + insourcing
     else:
         spent = expenses
 
     amounts = {
-        'id': project.id,
+        'id': id,
         'awarded': awarded,
         'awarded_str': format_currency(awarded),
         'spent': spent
@@ -62,82 +64,30 @@ def calculate_project_amounts(project_id):
 
     # Calculate percentage spent
     denominator = amounts['awarded']
-    if project.budget:
-        denominator = project.budget
+    if instance.budget:
+        denominator = instance.budget
 
     if denominator == 0:
         amounts['percentage_spent_str'] = (
             format_percent(0)
         )
+        amounts["percentage"] = 0
     else:
         amounts['percentage_spent_str'] = (
             format_percent(
                 amounts['spent'] / denominator
             )
         )
+        amounts["percentage"] = round(amounts['spent'] / denominator * 100)
 
     amounts['spent_str'] = format_currency(amounts['spent'])
 
     amounts['left_str'] = format_currency(
         round(amounts['awarded'] - amounts['spent'])
     )
-    if project.budget:
+    if instance.budget:
         amounts['left_str'] = format_currency(
-            round(project.budget - amounts['spent'])
-        )
-
-    return amounts
-
-
-def calculate_subproject_amounts(subproject_id):
-    subproject = Subproject.query.get(subproject_id)
-    payments = Payment.query.filter(
-        Payment.subproject_id == subproject.id
-    ).all()
-
-    subproject_awarded, aanbesteding, inbesteding = 0, 0, 0
-    subproject_awarded += sum([x.transaction_amount for x in payments if x.route == "inkomsten"])
-    # Make spent a positive number to make the output of this function consistent with
-    # previous versions.
-    aanbesteding += -sum([x.transaction_amount for x in payments if x.route == "uitgaven"])
-    inbesteding += -sum([x.transaction_amount for x in payments if x.route == "inbesteding"])
-    
-    if subproject.budget:
-        spent = aanbesteding + inbesteding
-    else:
-        spent = aanbesteding
-
-    amounts = {
-        'id': subproject.id,
-        'awarded': subproject_awarded,
-        'awarded_str': format_currency(subproject_awarded),
-        'spent': spent
-    }
-
-    # Calculate percentage spent
-    denominator = amounts['awarded']
-    if subproject.budget:
-        denominator = subproject.budget
-
-    if denominator == 0:
-        amounts['percentage_spent_str'] = (
-            format_percent(0)
-        )
-    else:
-        amounts['percentage_spent_str'] = (
-            format_percent(
-                amounts['spent'] / denominator
-            )
-        )
-
-    amounts['spent_str'] = format_currency(amounts['spent'])
-
-    amounts['left_str'] = format_currency(
-        round(amounts['awarded'] - amounts['spent'])
-    )
-    if subproject.budget:
-        amounts['left_str'] = format_currency(
-            round(subproject.budget - amounts['spent'])
+            round(instance.budget - amounts['spent'])
         )
 
     return amounts
