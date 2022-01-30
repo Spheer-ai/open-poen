@@ -605,7 +605,7 @@
                     <th data-sortable="true" data-field="initiatief">initiatief</th>
                   {% endif %}
                   <th data-force-hide="true" data-sortable="true" data-field="bedrag" data-sorter="customSort">bedrag €</th>
-                  <th data-sortable="true" data-field="verborgen" class="d-none d-xl-table-cell">verborgen</th>
+                  <th data-sortable="true" data-field="betaalpas" class="d-none d-xl-table-cell">betaalpas</th>
                   <th data-sortable="true" data-field="ontvanger" class="d-none d-md-table-cell">ontvanger</th>
                   <th data-sortable="true" data-field="omschrijving" class="d-none d-sm-table-cell">omschrijving</th>
                   <th data-sortable="true" data-field="datum" data-sorter="sortByDate" class="d-none d-xl-table-cell">datum</th>
@@ -619,6 +619,7 @@
                   <th class="d-none">bankrekening ontvanger</th>
                   <th class="d-none">route</th>
                   <th class="d-none">type</th>
+                  <th class="d-none">verborgen</th>
                   {# Hidden column used to generate the detailed view #}
                   <th data-force-hide="true" class="d-none">detail-view</th>
                 </tr>
@@ -664,9 +665,7 @@
                     </td>
                     <td>
                       <div class="cell">
-                        {% if payment.hidden %}
-                          <i>verborgen</i>
-                        {% endif %}
+                        {{ payment.debit_card.card_number }}
                       </div>
                     </td>
                     <td>
@@ -674,7 +673,7 @@
                         {% if payment.creditor_name and payment.route == "uitgaven" %}
                           {{ payment.creditor_name }}
                         {% elif payment.route == "inkomsten" %}
-                          Betaalpas: {{ payment.debit_card.card_number }}
+                          Betaalpas
                         {% endif %}
                       </div>
                     </td>
@@ -754,6 +753,15 @@
                       </div>
                     </td>
                     <td>
+                      <div class="cell">
+                        {% if payment.hidden %}
+                          verborgen
+                        {% else %}
+                          zichtbaar
+                        {% endif %}
+                      </div>
+                    </td>
+                    <td>
                     <div id="detail-{{ payment.id }}" class="d-none">
                       <div class="detail-row">
                         <div class="row">
@@ -769,6 +777,11 @@
                             {% endif %}
                             <br>
                             <br>
+                            <b>Betaalpas</b>
+                            <br>
+                            {{ payment.debit_card.card_number }}
+                            <br>
+                            <br>
                             <b>Ontvanger</b>
                             <br>
                             {% if payment.creditor_name and payment.route == "uitgaven" %}
@@ -776,7 +789,7 @@
                             {% elif not payment.creditor_name and payment.route == "uitgaven" %}
                               <i>Niet ingevuld.</i>
                             {% elif payment.route == "inkomsten" %}
-                              Betaalpas: {{ payment.debit_card.card_number }}
+                              Betaalpas
                             {% endif %}
                             <br>
                             <br>
