@@ -445,6 +445,10 @@ class DebitCard(db.Model, DefaultCRUD):
         if data.get("remove_from_project"):
             self.last_used_project_id = self.project.id
             del self.project
+            # Payments are assigned manually to a subproject, so they should also be explicitely removed.
+            payments = db.session.query(Payment).join(DebitCard).filter(DebitCard.id == self.id).all()
+            for payment in payments:
+                payment.subproject = None
             db.session.commit()
         else:
             return super(DebitCard, self).update(data)
