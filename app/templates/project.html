@@ -194,6 +194,7 @@
                         </button>
                       </div>
                       <div class="modal-body text-left">
+                        <p class="text-center">Klik <a href="http://openpoen.nl">hier</a> om het meest actuele saldo van je betaalpas te bekijken. De saldi hieronder kunnen enkele dagen achterlopen.</p>
                         {% for debit_card_donut in debit_card_donuts %}
                         <div class="betaalpas-unit bg-grey-blue">
                         <h3 class="text-center">{{ debit_card_donut.card_number }}</h3>
@@ -239,7 +240,9 @@
                         </button>
                       </div>
                       <div class="modal-body text-left">
-                        <p>Je bent een betaalpas kwijt. Wat nu?</p>
+                        <p>Neem alsjeblieft contact op met Gemeente Amsterdam in het geval van verlies van je betaalpas. Hiervoor kan je een e-mail sturen naar: </p>
+                        <br>
+                        <p>openpoen@amsterdam.nl</p>
                       </div>
                       <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Terug</button>
