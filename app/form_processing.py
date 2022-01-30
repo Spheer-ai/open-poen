@@ -168,7 +168,7 @@ def process_payment_form(request, project_or_subproject, project_owner, user_sub
         # Get data from the form
         else:
             # TODO: We don't want this hardcoded.
-            new_payment_fields = ["short_user_description", "long_user_description", "transaction_amount", "created",
+            new_payment_fields = ["short_user_description", "long_user_description", "transaction_amount", "booking_date",
                                   "hidden", "category_id", "subproject_id", "route", "id"]
             new_payment_data = {x.short_name: x.data for x in payment_form if x.short_name in new_payment_fields}
             new_payment_data["category_id"] = None if new_payment_data["category_id"] == "" else new_payment_data["category_id"]
@@ -189,7 +189,7 @@ def process_payment_form(request, project_or_subproject, project_owner, user_sub
                 # of the 'created' field, so we need to fill in the form with
                 # created timestamp that already exists
                 if payments.first().type != 'MANUAL':
-                    new_payment_data['created'] = payments.first().created
+                    new_payment_data['booking_date'] = payments.first().booking_date
 
                 if len(payments.all()):
                     payments.update(new_payment_data)
@@ -232,7 +232,7 @@ def create_payment_forms(payments):
         payment_form = PaymentForm(prefix=f'payment_form_{payment.id}', **{
             'short_user_description': payment.short_user_description,
             'long_user_description': payment.long_user_description,
-            'created': payment.created,
+            'booking_date': payment.booking_date,
             'transaction_amount': payment.transaction_amount,
             'id': payment.id,
             'hidden': payment.hidden,
@@ -242,7 +242,7 @@ def create_payment_forms(payments):
         })
 
         if payment.type != 'MANUAL':
-            del payment_form['created']
+            del payment_form['booking_date']
             del payment_form['remove']
 
         if payment.subproject:
@@ -428,19 +428,21 @@ def process_new_payment_form(form, project, subproject):
     media_type = new_payment.pop("mediatype")
     data_file = new_payment.pop("data_file")
 
-    # This is necessary, because the subproject id is assigned dynamically in the
-    # form when it is submitted from the project page.
-    if form.subproject:
-        new_payment["subproject_id"] = new_payment["subproject"]
-        del new_payment["subproject"], new_payment["project_id"]
-
-    value = new_payment["category_id"]
-    new_payment["category_id"] = None if value == "" else value
-
     new_payment = Payment(**new_payment)
     new_payment.amount_currency = 'EUR'
     new_payment.type = 'MANUAL'
     new_payment.updated = datetime.now()
+    new_payment.created = datetime.now()
+    new_payment.route = "inkomsten"
+
+    if project is not None:
+        if form.card_number.data not in [x.card_number for x in project.debit_cards.all()]:
+            formatted_flash("Topup toevoegen mislukt. Deze betaalpas is niet gekoppeld aan dit project.", "red")
+            return redirect(redirect_url)
+    if subproject is not None:
+        if form.card_number.data not in [x.card_number for x in subproject.project.debit_cards.all()]:
+            formatted_flash("Topup toevoegen mislukt. Deze betaalpas is niet gekoppeld aan dit project.", "red")
+            return redirect(redirect_url)
 
     # Payments are not allowed to have both a project and a subproject id.
     if new_payment.project_id and new_payment.subproject_id:
@@ -450,7 +452,6 @@ def process_new_payment_form(form, project, subproject):
         db.session.add(new_payment)
         db.session.commit()
         formatted_flash("Transactie is toegevoegd", "green")
-
     except (ValueError, IntegrityError) as e:
         db.session.rollback()
         app.logger.error(repr(e))
@@ -464,30 +465,6 @@ def process_new_payment_form(form, project, subproject):
             'transaction-attachment'
         )
     return redirect(redirect_url)
-
-
-def generate_new_payment_form(project, subproject):
-    if project and subproject:
-        raise ValidationError("Cannot create a payment form for a project and a subproject at once.")
-
-    form = NewPaymentForm(prefix="new_payment_form")
-
-    if project:
-        form.project_id.data = project.id
-        if project.subprojects.first() is not None:
-            form.category_id.choices = project.subprojects[0].make_category_select_options()
-            form.subproject.choices = [(x.id, x.name) for x in project.subprojects]
-            return form
-        else:
-            form.category_id.choices = project.make_category_select_options()
-            del form.subproject
-            return form
-
-    if subproject:
-        form.subproject_id.data = subproject.id
-        del form.subproject
-        form.category_id.choices = subproject.make_category_select_options()
-        return form
 
 
 def process_new_project_form(form):

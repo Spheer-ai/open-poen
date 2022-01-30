@@ -509,19 +509,19 @@
         <div class="row">
           <div class="col-12">
             <div id="toolbar">
-              {% if project_owner %}
+              {% if admin %}
                 <!-- Button trigger modal -->
-                <button type="button" class="btn button-poen-small button-toolbar bg-grey-blue mx-auto" data-toggle="modal" data-target="#modal-transactie-toevoegen">
-                  + transactie
+                <button type="button" class="btn button-poen-small button-toolbar bg-grey-blue mx-auto" data-toggle="modal" data-target="#modal-topup-toevoegen">
+                  + topup
                 </button>
 
                 <!-- Modal -->
-                <div class="modal fade" id="modal-transactie-toevoegen" tabindex="-1" role="dialog" aria-labelledby="transactieToevoegenLabel" aria-hidden="true">
+                <div class="modal fade" id="modal-topup-toevoegen" tabindex="-1" role="dialog" aria-labelledby="topupToevoegenLabel" aria-hidden="true">
                   <div class="modal-dialog" role="document">
                     <div class="modal-content">
                       <form method="POST" enctype="multipart/form-data">
                         <div class="modal-header">
-                          <h5 class="modal-title" id="transactieToevoegenLabel">Transactie Toevoegen</h5>
+                          <h5 class="modal-title" id="topupToevoegenLabel">Topup Toevoegen</h5>
                           <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
                             <span aria-hidden="true">&times;</span>
                           </button>
@@ -530,15 +530,13 @@
                           {{ new_payment_form.csrf_token }}
 
                           {% for f in new_payment_form %}
-                          {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' and f.name != "new_payment_form-created" %}
+                          {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' and f.name != "new_payment_form-booking_date" %}
                           {{ wtf.form_field(f, class="form-control") }}
                           {% endif %}
-                          {% if f.name == "new_payment_form-created" %}
+                          {% if f.name == "new_payment_form-booking_date" %}
                           {{ wtf.form_field(f, class="form-control datepicker") }}
                           {% endif %}
                           {% endfor %}
-                          {{ new_payment_form.project_id }}
-                          {{ new_payment_form.subproject_id }}
                         </div>
                         <div class="modal-footer">
                           <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
@@ -567,7 +565,7 @@
                     </div>
                     <div class="modal-body">
                       <div class="row">
-                        {% for payment in payments|sort(attribute='created', reverse=true) %}
+                        {% for payment in payments|sort(attribute='booking_date', reverse=true) %}
                           {% if not payment.hidden or (project_owner or payment.subproject.id in user_subproject_ids) %}
                             {% for attachment in payment.attachments %}
                               <div class="col-6 col-sm-2">
@@ -624,7 +622,7 @@
                 </tr>
               </thead>
               <tbody>
-                {% for payment in payments|sort(attribute='created', reverse=true) %}
+                {% for payment in payments|sort(attribute='booking_date', reverse=true) %}
                   {% set bonnen = [] %}
                   {% set media = [] %}
                   {% for attachment in payment.attachments %}
@@ -769,7 +767,9 @@
                               <br>
                               {{ payment.debit_card.card_number }}
                             {% elif payment.type == "MANUAL" %}
-                              <i>Handmatige betaling.</i>
+                              <i>Topup naar betaalpas:</i>
+                              <br>
+                              {{ payment.debit_card.card_number }}
                             {% endif %}
                             <br>
                             <br>
@@ -809,7 +809,7 @@
                               <br>
                               <br>
                             {% endif %}
-                            {% if not (payment.id in payment_forms and 'created' in payment_forms[payment.id]) %}
+                            {% if not (payment.id in payment_forms and 'booking_date' in payment_forms[payment.id]) %}
                               <b>Transactiedatum</b>
                               <br>
                               {{ payment.booking_date.strftime('%d-%m-\'%y') }}
@@ -915,8 +915,8 @@
                               {{ payment_forms[payment.id].id }}
                             {% endif %}
 
-                            {% if 'created' in payment_forms[payment.id] %}
-                            {{ wtf.form_field(payment_forms[payment.id]["created"], class="form-control table-datepicker") }}
+                            {% if 'booking_date' in payment_forms[payment.id] %}
+                            {{ wtf.form_field(payment_forms[payment.id]["booking_date"], class="form-control table-datepicker") }}
                             {% endif %}
 
                             {% if 'transaction_amount' in payment_forms[payment.id] and payment.type == "MANUAL" %}

@@ -17,7 +17,7 @@ from app.models import (
     User, Project, Subproject, Payment, UserStory, File, Funder, Category, BNGAccount, DebitCard, payment_attachment
 )
 from app.form_processing import (
-    generate_new_payment_form, process_category_form, process_form, process_new_payment_form, process_payment_form, create_payment_forms,
+    process_category_form, process_form, process_new_payment_form, process_payment_form, create_payment_forms,
     process_transaction_attachment_form, create_edit_attachment_forms,
     process_edit_attachment_form, save_attachment,
     process_bng_link_form, process_new_project_form
@@ -220,6 +220,10 @@ def project(project_id):
     ):
         is_project_owner = True
 
+    is_admin = False
+    if current_user.is_authenticated and current_user.admin:
+        is_admin = True
+
     if project.hidden and not is_project_owner:
         return render_template(
             '404.html',
@@ -295,7 +299,7 @@ def project(project_id):
         categories_dict = {x.id: x.make_category_select_options()
                            for x in project.subprojects}
 
-        new_payment_form = generate_new_payment_form(project, subproject=None)
+        new_payment_form = NewPaymentForm(prefix="new_payment_form")
         form_redirect = process_new_payment_form(new_payment_form, project, subproject=None)
         if form_redirect:
             return form_redirect
@@ -579,6 +583,7 @@ def project(project_id):
         funder_forms=funder_forms,
         new_funder_form=add_funder_form,
         project_owner=is_project_owner,  # TODO: Always use "is_project_owner" instead of "project_owner"
+        admin=is_admin,
         user_subproject_ids=user_subproject_ids,
         timestamp=util.get_export_timestamp(),
         modal_id=json.dumps(modal_id),
@@ -655,7 +660,7 @@ def subproject(project_id, subproject_id):
     # --------------------------------------------------------------------------------
     new_payment_form = ''
     if project_owner:
-        new_payment_form = generate_new_payment_form(project=None, subproject=subproject)
+        new_payment_form = NewPaymentForm(prefix="new_payment_form")
         form_redirect = process_new_payment_form(new_payment_form, project=None, subproject=subproject)
         if form_redirect:
             return form_redirect

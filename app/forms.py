@@ -19,7 +19,7 @@ allowed_extensions = [
 ]
 
 
-def validate_card_number(form, field):
+def validate_new_card_number(form, field):
     present_debit_card = DebitCard.query.filter_by(card_number=field.data).first()
     if present_debit_card is None:
         return
@@ -138,7 +138,7 @@ class EditDebitCardForm(FlaskForm):
 
 
 class DebitCardForm(FlaskForm):
-    card_number = StringField("Pasnummer", validators=[DataRequired(), validate_card_number])
+    card_number = StringField("Pasnummer", validators=[DataRequired(), validate_new_card_number])
     project_id = IntegerField(widget=HiddenInput(), validators=[Optional()])
     submit = SubmitField(
         'Opslaan',
@@ -256,47 +256,11 @@ class FlexibleDecimalField(DecimalField):
 
 # Add a new payment manually
 class NewPaymentForm(FlaskForm):
-    project_id = IntegerField(widget=HiddenInput(), validators=[Optional()])
-    subproject_id = IntegerField(widget=HiddenInput(), validators=[Optional()])
+    transaction_amount = FlexibleDecimalField('Bedrag (moet positief zijn voor topups.)')
 
-    # Call the set_category function when the user selects a different
-    # subproject (only on project pages) as we need to set new categories
-    # that belong to that subproject
-    subproject = SelectField(
-        'Initiatief',
-        coerce=int,
-        choices=[],
-        render_kw={'onchange': 'set_category(this)'}
-    )
+    booking_date = DateField('Datum (notatie: dd-mm-jjjj)', format="%d-%m-%Y")
 
-    category_id = SelectField('Categorie', validators=[Optional()], choices=[])
-
-    route = SelectField(
-        'Route',
-        choices=[
-            ('inkomsten', 'inkomsten'),
-            ('inbesteding', 'inbesteding'),
-            ('uitgaven', 'uitgaven')
-        ]
-    )
-
-    amount_value = FlexibleDecimalField('Bedrag (begin met een "-" als het een uitgave is)')
-
-    created = DateField('Datum (notatie: 31-12-2021)', format="%d-%m-%Y")
-
-    alias_name = StringField(
-        'Verstuurder naam', validators=[Length(max=120)]
-    )
-    alias_value = StringField(
-        'Verstuurder IBAN', validators=[Length(max=120)]
-    )
-
-    counterparty_alias_name = StringField(
-        'Ontvanger naam', validators=[Length(max=120)]
-    )
-    counterparty_alias_value = StringField(
-        'Ontvanger IBAN', validators=[Length(max=120)]
-    )
+    card_number = StringField("Pasnummer", validators=[DataRequired()])
 
     short_user_description = StringField(
         'Korte beschrijving', validators=[Length(max=50)]
@@ -349,10 +313,10 @@ class PaymentForm(FlaskForm):
         'Lange beschrijving', validators=[Length(max=2000)]
     )
     transaction_amount = FlexibleDecimalField('Bedrag (begin met een "-" als het een uitgave is)')
-    created = DateField('Datum (notatie: 31-12-2020)', format="%d-%m-%Y")
+    booking_date = DateField('Datum (notatie: 31-12-2020)', format="%d-%m-%Y")
     hidden = BooleanField('Transactie verbergen')
     category_id = SelectField('Categorie', validators=[Optional()], choices=[])
-    subproject_id = SelectField('Initiatief', validators=[], choices=[])
+    subproject_id = SelectField('Initiatief', validators=[Optional()], choices=[])
     route = SelectField('Route', choices=['inbesteding', 'uitgaven', 'inkomsten'])
     id = IntegerField(widget=HiddenInput())
 
