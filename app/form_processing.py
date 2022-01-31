@@ -151,7 +151,7 @@ def process_payment_form(request, project_or_subproject, project_owner, user_sub
             Payment.query.filter_by(id=payment_form.id.data).delete()
             db.session.commit()
             flash(
-                '<span class="text-default-green">Topup is verwijderd</span>'
+                '<span class="text-default-green">Topup/betaling is verwijderd</span>'
             )
         # Get data from the form
         else:
@@ -183,13 +183,13 @@ def process_payment_form(request, project_or_subproject, project_owner, user_sub
                     payments.update(new_payment_data)
                     db.session.commit()
                     flash(
-                        '<span class="text-default-green">Topup is bijgewerkt</span>'
+                        '<span class="text-default-green">Topup/betaling is bijgewerkt</span>'
                     )
             except IntegrityError as e:
                 db.session().rollback()
                 app.logger.error(repr(e))
                 flash(
-                    '<span class="text-default-red">Topup bijwerken mislukt<span>'
+                    '<span class="text-default-red">Topup/betaling bijwerken mislukt<span>'
                 )
 
         if is_subproject:

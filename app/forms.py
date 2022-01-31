@@ -19,7 +19,26 @@ allowed_extensions = [
 ]
 
 
-def validate_new_card_number(form, field):
+def trim_whitespace(x):
+    """This if else is necessary because this filter is evaluated for some reason even when the form is
+    not submitted. Probably a result of using wtforms in a way it was not intended for by an earlier
+    developer."""
+    if type(x) == str and len(x) > 0:
+        return x.strip()
+    else:
+        return None
+
+
+def validate_card_number(form, field):
+    if not field.data.startswith("6731924"):
+        raise ValidationError((f"Betaalpas {field.data} begint niet met 6731924. Alle betaalpassen beginnen "
+                               "met deze cijferreeks."))
+    if not len(field.data) == 19:
+        raise ValidationError((f"Betaalpas {field.data} bestaat niet precies uit 19, maar uit {len(field.data)}"
+                               " cijfers. Alle betaalpassen bestaan precies uit 19 cijfers."))
+
+
+def validate_card_number_to_project(form, field):
     """A debit card can only be added to a project if it does not already exist, or if it exists, but is not
     already coupled to a project."""
     present_debit_card = DebitCard.query.filter_by(card_number=field.data).first()
@@ -145,7 +164,13 @@ class EditDebitCardForm(FlaskForm):
 
 
 class DebitCardForm(FlaskForm):
-    card_number = StringField("Pasnummer", validators=[DataRequired(), validate_new_card_number])
+    card_number = StringField("Pasnummer", validators=[
+        DataRequired(),
+        validate_card_number_to_project,
+        validate_card_number
+    ],
+        filters=[trim_whitespace]
+    )
     project_id = IntegerField(widget=HiddenInput(), validators=[Optional()])
     submit = SubmitField(
         'Opslaan',
@@ -270,7 +295,12 @@ class NewPaymentForm(FlaskForm):
 
     booking_date = DateField('Datum (notatie: dd-mm-jjjj)', format="%d-%m-%Y")
 
-    card_number = StringField("Pasnummer", validators=[DataRequired()])
+    card_number = StringField("Pasnummer", validators=[
+        DataRequired(),
+        validate_card_number
+    ],
+        filters=[trim_whitespace]
+    )
 
     short_user_description = StringField(
         'Korte beschrijving', validators=[Length(max=50)]
