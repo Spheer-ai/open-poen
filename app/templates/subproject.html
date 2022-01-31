@@ -57,18 +57,18 @@
                 <br>
                 <!-- Button trigger modal -->
                 <div class="text-center">
-                  <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#subproject-bewerken">
-                    initiatief bewerken
+                  <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#subproject-beheren">
+                    initiatief beheren
                   </button>
                 </div>
 
                 <!-- Modal -->
-                <div class="modal fade text-left" id="subproject-bewerken" tabindex="-1" role="dialog" aria-labelledby="subprojectBewerkenLabel" aria-hidden="true">
+                <div class="modal fade text-left" id="subproject-beheren" tabindex="-1" role="dialog" aria-labelledby="subprojectbeherenLabel" aria-hidden="true">
                   <div class="modal-dialog" role="document">
                     <div class="modal-content">
                       <form method="POST">
                         <div class="modal-header">
-                          <h5 class="modal-title" id="subprojectBewerkenLabel">Initiatief Bewerken</h5>
+                          <h5 class="modal-title" id="subprojectbeherenLabel">Initiatief beheren</h5>
                           <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
                             <span aria-hidden="true">&times;</span>
                           </button>
@@ -87,8 +87,8 @@
                           {% for category_form in category_forms %}
                             <!-- Button trigger modal -->
                             <div>
-                              <button type="button" class="btn button-poen-small bg-grey-blue" data-toggle="modal" data-target="#categorie-bewerken-{{ category_form.id.data }}">
-                                categorie bewerken
+                              <button type="button" class="btn button-poen-small bg-grey-blue" data-toggle="modal" data-target="#categorie-beheren-{{ category_form.id.data }}">
+                                categorie beheren
                               </button>
                             {{ category_form.name.data }}
                             </div>
@@ -156,7 +156,7 @@
 
             <div class="card-small bg-white mx-auto d-flex">
               <ul class="card-small-list mx-auto my-auto">
-                {% for user in (subproject.project.users|list + subproject.users|list) | unique %}
+                {% for user in subproject.users|list %}
                   {% if user.first_name and not user.hidden %}
                     <li><a href="{{ url_for('profile', user_id=user.id) }}">{{ user.first_name }} {{ user.last_name }}</a></li>
                   {% endif %}
@@ -219,18 +219,18 @@
                         {% for user_email, edit_user_form in edit_user_forms.items() %}
                           <div>
                             <!-- Button trigger modal -->
-                            <button type="button" class="btn button-poen-small bg-grey-blue" data-toggle="modal" data-target="#initiatiefnemer-bewerken-{{ edit_user_form.id.data }}">
-                              initiatiefnemer bewerken
+                            <button type="button" class="btn button-poen-small bg-grey-blue" data-toggle="modal" data-target="#initiatiefnemer-beheren-{{ edit_user_form.id.data }}">
+                              initiatiefnemer beheren
                             </button>
                             {{ user_email }}
 
                             <!-- Modal -->
-                            <div class="modal fade" id="initiatiefnemer-bewerken-{{ edit_user_form.id.data }}" tabindex="-1" role="dialog" aria-labelledby="initiatiefnemerBewerkenLabel" aria-hidden="true">
+                            <div class="modal fade" id="initiatiefnemer-beheren-{{ edit_user_form.id.data }}" tabindex="-1" role="dialog" aria-labelledby="initiatiefnemerbeherenLabel" aria-hidden="true">
                               <div class="modal-dialog" role="document">
                                 <div class="modal-content">
                                   <form method="POST">
                                     <div class="modal-header">
-                                      <h5 class="modal-title" id="initiatiefnemerBewerkenLabel">Initiatiefnemer Bewerken</h5>
+                                      <h5 class="modal-title" id="initiatiefnemerbeherenLabel">Initiatiefnemer beheren</h5>
                                       <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
                                         <span aria-hidden="true">&times;</span>
                                       </button>
@@ -309,12 +309,12 @@
                                       <img class="img-fluid embed-responsive-item attachment" src="{{ url_for('upload', filename='transaction-attachment/' + attachment.filename) }}">
                                     </a>
                                   {% else %}
-                                    <a class="embed-responsive embed-responsive-1by1" href="{{ url_for('upload', filename='transaction-attachment/' + attachment.filename) }}" target="_blank">
-                                      <div class="embed-responsive-item bg-grey attachment d-flex" style="word-wrap: break-word">
-                                        <i class="fas fa-file w-75 h-75 mx-auto my-auto text-blue-light"></i>
-                                        <span class="w-100 fa-layers-text text-color-main">{{ attachment.mimetype.split('/')[1] }}</span>
-                                      </div>
-                                    </a>
+                                  <a class="embed-responsive embed-responsive-1by1" data-toggle="modal", data-target="#pdf{{loop.counter}}">
+                                    <div class="embed-responsive-item bg-grey attachment d-flex" style="word-wrap: break-word">
+                                      <i class="fas fa-file w-75 h-75 mx-auto my-auto text-blue-light"></i>
+                                      <span class="w-100 fa-layers-text text-color-main">{{ attachment.mimetype.split('/')[1] }}</span>
+                                    </div>
+                                  </a>
                                   {% endif %}
                                 </div>
                               </div>
@@ -326,6 +326,31 @@
                   </div>
                 </div>
               </div>
+
+              {% for payment in subproject.payments|sort(attribute='created', reverse=true) %}
+                {% if not payment.hidden or (project_owner or user_in_subproject) %}
+                  {% for attachment in payment.attachments %}
+                    {% if attachment.mimetype not in ['image/jpeg', 'image/jpg', 'image/png'] %}
+                      <div class="modal fade" id="pdf{{loop.counter}}" tabindex="-1" role="dialog"
+                        aria-labelledby="{{ attachment.filename }}">
+                        <div class="modal-dialog wide-modal" role="document">
+                          <div class="modal-content" style="height: 90vh">
+                            <div class="modal-body">
+                              <object data="{{ url_for('upload', filename='transaction-attachment/' + attachment.filename) }}"
+                                type="application/pdf" width="100%" height="100%">
+                                <p>Je hebt geen PDF-viewer geïnstalleerd op je browser. Klik <a
+                                    href="{{ url_for('upload', filename='transaction-attachment/' + attachment.filename) }}">hier</a> om de
+                                  PDF te downloaden.</p>
+                              </object>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    {% endif %}
+                  {% endfor %}
+                {% endif %}
+              {% endfor %}
+
             </div>
             <table class="payment-table" data-pagination="true" data-locale="nl-NL" data-toolbar="#toolbar" data-cookie="true" data-cookie-id-table="project-{{ subproject.project.id }}-subproject-{{ subproject.id }}" data-detail-view="true" data-detail-view-by-click="true" data-detail-view-icon="false" data-detail-formatter="detailFormatter" data-show-export="true" data-export-data-type="all" data-export-types="['csv', 'txt', 'json', 'xml', 'sql']" data-export-options='{"fileName": "{{ timestamp }}-{{ subproject.project.name | replace(' ', '_') }}-{{ subproject.name | replace(' ', '_')  }}", "preventInjection": false}'>
               <thead>
@@ -754,13 +779,13 @@
     </div>
 
     {% for category_form in category_forms %}
-      <!-- Modal for categorie bewerken -->
-      <div class="modal fade" id="categorie-bewerken-{{ category_form.id.data }}" tabindex="-1" role="dialog" aria-labelledby="categorieBewerkenLabel" aria-hidden="true">
+      <!-- Modal for categorie beheren -->
+      <div class="modal fade" id="categorie-beheren-{{ category_form.id.data }}" tabindex="-1" role="dialog" aria-labelledby="categoriebeherenLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
           <div class="modal-content">
             <form method="POST">
               <div class="modal-header">
-                <h5 class="modal-title" id="categorieBewerkenLabel">Categorie Bewerken</h5>
+                <h5 class="modal-title" id="categoriebeherenLabel">Categorie beheren</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
                   <span aria-hidden="true">&times;</span>
                 </button>
@@ -865,15 +890,9 @@
 {% endblock %}
 
 {% block scripts %}
-  {% if modal_id is not none %}
-    <script>
-      window.modal_id = {{ modal_id|safe }};
-    </script>
-  {% endif %}\
-  {% if payment_id is not none %}
-    <script>
-      window.paymentId = {{ payment_id|safe }};
-    </script>
-  {% endif %}
+<script>
+  window.modal_id = {{ modal_id|safe }};
+  window.paymentId = {{ payment_id|safe }};
+</script>
   {{ super() }}
 {% endblock %}

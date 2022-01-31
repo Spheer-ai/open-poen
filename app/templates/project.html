@@ -33,16 +33,16 @@
 
               {% if project_owner %}
                 <!-- Button trigger modal -->
-                <button type="button" class="btn button-poen-small bg-grey-blue mx-auto" data-toggle="modal" data-target="#sponsoren-bewerken">
-                  sponsoren bewerken >
+                <button type="button" class="btn button-poen-small bg-grey-blue mx-auto" data-toggle="modal" data-target="#sponsoren-beheren">
+                  sponsoren beheren >
                 </button>
 
                 <!-- Modal -->
-                <div class="modal fade" id="sponsoren-bewerken" tabindex="-1" role="dialog" aria-labelledby="sponsorenBewerkenLabel" aria-hidden="true">
+                <div class="modal fade" id="sponsoren-beheren" tabindex="-1" role="dialog" aria-labelledby="sponsorenbeherenLabel" aria-hidden="true">
                   <div class="modal-dialog" role="document">
                     <div class="modal-content">
                       <div class="modal-header">
-                        <h5 class="modal-title" id="sponsorenBewerkenLabel">Sponsoren Bewerken</h5>
+                        <h5 class="modal-title" id="sponsorenbeherenLabel">Sponsoren Beheren</h5>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
                           <span aria-hidden="true">&times;</span>
                         </button>
@@ -89,18 +89,18 @@
                         {% for funder_form in funder_forms %}
                           <div>
                             <!-- Button trigger modal -->
-                            <button type="button" class="btn button-poen-small bg-grey-blue mx-auto" data-toggle="modal" data-target="#sponsor-bewerken-{{ funder_form.id.data }}">
-                              bewerken
+                            <button type="button" class="btn button-poen-small bg-grey-blue mx-auto" data-toggle="modal" data-target="#sponsor-beheren-{{ funder_form.id.data }}">
+                              beheren
                             </button>
                             {{ funder_form.name.data }}
 
                             <!-- Modal -->
-                            <div class="modal fade" id="sponsor-bewerken-{{ funder_form.id.data }}" tabindex="-1" role="dialog" aria-labelledby="sponsorBewerkenLabel" aria-hidden="true">
+                            <div class="modal fade" id="sponsor-beheren-{{ funder_form.id.data }}" tabindex="-1" role="dialog" aria-labelledby="sponsorbeherenLabel" aria-hidden="true">
                               <div class="modal-dialog" role="document">
                                 <div class="modal-content">
                                   <form method="POST">
                                     <div class="modal-header">
-                                      <h5 class="modal-title" id="sponsortBewerkenLabel">Sponsor Bewerken</h5>
+                                      <h5 class="modal-title" id="sponsorbeherenLabel">Sponsor Beheren</h5>
                                       <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
                                         <span aria-hidden="true">&times;</span>
                                       </button>
@@ -288,7 +288,7 @@
                             <!-- Button trigger modal -->
                             <button type="button" class="btn button-poen-small bg-grey-blue" data-toggle="modal"
                               data-target="#project-owner-bewerken-{{ edit_project_owner_form.id.data }}">
-                              project owner bewerken
+                              project owner beheren
                             </button>
                             {{ project_owner_email }}
                           </div>
@@ -578,7 +578,7 @@
                                       <img class="img-fluid embed-responsive-item attachment" src="{{ url_for('upload', filename='transaction-attachment/' + attachment.filename) }}">
                                     </a>
                                   {% else %}
-                                    <a class="embed-responsive embed-responsive-1by1" href="{{ url_for('upload', filename='transaction-attachment/' + attachment.filename) }}" target="_blank">
+                                    <a class="embed-responsive embed-responsive-1by1" data-toggle="modal", data-target="#pdf{{loop.counter}}">
                                       <div class="embed-responsive-item bg-grey attachment d-flex" style="word-wrap: break-word">
                                         <i class="fas fa-file w-75 h-75 mx-auto my-auto text-blue-light"></i>
                                         <span class="w-100 fa-layers-text text-color-main">{{ attachment.mimetype.split('/')[1] }}</span>
@@ -595,6 +595,32 @@
                   </div>
                 </div>
               </div>
+        
+              {% for payment in payments|sort(attribute='created', reverse=true) %}
+                {% if not payment.hidden or (project_owner or payment.subproject.id in user_subproject_ids) %}
+                  {% for attachment in payment.attachments %}
+                    {% if attachment.mimetype not in ['image/jpeg', 'image/jpg', 'image/png'] %}
+                      <div class="modal fade" id="pdf{{loop.counter}}" tabindex="-1" role="dialog"
+                        aria-labelledby="{{ attachment.filename }}">
+                        <div class="modal-dialog wide-modal" role="document">
+                          <div class="modal-content" style="height: 90vh">
+                            <div class="modal-body">
+                              <object data="{{ url_for('upload', filename='transaction-attachment/' + attachment.filename) }}"
+                                type="application/pdf" width="100%" height="100%">
+                                <p>Je hebt geen PDF-viewer geïnstalleerd op je browser. Klik <a
+                                    href="{{ url_for('upload', filename='transaction-attachment/' + attachment.filename) }}">hier</a> om de
+                                  PDF te downloaden.</p>
+                              </object>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    {% endif %}
+                  {% endfor %}
+                {% endif %}
+              {% endfor %}
+
+
             </div>
             <table class="payment-table" data-pagination="true" data-locale="nl-NL" data-toolbar="#toolbar" data-cookie="true" data-cookie-id-table="project-{{ project.id }}" data-detail-view="true" data-detail-view-by-click="true" data-detail-view-icon="false" data-detail-formatter="detailFormatter" data-show-export="true" data-export-data-type="all" data-export-types="['csv', 'txt', 'json', 'xml', 'sql']" data-export-options='{"fileName": "{{ timestamp }}-{{ project.name | replace(' ', '_') }}", "preventInjection": false}'>
               <thead>
@@ -1095,13 +1121,13 @@
     </div>
 
     {% for project_owner_email, edit_project_owner_form in edit_project_owner_forms[project_data.id].items() %}
-      <!-- Modal for 'Project owner bewerken' -->
-      <div class="modal fade" id="project-owner-bewerken-{{ edit_project_owner_form.id.data }}" tabindex="-1" role="dialog" aria-labelledby="projectOwnerBewerkenLabel" aria-hidden="true">
+      <!-- Modal for 'Project owner beheren' -->
+      <div class="modal fade" id="project-owner-beheren-{{ edit_project_owner_form.id.data }}" tabindex="-1" role="dialog" aria-labelledby="projectOwnerbeherenLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
           <div class="modal-content">
             <form method="POST">
               <div class="modal-header">
-                <h5 class="modal-title" id="projectOwnerBewerkenLabel">Project Owner Bewerken</h5>
+                <h5 class="modal-title" id="projectOwnerbeherenLabel">Project Owner beheren</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
                   <span aria-hidden="true">&times;</span>
                 </button>
@@ -1215,13 +1241,13 @@
       </div>
 
       {% for category_form in project_data.category_forms %}
-        <!-- Modal for categorie bewerken -->
-        <div class="modal fade" id="categorie-bewerken-{{ category_form.id.data }}" tabindex="-1" role="dialog" aria-labelledby="categorieBewerkenLabel" aria-hidden="true">
+        <!-- Modal for categorie beheren -->
+        <div class="modal fade" id="categorie-beheren-{{ category_form.id.data }}" tabindex="-1" role="dialog" aria-labelledby="categoriebeherenLabel" aria-hidden="true">
           <div class="modal-dialog" role="document">
             <div class="modal-content">
               <form method="POST">
                 <div class="modal-header">
-                  <h5 class="modal-title" id="categorieBewerkenLabel">Categorie Bewerken</h5>
+                  <h5 class="modal-title" id="categoriebeherenLabel">Categorie beheren</h5>
                   <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
                     <span aria-hidden="true">&times;</span>
                   </button>
@@ -1286,16 +1312,10 @@
 {% endblock %}
 
 {% block scripts %}
-  <script>var categories_dict = "{{ categories_dict|tojson }}";</script>
-  {% if modal_id is not none %}
-    <script>
-      window.modal_id = {{ modal_id|safe }};
-    </script>
-  {% endif %}\
-  {% if payment_id is not none %}
-    <script>
-      window.paymentId = {{ payment_id|safe }};
-    </script>
-  {% endif %}
+  <script>
+    categories_dict = {{ categories_dict|tojson }};
+    window.modal_id = {{ modal_id|safe }};
+    window.paymentId = {{ payment_id|safe }};
+  </script>
   {{ super() }}
 {% endblock %}
