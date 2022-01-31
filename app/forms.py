@@ -319,7 +319,8 @@ class EditAttachmentForm(FlaskForm):
 class FunderForm(FlaskForm):
     name = StringField('Naam', validators=[DataRequired(), Length(max=120)])
     url = StringField(
-        'URL', validators=[DataRequired(), URL(), Length(max=2000)]
+        'URL', validators=[DataRequired(), URL(), Length(max=2000)],
+        default="https://voorbeeldurl.com"
     )
     id = IntegerField(widget=HiddenInput())
 
