@@ -578,7 +578,7 @@
                                       <img class="img-fluid embed-responsive-item attachment" src="{{ url_for('upload', filename='transaction-attachment/' + attachment.filename) }}">
                                     </a>
                                   {% else %}
-                                    <a class="embed-responsive embed-responsive-1by1" data-toggle="modal", data-target="#pdf{{loop.counter}}">
+                                    <a class="embed-responsive embed-responsive-1by1" data-toggle="modal", data-target="#pdf{{attachment.id}}">
                                       <div class="embed-responsive-item bg-grey attachment d-flex" style="word-wrap: break-word">
                                         <i class="fas fa-file w-75 h-75 mx-auto my-auto text-blue-light"></i>
                                         <span class="w-100 fa-layers-text text-color-main">{{ attachment.mimetype.split('/')[1] }}</span>
@@ -600,7 +600,7 @@
                 {% if not payment.hidden or (project_owner or payment.subproject.id in user_subproject_ids) %}
                   {% for attachment in payment.attachments %}
                     {% if attachment.mimetype not in ['image/jpeg', 'image/jpg', 'image/png'] %}
-                      <div class="modal fade" id="pdf{{loop.counter}}" tabindex="-1" role="dialog"
+                      <div class="modal fade" id="pdf{{attachment.id}}" tabindex="-1" role="dialog"
                         aria-labelledby="{{ attachment.filename }}">
                         <div class="modal-dialog wide-modal" role="document">
                           <div class="modal-content" style="height: 90vh">
@@ -864,7 +864,7 @@
                                           <img class="img-fluid embed-responsive-item attachment" src="{{ url_for('upload', filename='transaction-attachment/' + attachment.filename) }}">
                                         </a>
                                       {% else %}
-                                        <a class="embed-responsive embed-responsive-1by1" href="{{ url_for('upload', filename='transaction-attachment/' + attachment.filename) }}">
+                                        <a class="embed-responsive embed-responsive-1by1" data-toggle="modal" data-target="#pdf{{attachment.id}}">
                                           <div class="embed-responsive-item bg-grey attachment d-flex" style="word-wrap: break-word">
                                             <i class="fas fa-file w-75 h-75 mx-auto my-auto text-blue-light"></i>
                                             <span class="w-100 fa-layers-text text-color-main">{{ attachment.mimetype.split('/')[1] }}</span>
@@ -904,7 +904,7 @@
                                           <img class="img-fluid embed-responsive-item attachment" src="{{ url_for('upload', filename='transaction-attachment/' + attachment.filename) }}">
                                         </a>
                                       {% else %}
-                                        <a class="embed-responsive embed-responsive-1by1" href="{{ url_for('upload', filename='transaction-attachment/' + attachment.filename) }}">
+                                        <a class="embed-responsive embed-responsive-1by1" data-toggle="modal" data-target="#pdf{{attachment.id}}">
                                           <div class="embed-responsive-item bg-grey attachment d-flex" style="word-wrap: break-word">
                                             <i class="fas fa-file w-75 h-75 mx-auto my-auto text-blue-light"></i>
                                             <span class="w-100 fa-layers-text text-color-main">{{ attachment.mimetype.split('/')[1] }}</span>
