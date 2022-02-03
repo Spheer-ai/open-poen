@@ -246,6 +246,7 @@ def get_bng_payments():
         raise TypeError("Het zou niet mogelijk moeten zijn om wel een account te hebben, maar geen consent.")
 
     date_from = datetime.today() - timedelta(days=365)
+    date_to = datetime.today() - timedelta(days=1)
 
     # TODO: Make this part asynchronous?
     # TODO: What to do with booking status? Are we interested in pending?
@@ -256,6 +257,7 @@ def get_bng_payments():
         bng_account.access_token,
         account_info["accounts"][0]["resourceId"],
         date_from.strftime("%Y-%m-%d"),
+        date_to.strftime("%Y-%m-%d")
     )
 
     with TemporaryDirectory() as d:

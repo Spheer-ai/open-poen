@@ -222,13 +222,13 @@ def read_available_accounts(consent_id, access_token):
     return r.json()
 
 
-def read_transaction_list(consent_id, access_token, account_id, date_from):
+def read_transaction_list(consent_id, access_token, account_id, date_from, date_to):
     booking_status = "booked"  # booked, pending or both
     with_balance = "true"
 
     url = (f"{API_URL_PREFIX}accounts/{account_id}/"
            f"transactions?bookingStatus={booking_status}&dateFrom={date_from}&"
-           f"withBalance={with_balance}&download=true")
+           f"withBalance={with_balance}&download=true&dateTo={date_to}")
     request_id = str(uuid.uuid4())
 
     headers = make_headers("get", url, request_id, "",
