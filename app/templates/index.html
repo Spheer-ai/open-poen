@@ -43,9 +43,9 @@
           <div class="col-4 text-center small-gutter">
             <h4 class="text-red">{{ project_data|length }}</h4>
             {% if project_data|length == 1 %}
-              <h2>buurtproject</h2>
+              <h2>buurtinitiatief</h2>
             {% else %}
-              <h2>buurtprojecten</h2>
+              <h2>buurtinitiatieven</h2>
             {% endif %}
           </div>
           <div class="col-4 text-right border-l small-gutter-left">
@@ -180,7 +180,7 @@
                 <div class="col-12">
                   <!-- Button trigger modal -->
                   <button type="button" class="btn amounts-half-card w-100 bg-green-light text-white" data-toggle="modal" data-target="#modal-project-toevoegen">
-                    <h1>project toevoegen</h1>
+                    <h1>initiatief toevoegen</h1>
                     <h5>+</h5>
                   </button>
 
@@ -190,7 +190,7 @@
                       <div class="modal-content">
                         <form method="POST">
                           <div class="modal-header">
-                            <h5 class="modal-title" id="projectToevoegenLabel">Project Toevoegen</h5>
+                            <h5 class="modal-title" id="projectToevoegenLabel">Initiatief Toevoegen</h5>
                             <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
                               <span aria-hidden="true">&times;</span>
                             </button>
@@ -229,7 +229,7 @@
                 <a class="card-button" role="button" href="{{ url_for('project', project_id=project.id) }}">
                   <div class="amounts-card bg-green-light">
                     {% if project.hidden %}
-                      <p><i>Dit project is verborgen en dus niet te zien door het publiek</i><p>
+                      <p><i>Dit initiatief is verborgen en dus niet te zien door het publiek</i><p>
                     {% endif %}
                     <div class="amounts-card-title">
                       <h1 class="text-center">{{ project.name }}</h1>

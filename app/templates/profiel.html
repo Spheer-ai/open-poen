@@ -50,7 +50,7 @@
           {% endif %}
 
           {% if user.projects %}
-            <b>Projecten</b>
+            <b>Initiatieven</b>
             <ul>
             {% for project in user.projects %}
               {% if not project.hidden or current_user.admin or current_user == user.id %}
@@ -62,7 +62,7 @@
           {% endif %}
 
           {% if user.subprojects %}
-            <b>Initiatieven</b>
+            <b>Activiteiten</b>
             <ul>
             {% for subproject in user.subprojects %}
               {% if (not subproject.project.hidden and not subproject.hidden) or current_user.admin or current_user == user.id %}

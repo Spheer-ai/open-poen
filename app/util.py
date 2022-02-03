@@ -44,7 +44,7 @@ def process_bunq_oauth_callback(request, current_user):
         )
     except Exception as e:
         flash(
-            '<span class="text-default-red">Bunq account koppelen aan het project '
+            '<span class="text-default-red">Bunq account koppelen aan het initiatief '
             ' is mislukt. Probeer het later nog een keer of neem contact '
             'op met <a href="mailto:info@openpoen.nl>info@openpoen.nl</a>.'
         )
@@ -101,11 +101,11 @@ def process_bunq_oauth_callback(request, current_user):
 
                     flash(
                         '<span class="text-default-green">Bunq account succesvol '
-                        'gekoppeld aan project "%s". De transacties '
+                        'gekoppeld aan initiatief "%s". De transacties '
                         'worden nu op de achtergrond binnengehaald. '
-                        'Bewerk het nieuwe project om aan te geven welk '
-                        'IBAN bij het project hoort. Maak nieuwe '
-                        'subprojecten aan en koppel ook daar de IBANs die '
+                        'Bewerk het nieuwe initiatief om aan te geven welk '
+                        'IBAN bij het initiatief hoort. Maak nieuwe '
+                        'activiteiten aan en koppel ook daar de IBANs die '
                         'daarbij horen.</span>' % (
                             project.name
                         )
@@ -113,7 +113,7 @@ def process_bunq_oauth_callback(request, current_user):
                 else:
                     flash(
                         '<span class="text-default-red">Bunq account koppelen aan '
-                        'het project is mislukt. Probeer het later nog '
+                        'het initiatief is mislukt. Probeer het later nog '
                         'een keer of neem contact op met '
                         '<a href="mailto:info@openpoen.nl>info@openpoen.nl'
                         '</a>.'
@@ -479,13 +479,13 @@ def _set_user_role(user, admin=False, project_id=0, subproject_id=0):
     if project_id:
         project = Project.query.get(project_id)
         if user in project.users:
-            raise ValueError('Gebruiker niet toegevoegd: deze gebruiker was al project owner van dit project')
+            raise ValueError('Gebruiker niet toegevoegd: deze gebruiker was al initiatiefnemer van dit initiatief')
         project.users.append(user)
         db.session.commit()
     if subproject_id:
         subproject = Subproject.query.get(subproject_id)
         if user in subproject.users:
-            raise ValueError('Gebruiker niet toegevoegd: deze gebruiker was al project owner van dit project')
+            raise ValueError('Gebruiker niet toegevoegd: deze gebruiker was al activiteitnemer van deze activiteit')
         subproject.users.append(user)
         db.session.commit()
 
@@ -506,6 +506,7 @@ def add_user(email, admin=False, project_id=0, subproject_id=0):
 
         # Send the new user an invitation email
         send_invite(user)
+
 
 def get_export_timestamp():
     return datetime.now(

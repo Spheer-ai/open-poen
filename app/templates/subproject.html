@@ -28,7 +28,7 @@
           <div class="col-12 col-lg-6 col-xxl-4 order-1 order-lg-4">
             <div class="amounts-card bg-white">
               {% if subproject.hidden %}
-                <p><i>Dit subproject is verborgen en dus niet te zien door het publiek</i><p>
+                <p><i>Deze activiteit is verborgen en dus niet te zien door het publiek</i><p>
               {% endif %}
               <div class="amounts-card-title">
                 <h1 class="text-center">{{ subproject.name }}</h1>
@@ -59,7 +59,7 @@
                 <!-- Button trigger modal -->
                 <div class="text-center">
                   <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#subproject-beheren">
-                    initiatief beheren
+                    activiteit beheren
                   </button>
                 </div>
 
@@ -69,7 +69,7 @@
                     <div class="modal-content">
                       <form method="POST">
                         <div class="modal-header">
-                          <h5 class="modal-title" id="subprojectbeherenLabel">Initiatief beheren</h5>
+                          <h5 class="modal-title" id="subprojectbeherenLabel">Activiteit beheren</h5>
                           <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
                             <span aria-hidden="true">&times;</span>
                           </button>
@@ -125,14 +125,14 @@
                               <div class="modal-content">
                                 <form method="POST">
                                   <div class="modal-header">
-                                    <h5 class="modal-title" id="subprojectVerwijderLabel">Subproject Verwijderen</h5>
+                                    <h5 class="modal-title" id="subprojectVerwijderLabel">Activiteit Verwijderen</h5>
                                     <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
                                       <span aria-hidden="true">&times;</span>
                                     </button>
                                   </div>
                                   <div class="modal-body">
                                     <div>
-                                      <p>Weet u zeker dat u subproject "<b>{{ subproject['name'] }}</b>" wilt verwijderen? Als u een subproject niet wilt tonen aan het publiek kunt u het subproject ook 'verbergen' in plaats van verwijderen.</p>
+                                      <p>Weet u zeker dat u activiteit "<b>{{ subproject['name'] }}</b>" wilt verwijderen? Als u een activiteit niet wilt tonen aan het publiek kunt u de activiteit ook 'verbergen' in plaats van verwijderen.</p>
                                     </div>
                                   </div>
                                   <div class="modal-footer">
@@ -153,7 +153,7 @@
           </div>
 
           <div class="lead-side-col col-6 col-lg-3 col-xxl-4 order-9 d-flex flex-column justify-content-between">
-            <div class="button-poen-small bg-grey-blue mx-auto">initiatief&shy;nemers</div>
+            <div class="button-poen-small bg-grey-blue mx-auto">activiteit&shy;nemers</div>
 
             <div class="card-small bg-white mx-auto d-flex">
               <ul class="card-small-list mx-auto my-auto">
@@ -167,14 +167,14 @@
 
             {% if project_owner %}
               <!-- Button trigger modal -->
-              <button type="button" class="btn button-poen-small bg-grey-blue mx-auto" data-toggle="modal" data-target="#initiatiefnemers-beheren">initiatief&shy;nemers beheren ></button>
+              <button type="button" class="btn button-poen-small bg-grey-blue mx-auto" data-toggle="modal" data-target="#activiteitnemers-beheren">activiteit&shy;nemers beheren ></button>
 
               <!-- Modal -->
-              <div class="modal fade" id="initiatiefnemers-beheren" tabindex="-1" role="dialog" aria-labelledby="initiatiefnemersBeherenLabel" aria-hidden="true">
+              <div class="modal fade" id="activiteitnemers-beheren" tabindex="-1" role="dialog" aria-labelledby="activiteitnemersBeherenLabel" aria-hidden="true">
                 <div class="modal-dialog" role="document">
                   <div class="modal-content">
                     <div class="modal-header">
-                      <h5 class="modal-title" id="initiatiefnemersBeherenLabel">Initiatiefnemers Beheren</h5>
+                      <h5 class="modal-title" id="activiteitnemersBeherenLabel">Activiteitnemers Beheren</h5>
                       <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
                         <span aria-hidden="true">&times;</span>
                       </button>
@@ -182,23 +182,23 @@
                     <div class="modal-body">
                       <div>
                         <!-- Button trigger modal -->
-                        <button type="button" class="btn button-poen-small bg-grey-blue" data-toggle="modal" data-target="#initiatiefnemer-toevoegen">
-                          initiatiefnemer toevoegen
+                        <button type="button" class="btn button-poen-small bg-grey-blue" data-toggle="modal" data-target="#activiteitnemer-toevoegen">
+                          activiteitnemer toevoegen
                         </button>
 
                         <!-- Modal -->
-                        <div class="modal fade" id="initiatiefnemer-toevoegen" tabindex="-1" role="dialog" aria-labelledby="initiatiefnemerToevoegenLabel" aria-hidden="true">
+                        <div class="modal fade" id="activiteitnemer-toevoegen" tabindex="-1" role="dialog" aria-labelledby="activiteitnemerToevoegenLabel" aria-hidden="true">
                           <div class="modal-dialog" role="document">
                             <div class="modal-content">
                               <form method="POST">
                                 <div class="modal-header">
-                                  <h5 class="modal-title" id="initiatiefnemerToevoegenLabel">Initiatiefnemer Toevoegen</h5>
+                                  <h5 class="modal-title" id="activiteitnemerToevoegenLabel">Activiteitnemer Toevoegen</h5>
                                   <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
                                     <span aria-hidden="true">&times;</span>
                                   </button>
                                 </div>
                                 <div class="modal-body">
-                                  <p>Als er nog geen gebruiker bestaat met dit e-mailadres dan krijgt deze een uitnodigingsmail met daarin een link om een wachtwoord aan te maken. Als er wel al een gebruiker bestaat met dit e-mailadres dan krijgt deze gebruiker toegang tot dit initiatief (er wordt daar geen e-mail over verstuurd).</p>
+                                  <p>Als er nog geen gebruiker bestaat met dit e-mailadres dan krijgt deze een uitnodigingsmail met daarin een link om een wachtwoord aan te maken. Als er wel al een gebruiker bestaat met dit e-mailadres dan krijgt deze gebruiker toegang tot deze activiteit (er wordt daar geen e-mail over verstuurd).</p>
                                   <div>
                                     {{ add_user_form.csrf_token }}
 
@@ -220,18 +220,18 @@
                         {% for user_email, edit_user_form in edit_user_forms.items() %}
                           <div>
                             <!-- Button trigger modal -->
-                            <button type="button" class="btn button-poen-small bg-grey-blue" data-toggle="modal" data-target="#initiatiefnemer-beheren-{{ edit_user_form.id.data }}">
-                              initiatiefnemer beheren
+                            <button type="button" class="btn button-poen-small bg-grey-blue" data-toggle="modal" data-target="#activiteitnemer-beheren-{{ edit_user_form.id.data }}">
+                              activiteitnemer beheren
                             </button>
                             {{ user_email }}
 
                             <!-- Modal -->
-                            <div class="modal fade" id="initiatiefnemer-beheren-{{ edit_user_form.id.data }}" tabindex="-1" role="dialog" aria-labelledby="initiatiefnemerbeherenLabel" aria-hidden="true">
+                            <div class="modal fade" id="activiteitnemer-beheren-{{ edit_user_form.id.data }}" tabindex="-1" role="dialog" aria-labelledby="activiteitnemerbeherenLabel" aria-hidden="true">
                               <div class="modal-dialog" role="document">
                                 <div class="modal-content">
                                   <form method="POST">
                                     <div class="modal-header">
-                                      <h5 class="modal-title" id="initiatiefnemerbeherenLabel">Initiatiefnemer beheren</h5>
+                                      <h5 class="modal-title" id="activiteitnemerbeherenLabel">Activiteitnemer beheren</h5>
                                       <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
                                         <span aria-hidden="true">&times;</span>
                                       </button>
@@ -779,7 +779,7 @@
                                   {% elif payment.short_user_description %}
                                     {{ payment.short_user_description }}
                                   {% else %}
-                                    <i>Er is door de initiatiefnemer nog geen beschrijving van deze transactie toegevoegd.</i>
+                                    <i>Er is door de activiteitnemer nog geen beschrijving van deze transactie toegevoegd.</i>
                                   {% endif %}
                                   <br>
                                   <br>

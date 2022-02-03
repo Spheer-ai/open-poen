@@ -79,15 +79,15 @@ class ProjectForm(FlaskForm):
     name = StringField('Naam', validators=[DataRequired(), Length(max=120)])
     description = TextAreaField('Beschrijving', validators=[DataRequired()])
     contains_subprojects = BooleanField(
-        'Uitgaven van dit project gebeuren via subrekeningen en subprojecten',
+        'Uitgaven van dit initiatief gebeuren via subrekeningen en deelactiviteiten',
         render_kw={
             'checked': '',
             'value': 'y'
         }
     )
-    hidden = BooleanField('Project verbergen')
+    hidden = BooleanField('Initiatief verbergen')
     hidden_sponsors = BooleanField('Sponsoren verbergen')
-    budget = IntegerField('Budget voor dit project', validators=[Optional()])
+    budget = IntegerField('Budget voor dit initiatief', validators=[Optional()])
     iban = SelectField('IBAN', validators=[Optional()], choices=[])
     id = IntegerField(widget=HiddenInput())
 
@@ -109,8 +109,8 @@ class ProjectForm(FlaskForm):
 class SubprojectForm(FlaskForm):
     name = StringField('Naam', validators=[DataRequired(), Length(max=120)])
     description = TextAreaField('Beschrijving', validators=[DataRequired()])
-    hidden = BooleanField('Initiatief verbergen')
-    budget = IntegerField('Budget voor dit initiatief', validators=[Optional()])
+    hidden = BooleanField('Activiteit verbergen')
+    budget = IntegerField('Budget voor deze activiteit', validators=[Optional()])
     iban = SelectField(
         'IBAN', validators=[Optional()], choices=[]
     )
@@ -148,7 +148,7 @@ class NewPaymentForm(FlaskForm):
     # subproject (only on project pages) as we need to set new categories
     # that belong to that subproject
     subproject_id = SelectField(
-        'Initiatief',
+        'Activiteit',
         coerce=int,
         choices=[],
         render_kw={'onchange': 'set_category(this)'}
@@ -369,11 +369,11 @@ class EditAdminForm(FlaskForm):
 
 
 class EditProjectOwnerForm(FlaskForm):
-    hidden = BooleanField('Project owner verbergen in initiatiefnemersoverzicht')
+    hidden = BooleanField('Initiatiefnemer verbergen in initiatiefnemersoverzicht')
     remove_from_project = BooleanField(
-        'Verwijder project owner van dit project'
+        'Verwijder initiatiefnemer van dit initiatief'
     )
-    active = BooleanField('Project owner account is actief')
+    active = BooleanField('Initiatiefnemer account is actief')
     id = IntegerField(widget=HiddenInput())
     project_id = IntegerField(widget=HiddenInput())
 
@@ -386,11 +386,11 @@ class EditProjectOwnerForm(FlaskForm):
 
 
 class EditUserForm(FlaskForm):
-    hidden = BooleanField('Initiatiefnemer verbergen in initiatiefnemersoverzicht')
+    hidden = BooleanField('Activiteitnemer verbergen in activiteitnemersoverzicht')
     remove_from_subproject = BooleanField(
-        'Verwijder initiatiefnemer van dit project'
+        'Verwijder activiteitnemer van dit project'
     )
-    active = BooleanField('Initiatiefnemer account is actief')
+    active = BooleanField('Activiteitnemer account is actief')
     id = IntegerField(widget=HiddenInput())
     subproject_id = IntegerField(widget=HiddenInput())
 
