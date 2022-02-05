@@ -215,6 +215,9 @@
                         <h3 class="text-center">Totaal: {{ debit_card_donut.awarded_str }}</h3>
                         </div>
                         {% endfor %}
+                        {% if not debit_card_donuts %}
+                        <h3 class="text-center">Er zijn nog geen betaalpassen gekoppeld aan dit project.</h3>
+                        {% endif %}
                       </div>
                       <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Terug</button>
