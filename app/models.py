@@ -282,7 +282,7 @@ class Project(db.Model, DefaultCRUD):
         return select_options
 
     def make_subproject_select_options(self):
-        select_options = [('', 'Hoofdproject')]
+        select_options = [('', 'Hoofdactiviteit')]
         for subproject in self.subprojects.all():
             select_options.append((str(subproject.id), subproject.name))
         return select_options
@@ -298,22 +298,22 @@ class Project(db.Model, DefaultCRUD):
     @property
     def redirect_after_delete(self):
         return redirect(url_for("index"))
-    
+
     @property
     def message_after_edit(self):
-        return f"Project {self.name} is aangepast."
+        return f"Initiatief {self.name} is aangepast."
 
     @property
     def message_after_create(self):
-        return f"Project {self.name} is aangemaakt."
-    
+        return f"Initiatief {self.name} is aangemaakt."
+
     @property
     def message_after_delete(self):
-        return f"Project {self.name} is verwijderd."
+        return f"Initiatief {self.name} is verwijderd."
 
     def message_after_error(self, error, data):
         if type(error) == IntegrityError:
-            return f"Aanpassen mislukt. De naam {data['name']} is al gebruikt voor een ander project."
+            return f"Aanpassen mislukt. De naam {data['name']} is al gebruikt voor een ander initiatief."
         else:
             return "Aanpassen mislukt vanwege een onbekende fout. De beheerder van Open Poen is op de hoogte gesteld."
 
@@ -370,15 +370,15 @@ class Subproject(db.Model, DefaultCRUD):
 
     @property
     def message_after_edit(self):
-        return f"Initiatief {self.name} is aangepast."
+        return f"Activiteit {self.name} is aangepast."
 
     @property
     def message_after_create(self):
-        return f"Initiatief {self.name} is aangemaakt."
+        return f"Activiteit {self.name} is aangemaakt."
 
     @property
     def message_after_delete(self):
-        return f"Initiatief {self.name} is verwijderd."
+        return f"Activiteit {self.name} is verwijderd."
 
     @property
     def redirect_after_edit(self):
@@ -398,7 +398,7 @@ class Subproject(db.Model, DefaultCRUD):
 
     def message_after_error(self, error, data):
         if type(error) == IntegrityError:
-            return f"Aanpassen mislukt. De naam {data['name']} is al gebruikt voor een ander initiatief in dit project."
+            return f"Aanpassen mislukt. De naam {data['name']} is al gebruikt voor een andere activiteit in dit project."
         else:
             return "Aanpassen mislukt vanwege een onbekende fout. De beheerder van Open Poen is op de hoogte gesteld."
 

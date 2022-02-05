@@ -152,7 +152,7 @@ class NewProjectFunderForm(FlaskForm):
 
 class EditDebitCardForm(FlaskForm):
     remove_from_project = BooleanField(
-        'Ontkoppel betaalpas van dit project'
+        'Ontkoppel betaalpas van dit initiatief'
     )
     id = IntegerField(widget=HiddenInput(), validators=[Optional()])
     submit = SubmitField(
@@ -183,20 +183,20 @@ class DebitCardForm(FlaskForm):
 class NewProjectSubprojectForm(FlaskForm):
     name = StringField('Naam', validators=[DataRequired(), Length(max=120)])
     description = TextAreaField('Beschrijving', validators=[DataRequired()])
-    hidden = BooleanField('Initiatief verbergen')
-    budget = IntegerField('Budget voor dit initiatief', validators=[Optional()])
+    hidden = BooleanField('Activiteit verbergen')
+    budget = IntegerField('Budget voor deze activiteit', validators=[Optional()])
 
 
 class NewProjectForm(FlaskForm):
     name = StringField('Naam', validators=[DataRequired(), Length(max=120)])
     description = TextAreaField('Beschrijving', validators=[DataRequired()])
     contains_subprojects = BooleanField(
-        'Uitgaven van dit project gebeuren via subrekeningen en subprojecten',
+        'Uitgaven van dit initiatief worden geregistreerd op activiteiten',
         default="checked"
     )
-    hidden = BooleanField('Project verbergen')
+    hidden = BooleanField('Initiatief verbergen')
     hidden_sponsors = BooleanField('Sponsoren verbergen')
-    budget = IntegerField('Budget voor dit project', validators=[Optional()])
+    budget = IntegerField('Budget voor dit initiatief', validators=[Optional()])
     card_numbers_amount = IntegerField("Aantal toe te voegen betaalpassen.", default=0)
     card_numbers = FieldList(
         FormField(DebitCardForm),
@@ -211,7 +211,7 @@ class NewProjectForm(FlaskForm):
         max_entries=None,
         validators=[]
     )
-    subprojects_amount = IntegerField("Aantal toe te voegen initiatieven.", default=0)
+    subprojects_amount = IntegerField("Aantal toe te voegen activiteiten.", default=0)
     subprojects = FieldList(
         FormField(NewProjectSubprojectForm),
         min_entries=0,
@@ -231,15 +231,15 @@ class EditProjectForm(FlaskForm):
     name = StringField('Naam', validators=[DataRequired(), Length(max=120)])
     description = TextAreaField('Beschrijving', validators=[DataRequired()])
     contains_subprojects = BooleanField(
-        'Uitgaven van dit project gebeuren via subrekeningen en subprojecten',
+        'Uitgaven van dit initiatief worden geregistreerd op activiteiten',
         render_kw={
             'checked': '',
             'value': 'y'
         }
     )
-    hidden = BooleanField('Project verbergen')
+    hidden = BooleanField('Initiatief verbergen')
     hidden_sponsors = BooleanField('Sponsoren verbergen')
-    budget = IntegerField('Budget voor dit project', validators=[Optional()])
+    budget = IntegerField('Budget voor dit initiatief', validators=[Optional()])
     id = IntegerField(widget=HiddenInput())
     submit = SubmitField(
         'Opslaan',
@@ -258,8 +258,8 @@ class EditProjectForm(FlaskForm):
 class SubprojectForm(FlaskForm):
     name = StringField('Naam', validators=[DataRequired(), Length(max=120)])
     description = TextAreaField('Beschrijving', validators=[DataRequired()])
-    hidden = BooleanField('Initiatief verbergen')
-    budget = IntegerField('Budget voor dit initiatief', validators=[Optional()])
+    hidden = BooleanField('Activiteit verbergen')
+    budget = IntegerField('Budget voor deze activiteit', validators=[Optional()])
     project_id = IntegerField(widget=HiddenInput())
     id = IntegerField(widget=HiddenInput())
 
@@ -356,7 +356,7 @@ class PaymentForm(FlaskForm):
     booking_date = DateField('Datum (notatie: 31-12-2020)', format="%d-%m-%Y")
     hidden = BooleanField('Transactie verbergen')
     category_id = SelectField('Categorie', validators=[Optional()], choices=[])
-    subproject_id = SelectField('Initiatief', validators=[Optional()], choices=[])
+    subproject_id = SelectField('Activiteit', validators=[Optional()], choices=[])
     id = IntegerField(widget=HiddenInput())
 
     submit = SubmitField(
@@ -489,11 +489,11 @@ class EditAdminForm(FlaskForm):
 
 
 class EditProjectOwnerForm(FlaskForm):
-    hidden = BooleanField('Project owner verbergen in initiatiefnemersoverzicht')
+    hidden = BooleanField('Initiatiefnemer verbergen in initiatiefnemersoverzicht')
     remove_from_project = BooleanField(
-        'Verwijder project owner van dit project'
+        'Verwijder initiatiefnemer van dit initiatief'
     )
-    active = BooleanField('Project owner account is actief')
+    active = BooleanField('Initiatiefnemer account is actief')
     id = IntegerField(widget=HiddenInput())
     project_id = IntegerField(widget=HiddenInput())
 
@@ -506,11 +506,11 @@ class EditProjectOwnerForm(FlaskForm):
 
 
 class EditUserForm(FlaskForm):
-    hidden = BooleanField('Initiatiefnemer verbergen in initiatiefnemersoverzicht')
+    hidden = BooleanField('Activiteitnemer verbergen in activiteitnemersoverzicht')
     remove_from_subproject = BooleanField(
-        'Verwijder initiatiefnemer van dit project'
+        'Verwijder activiteitnemer van dit project'
     )
-    active = BooleanField('Initiatiefnemer account is actief')
+    active = BooleanField('Activiteitnemer account is actief')
     id = IntegerField(widget=HiddenInput())
     subproject_id = IntegerField(widget=HiddenInput())
 

@@ -43,9 +43,9 @@
           <div class="col-4 text-center small-gutter">
             <h4 class="text-red">{{ project_data|length }}</h4>
             {% if project_data|length == 1 %}
-              <h2>buurtproject</h2>
+              <h2>buurtinitiatief</h2>
             {% else %}
-              <h2>buurtprojecten</h2>
+              <h2>buurtinitiatieven</h2>
             {% endif %}
           </div>
           <div class="col-4 text-right border-l small-gutter-left">
@@ -128,18 +128,18 @@
                             {% for admin_email, edit_admin_form in edit_admin_forms.items() %}
                               <div>
                                 <!-- Button trigger modal -->
-                                <button type="button" class="btn button-poen-small bg-grey-blue" data-toggle="modal" data-target="#admin-bewerken-{{ edit_admin_form.id.data }}">
-                                  admin bewerken
+                                <button type="button" class="btn button-poen-small bg-grey-blue" data-toggle="modal" data-target="#admin-beheren-{{ edit_admin_form.id.data }}">
+                                  admin beheren
                                 </button>
                                 {{ admin_email }}
 
                                 <!-- Modal -->
-                                <div class="modal fade" id="admin-bewerken-{{ edit_admin_form.id.data }}" tabindex="-1" role="dialog" aria-labelledby="adminBewerkenLabel" aria-hidden="true">
+                                <div class="modal fade" id="admin-beheren-{{ edit_admin_form.id.data }}" tabindex="-1" role="dialog" aria-labelledby="adminbeherenLabel" aria-hidden="true">
                                   <div class="modal-dialog" role="document">
                                     <div class="modal-content">
                                       <form method="POST">
                                         <div class="modal-header">
-                                          <h5 class="modal-title" id="adminBewerkenLabel">Admin Bewerken</h5>
+                                          <h5 class="modal-title" id="adminbeherenLabel">Admin beheren</h5>
                                           <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
                                             <span aria-hidden="true">&times;</span>
                                           </button>
@@ -180,7 +180,7 @@
                 <div class="col-12">
                   <!-- Button trigger modal -->
                   <button type="button" class="btn amounts-half-card w-100 bg-green-light text-white" data-toggle="modal" data-target="#modal-project-toevoegen">
-                    <h1>project toevoegen</h1>
+                    <h1>initiatief toevoegen</h1>
                     <h5>+</h5>
                   </button>
 
@@ -190,7 +190,7 @@
                       <div class="modal-content">
                         <form method="POST">
                           <div class="modal-header">
-                            <h5 class="modal-title" id="projectToevoegenLabel">Project Toevoegen</h5>
+                            <h5 class="modal-title" id="projectToevoegenLabel">Initiatief Toevoegen</h5>
                             <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
                               <span aria-hidden="true">&times;</span>
                             </button>
@@ -199,7 +199,7 @@
                             <div>
                               {{ project_form.csrf_token }}
                               <div class="project-unit">
-                                <h2>Algemene projectinstellingen</h2>
+                                <h2>Algemene initiatiefinstellingen</h2>
                                 {{ wtf.form_field(project_form.name) }}
                                 {{ wtf.form_field(project_form.description) }}
                                 {{ wtf.form_field(project_form.contains_subprojects) }}
@@ -219,7 +219,7 @@
                               {% if project_form.funders|length > 0 %}
                               <div class="project-unit">
                                   <h2>Sponsoren</h2>
-                                  <p>Voer hier de sponsoren van het project in. Vul of beide velden in, of laat beide velden leeg.</p>
+                                  <p>Voer hier de sponsoren van het initiatief in.</p>
                                   {% for funder in project_form.funders %}
                                   <p>Sponsor {{ loop.index }}</p>
                                   {{ wtf.form_field(funder.form.name) }}
@@ -231,8 +231,7 @@
                               {% if project_form.card_numbers|length > 0 %}
                               <div class="project-unit">
                                   <h2>Betaalpassen</h2>
-                                  <p>Voer hier de betaalpassen in die aan het project moeten worden gekoppeld. Voer of een valide IBAN in, of laat
-                                    het veld leeg.</p>
+                                  <p>Voer hier de betaalpassen in die aan het initiatief moeten worden gekoppeld.</p>
                                   {% for card_number in project_form.card_numbers %}
                                   <p>Betaalpas {{ loop.index }}</p>
                                   {{ wtf.form_field(card_number.card_number) }}
@@ -242,10 +241,10 @@
                               {% endif %}
                               {% if project_form.subprojects|length > 0 %}
                               <div class="project-unit">
-                                  <h2>Initiatieven</h2>
-                                  <p>Voeg hier de initiatieven in die moeten worden aangemaakt voor dit project. Laat de velden leeg als je alleen het hoofdproject wilt aanmaken.</p>
+                                  <h2>Activiteiten</h2>
+                                  <p>Voeg hier de activiteiten in die moeten worden aangemaakt voor dit initiatief.</p>
                                   {% for subproject in project_form.subprojects %}
-                                    <p>Initiatief {{ loop.index }}</p>
+                                    <p>Activiteit {{ loop.index }}</p>
                                       {{ wtf.form_field(subproject.form.name) }}
                                       {{ wtf.form_field(subproject.form.description) }}
                                       {{ wtf.form_field(subproject.form.hidden) }}
@@ -346,7 +345,7 @@
                 <a class="card-button" role="button" href="{{ url_for('project', project_id=project.id) }}">
                   <div class="amounts-card bg-green-light">
                     {% if project.hidden %}
-                      <p><i>Dit project is verborgen en dus niet te zien door het publiek</i><p>
+                      <p><i>Dit initiatief is verborgen en dus niet te zien door het publiek</i><p>
                     {% endif %}
                     <div class="amounts-card-title">
                       <h1 class="text-center">{{ project.name }}</h1>

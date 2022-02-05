@@ -146,7 +146,7 @@
           <div class="col-12 col-lg-6 col-xxl-4 order-1 order-lg-4">
             <div class="amounts-card bg-white">
               {% if project.hidden %}
-                <p><i>Dit project is verborgen en dus niet te zien door het publiek</i><p>
+                <p><i>Dit initiatief is verborgen en dus niet te zien door het publiek</i><p>
               {% endif %}
               <div class="amounts-card-title">
                 <h1 class="text-center">{{ project.name }}</h1>
@@ -254,30 +254,30 @@
                 {% if project_owner %}
             
                 <!-- Button trigger modal -->
-                <button type="button" class="btn btn-primary project-modal-btn" data-toggle="modal" data-target="#project-bewerken">
-                  project bewerken
+                <button type="button" class="btn btn-primary project-modal-btn" data-toggle="modal" data-target="#project-beheren">
+                  initiatief beheren
                 </button>
             
                 <!-- Modal -->
-                <div class="modal fade" id="project-bewerken" tabindex="-1" role="dialog" aria-labelledby="projectBewerkenLabel"
+                <div class="modal fade" id="project-beheren" tabindex="-1" role="dialog" aria-labelledby="projectbeherenLabel"
                   aria-hidden="true">
                   <div class="modal-dialog" role="document">
                     <div class="modal-content">
                       <form method="POST">
                         <div class="modal-header">
-                          <h5 class="modal-title" id="projectBewerkenLabel">Project Bewerken</h5>
+                          <h5 class="modal-title" id="projectbeherenLabel">Initiatief beheren</h5>
                           <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
                             <span aria-hidden="true">&times;</span>
                           </button>
                         </div>
                         <div class="modal-body text-left">
-                          <b>Project owners</b>
+                          <b>Initiatiefnemers</b>
                           <br>
                           <br>
                           <!-- Button trigger modal -->
                           <button type="button" class="btn button-poen-small bg-grey" data-toggle="modal"
                             data-target="#project-owner-toevoegen">
-                            project owner toevoegen
+                            initiatiefnemer toevoegen
                           </button>
             
                           <br>
@@ -287,8 +287,8 @@
                           <div>
                             <!-- Button trigger modal -->
                             <button type="button" class="btn button-poen-small bg-grey-blue" data-toggle="modal"
-                              data-target="#project-owner-bewerken-{{ edit_project_owner_form.id.data }}">
-                              project owner beheren
+                              data-target="#project-owner-beheren-{{ edit_project_owner_form.id.data }}">
+                              initiatiefnemer beheren
                             </button>
                             {{ project_owner_email }}
                           </div>
@@ -313,8 +313,8 @@
                           <div>
                             <!-- Button trigger modal -->
                             <button type="button" class="btn button-poen-small bg-grey-blue" data-toggle="modal"
-                              data-target="#betaalpas-bewerken-{{ edit_debit_card_form.id.data }}">
-                              betaalpas bewerken
+                              data-target="#betaalpas-beheren-{{ edit_debit_card_form.id.data }}">
+                              betaalpas beheren
                             </button>
                             {{ card_number }}
                           </div>
@@ -339,8 +339,8 @@
                           <!-- Button trigger modal -->
                           <div>
                             <button type="button" class="btn button-poen-small bg-grey-blue" data-toggle="modal"
-                              data-target="#categorie-bewerken-{{ category_form.id.data }}">
-                              categorie bewerken
+                              data-target="#categorie-beheren-{{ category_form.id.data }}">
+                              categorie beheren
                             </button>
                             {{ category_form.name.data }}
                           </div>
@@ -350,7 +350,7 @@
                           <hr>
                           {% endif %}
             
-                          <b>Algemene projectinstellingen</b>
+                          <b>Algemene initiatiefinstellingen</b>
                           <br>
                           <br>
             
@@ -387,18 +387,18 @@
                               <div class="modal-content">
                                 <form method="POST">
                                   <div class="modal-header">
-                                    <h5 class="modal-title" id="projectVerwijderLabel">Project Verwijderen</h5>
+                                    <h5 class="modal-title" id="projectVerwijderLabel">Initiatief Verwijderen</h5>
                                     <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
                                       <span aria-hidden="true">&times;</span>
                                     </button>
                                   </div>
                                   <div class="modal-body">
                                     <div>
-                                      <p>Weet u zeker dat u project "<b>{{ project_data['name'] }}</b>" wilt verwijderen? Hiermee
+                                      <p>Weet u zeker dat u initiatief "<b>{{ project_data['name'] }}</b>" wilt verwijderen? Hiermee
                                         worden alle transacties van de bijbehorende bankrekening en de door de gebruikers
                                         toegevoegde beschrijvingen en plaatjes uit de database van Open Poen verwijderd! Ook worden
-                                        alle subprojecten die onder dit project vallen verwijderd! Als u een project niet wilt tonen
-                                        aan het publiek kunt u het project ook 'verbergen' in plaats van verwijderen.</p>
+                                        alle activiteiten die onder dit initiatief vallen verwijderd! Als u een initiatief niet wilt tonen
+                                        aan het publiek kunt u het initiatief ook 'verbergen' in plaats van verwijderen.</p>
                                     </div>
                                   </div>
                                   <div class="modal-footer">
@@ -447,7 +447,7 @@
 
           <div class="lead-side-col col-6 col-lg-3 col-xxl-4 order-9 d-flex flex-column justify-content-between">
             {% if project.contains_subprojects %}
-              <div class="button-poen-small bg-grey-blue mx-auto">initiatieven</div>
+              <div class="button-poen-small bg-grey-blue mx-auto">activiteiten</div>
 
               <div class="card-small bg-white mx-auto d-flex">
                 <ul class="card-small-list mx-auto my-auto">
@@ -462,7 +462,7 @@
               {% if project_owner %}
                 <!-- Button trigger modal -->
                 <button type="button" class="btn button-poen-small bg-grey-blue mx-auto" data-toggle="modal" data-target="#subproject-toevoegen">
-                  initiatief toevoegen >
+                  activiteit toevoegen >
                 </button>
 
                 <!-- Modal -->
@@ -471,7 +471,7 @@
                     <div class="modal-content">
                       <form method="POST">
                         <div class="modal-header">
-                          <h5 class="modal-title" id="subprojectToevoegenLabel">Initiatief Toevoegen</h5>
+                          <h5 class="modal-title" id="subprojectToevoegenLabel">Activiteit Toevoegen</h5>
                           <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
                             <span aria-hidden="true">&times;</span>
                           </button>
@@ -628,7 +628,7 @@
                   {# Hidden field required to make search work with the detailed view; NOTE: the id should always be the first column of the table #}
                   <th data-force-hide="true" class="d-none">id</th>
                   {% if project.contains_subprojects %}
-                    <th data-sortable="true" data-field="initiatief">initiatief</th>
+                    <th data-sortable="true" data-field="activiteit">activiteit</th>
                   {% endif %}
                   <th data-force-hide="true" data-sortable="true" data-field="bedrag" data-sorter="customSort">bedrag €</th>
                   <th data-sortable="true" data-field="betaalpas" class="d-none d-xl-table-cell">betaalpas</th>
@@ -675,7 +675,7 @@
                           {% if payment.subproject is not none %}
                             <a href="{{ url_for('subproject', project_id=project.id, subproject_id=payment.subproject.id) }}">{{ payment.subproject.name }}</a>
                           {% else %}
-                            Hoofdproject
+                            Hoofdactiviteit
                           {% endif %}
                         </div>
                       </td>
@@ -966,12 +966,12 @@
                             {% if project.contains_subprojects and payment.id in payment_forms %}
                               {{ wtf.form_field(payment_forms[payment.id]['subproject_id'], class="form-control") }}
                             {% elif project.contains_subprojects %}
-                              <b>Initiatief</b>
+                              <b>Activiteit</b>
                               <br>
                               {% if payment.subproject is not none %}
                                 <a href="{{ url_for('subproject', project_id=project.id, subproject_id=payment.subproject.id) }}"><i>{{ payment.subproject.name }}</i></a>
                               {% else %}
-                                <i>Hoofdproject</i>
+                                <p>Hoofdactiviteit</p>
                               {% endif %}
                               <br>
                               <br>
@@ -989,7 +989,7 @@
                               {% elif payment.short_user_description %}
                                 {{ payment.short_user_description }}
                               {% else %}
-                                <i>Er is door de initiatiefnemer nog geen beschrijving van deze transactie toegevoegd.</i>
+                                <i>Er is door de activiteitnemer nog geen beschrijving van deze transactie toegevoegd.</i>
                               {% endif %}
                               <br>
                               <br>
@@ -1097,13 +1097,13 @@
         <div class="modal-content">
           <form method="POST">
             <div class="modal-header">
-              <h5 class="modal-title" id="projectOwnerToevoegenLabel">Project Owner Toevoegen</h5>
+              <h5 class="modal-title" id="projectOwnerToevoegenLabel">Initiatiefnemer Toevoegen</h5>
               <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
                 <span aria-hidden="true">&times;</span>
               </button>
             </div>
             <div class="modal-body">
-              <p>Als er nog geen gebruiker bestaat met dit e-mailadres dan krijgt deze een uitnodigingsmail met daarin een link om een wachtwoord aan te maken. Als er wel al een gebruiker bestaat met dit e-mailadres dan krijgt deze gebruiker 'project owner'-rechten (er wordt daar geen e-mail over verstuurd).</p>
+              <p>Als er nog geen gebruiker bestaat met dit e-mailadres dan krijgt deze een uitnodigingsmail met daarin een link om een wachtwoord aan te maken. Als er wel al een gebruiker bestaat met dit e-mailadres dan krijgt deze gebruiker 'initiatiefnemer'-rechten (er wordt daar geen e-mail over verstuurd).</p>
               <div>
                 {{ add_user_form.csrf_token }}
 
@@ -1127,7 +1127,7 @@
           <div class="modal-content">
             <form method="POST">
               <div class="modal-header">
-                <h5 class="modal-title" id="projectOwnerbeherenLabel">Project Owner beheren</h5>
+                <h5 class="modal-title" id="projectOwnerbeherenLabel">Initiatiefnemer beheren</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
                   <span aria-hidden="true">&times;</span>
                 </button>
@@ -1166,7 +1166,7 @@
               </button>
             </div>
             <div class="modal-body">
-              <p>Voeg een betaalpas toe aan dit project. Betalingen die worden gedaan met deze betaalpas worden automatisch aan dit project gekoppeld.</p>
+              <p>Voeg een betaalpas toe aan dit initiatief. Betalingen die worden gedaan met deze betaalpas worden automatisch aan dit initiatief gekoppeld.</p>
               <div>
                 {{ add_debit_card_form.csrf_token }}
                 {{ wtf.form_field(add_debit_card_form.card_number, class="form-control") }}
@@ -1183,12 +1183,12 @@
     </div>
 
     {% for card_number, edit_debit_card_form in edit_debit_card_forms.items() %}
-    <div class="modal fade" id="betaalpas-bewerken-{{ edit_debit_card_form.id.data }}" tabindex="-1" role="dialog" aria-labelledby="debitCardBewerkenLabel" aria-hidden="true">
+    <div class="modal fade" id="betaalpas-beheren-{{ edit_debit_card_form.id.data }}" tabindex="-1" role="dialog" aria-labelledby="debitCardbeherenLabel" aria-hidden="true">
       <div class="modal-dialog" role="document">
         <div class="modal-content">
           <form method="POST">
             <div class="modal-header">
-              <h5 class="modal-title" id="debitCardBewerkenLabel">Betaalpas Bewerken</h5>
+              <h5 class="modal-title" id="debitCardbeherenLabel">Betaalpas beheren</h5>
               <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
                 <span aria-hidden="true">&times;</span>
               </button>

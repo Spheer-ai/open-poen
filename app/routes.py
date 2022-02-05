@@ -99,7 +99,7 @@ def index():
         try:
             util.add_user(**new_user_data)
             util.formatted_flash((
-                f"{new_user_data['email']} is uitgenodigd als admin of project owner. "
+                f"{new_user_data['email']} is uitgenodigd als admin of initiatiefnemer. "
                 "(Of zodanig toegevoegd als de gebruiker al bestond.)"), color="green"
             )
         except ValueError as e:
@@ -450,7 +450,7 @@ def project(project_id):
             util.add_user(**new_user_data)
             flash(
                 '<span class="text-default-green">"%s" is uitgenodigd als admin of '
-                'project owner (of toegevoegd als admin of project owner als de '
+                'initiatiefnemer (of toegevoegd als admin of initiatiefnemer als de '
                 'gebruiker al bestond)' % (
                     new_user_data['email']
                 )
@@ -805,8 +805,8 @@ def subproject(project_id, subproject_id):
         try:
             util.add_user(**new_user_data)
             flash(
-                '<span class="text-default-green">"%s" is uitgenodigd als initiatiefnemer '
-                '(of toegevoegd als initiatiefnemer als de gebruiker al '
+                '<span class="text-default-green">"%s" is uitgenodigd als activiteitnemer '
+                '(of toegevoegd als activiteitnemer als de gebruiker al '
                 'bestond)' % (
                     new_user_data['email']
                 )
