@@ -190,11 +190,6 @@ def parse_and_save_bng_payments(payments):
             card_number = None
         # To simplify things, we always save empty strings as None (NULL).
         payment = {k: (v if v != "" else None) for (k, v) in payment.items()}
-        # If we don't do this, payments are registered twice. First time they become accessible through
-        # the API without these fields. Then with them. Their transactionId changes when they are updated
-        # in the API, so there is no obvious cleaner way to do this.
-        if payment["entry_reference"] is None and payment["remittance_information_structured"] is None:
-            continue
         new_payments.append(Payment(
             **payment,
             route=route,
