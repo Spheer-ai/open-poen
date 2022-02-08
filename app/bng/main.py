@@ -177,6 +177,10 @@ def parse_and_save_bng_payments(payments):
         payment = {pattern.sub("_", k).lower(): v for (k, v) in payment.items()}
         # These two fields need to be cast. The other fields are strings and should remain so.
         payment["booking_date"] = parse(payment["booking_date"])
+        # To prevent importing a transaction that is not definitive yet.
+        diff = datetime.today() - payment["booking_date"]
+        if diff.days < 1:
+            continue
         payment["transaction_amount"] = float(payment["transaction_amount"])
         if payment["transaction_amount"] > 0:
             route = "inkomsten"
@@ -241,7 +245,6 @@ def get_bng_payments():
         raise TypeError("Het zou niet mogelijk moeten zijn om wel een account te hebben, maar geen consent.")
 
     date_from = datetime.today() - timedelta(days=365)
-    date_to = datetime.today() - timedelta(days=1)
 
     # TODO: Make this part asynchronous?
     # TODO: What to do with booking status? Are we interested in pending?
@@ -251,8 +254,7 @@ def get_bng_payments():
         bng_account.consent_id,
         bng_account.access_token,
         account_info["accounts"][0]["resourceId"],
-        date_from.strftime("%Y-%m-%d"),
-        date_to.strftime("%Y-%m-%d")
+        date_from.strftime("%Y-%m-%d")
     )
 
     with TemporaryDirectory() as d:
