@@ -54,7 +54,7 @@ if not app.debug:
             mailhost=(app.config['MAIL_SERVER'], app.config['MAIL_PORT']),
             fromaddr=app.config['FROM'],
             toaddrs=app.config['ADMINS'],
-            subject='[Open Poen] website error',
+            subject=f'[Open Poen {app.config["VERSION"]}] website error',
             credentials=auth,
             secure=secure
         )
