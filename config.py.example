@@ -61,6 +61,7 @@ class Config(object):
     MAIL_PASSWORD = ''
     FROM = ''
     ADMINS = ['']
+    VERSION = ''
 
     BUNQ_ENVIRONMENT_TYPE = ApiEnvironmentType.PRODUCTION
     BUNQ_CLIENT_ID = ''
