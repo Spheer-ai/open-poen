@@ -226,7 +226,7 @@ def get_new_payments(project_id):
                     params=params
                 )
             except Exception as e:
-                app.logger.error(
+                app.logger.info(
                     "Getting Bunq payments resulted in an exception:\n" + repr(e)
                 )
                 new_payments = False
