@@ -60,6 +60,7 @@ class Config(object):
     MAIL_PASSWORD = ''
     FROM = ''
     ADMINS = ['']
+    VERSION = ''
 
     # BNG
     USE_SANDBOX = True
