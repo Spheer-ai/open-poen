@@ -338,7 +338,7 @@ class PaymentForm(FlaskForm):
         'Bedrag (begin met een "-" als het een uitgave is)',
         validators=[validate_topup_amount],
     )
-    booking_date = DateField("Datum (notatie: 31-12-2020)", format="%d-%m-%Y")
+    booking_date = DateField("Datum (notatie: dd-mm-jjjj)", format="%d-%m-%Y")
     hidden = BooleanField("Transactie verbergen")
     category_id = SelectField("Categorie", validators=[Optional()], choices=[])
     subproject_id = SelectField("Activiteit", validators=[Optional()], choices=[])

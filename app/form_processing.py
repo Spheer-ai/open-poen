@@ -147,71 +147,83 @@ def process_payment_form(
     else:
         return
 
-    if payment_form.validate_on_submit():
-        # Remove payment
-        if payment_form.remove.data:
-            Payment.query.filter_by(id=payment_form.id.data).delete()
-            db.session.commit()
-            flash(
-                '<span class="text-default-green">Topup/betaling is verwijderd</span>'
-            )
-        # Get data from the form
-        else:
-            # TODO: We don't want this hardcoded.
-            new_payment_fields = [
-                "short_user_description",
-                "long_user_description",
-                "transaction_amount",
-                "booking_date",
-                "hidden",
-                "category_id",
-                "subproject_id",
-                "route",
-                "id",
-            ]
-            new_payment_data = {
-                x.short_name: x.data
-                for x in payment_form
-                if x.short_name in new_payment_fields
-            }
-            new_payment_data["category_id"] = (
-                None
-                if new_payment_data["category_id"] == ""
-                else new_payment_data["category_id"]
-            )
-            new_payment_data["subproject_id"] = (
-                None
-                if new_payment_data["subproject_id"] == ""
-                else new_payment_data["subproject_id"]
-            )
-
-            try:
-                # Update if the payment already exists
-                payments = Payment.query.filter_by(id=payment_form.id.data)
-
-                # In case of a manual payment we update the updated field with
-                # the current timestamp
-                if payments.first().type == "MANUAL":
-                    new_payment_data["updated"] = datetime.now()
-
-                # In case of non-manual payments we don't allow the modification
-                # of the 'created' field, so we need to fill in the form with
-                # created timestamp that already exists
-                if payments.first().type != "MANUAL":
-                    new_payment_data["booking_date"] = payments.first().booking_date
-
-                if len(payments.all()):
-                    payments.update(new_payment_data)
-                    db.session.commit()
-                    flash(
-                        '<span class="text-default-green">Topup/betaling is bijgewerkt</span>'
-                    )
-            except IntegrityError as e:
-                db.session().rollback()
-                app.logger.error(repr(e))
-                flash(
-                    '<span class="text-default-red">Topup/betaling bijwerken mislukt<span>'
+    if payment_form.remove.data:
+        Payment.query.filter_by(id=payment_form.id.data).delete()
+        db.session.commit()
+        flash('<span class="text-default-green">Topup/betaling is verwijderd</span>')
+        if is_subproject:
+            # Redirect back to clear form data
+            return redirect(
+                url_for(
+                    "subproject",
+                    project_id=project_or_subproject.project_id,
+                    subproject_id=project_or_subproject.id,
                 )
+            )
+        # Redirect back to clear form data
+        return redirect(
+            url_for(
+                "project",
+                project_id=project_or_subproject.id,
+            )
+        )
+
+    if payment_form.validate_on_submit():
+        # TODO: We don't want this hardcoded.
+        new_payment_fields = [
+            "short_user_description",
+            "long_user_description",
+            "transaction_amount",
+            "booking_date",
+            "hidden",
+            "category_id",
+            "subproject_id",
+            "route",
+            "id",
+        ]
+        new_payment_data = {
+            x.short_name: x.data
+            for x in payment_form
+            if x.short_name in new_payment_fields
+        }
+        new_payment_data["category_id"] = (
+            None
+            if new_payment_data["category_id"] == ""
+            else new_payment_data["category_id"]
+        )
+        new_payment_data["subproject_id"] = (
+            None
+            if new_payment_data["subproject_id"] == ""
+            else new_payment_data["subproject_id"]
+        )
+
+        try:
+            # Update if the payment already exists
+            payments = Payment.query.filter_by(id=payment_form.id.data)
+
+            # In case of a manual payment we update the updated field with
+            # the current timestamp
+            if payments.first().type == "MANUAL":
+                new_payment_data["updated"] = datetime.now()
+
+            # In case of non-manual payments we don't allow the modification
+            # of the 'created' field, so we need to fill in the form with
+            # created timestamp that already exists
+            if payments.first().type != "MANUAL":
+                new_payment_data["booking_date"] = payments.first().booking_date
+
+            if len(payments.all()):
+                payments.update(new_payment_data)
+                db.session.commit()
+                flash(
+                    '<span class="text-default-green">Topup/betaling is bijgewerkt</span>'
+                )
+        except IntegrityError as e:
+            db.session().rollback()
+            app.logger.error(repr(e))
+            flash(
+                '<span class="text-default-red">Topup/betaling bijwerken mislukt<span>'
+            )
 
         if is_subproject:
             # Redirect back to clear form data
