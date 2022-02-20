@@ -11,106 +11,76 @@ from sqlalchemy.exc import IntegrityError
 
 # Association table between Project and User
 project_user = db.Table(
-    'project_user',
+    "project_user",
     db.Column(
-        'project_id', db.Integer, db.ForeignKey(
-            'project.id', ondelete='CASCADE'
-        )
+        "project_id", db.Integer, db.ForeignKey("project.id", ondelete="CASCADE")
     ),
-    db.Column(
-        'user_id', db.Integer, db.ForeignKey('user.id', ondelete='CASCADE')
-    ),
-    db.PrimaryKeyConstraint('project_id', 'user_id')
+    db.Column("user_id", db.Integer, db.ForeignKey("user.id", ondelete="CASCADE")),
+    db.PrimaryKeyConstraint("project_id", "user_id"),
 )
 
 
 # Association table between Subproject and User
 subproject_user = db.Table(
-    'subproject_user',
+    "subproject_user",
     db.Column(
-        'subproject_id', db.Integer, db.ForeignKey(
-            'subproject.id', ondelete='CASCADE'
-        )
+        "subproject_id", db.Integer, db.ForeignKey("subproject.id", ondelete="CASCADE")
     ),
-    db.Column(
-        'user_id', db.Integer, db.ForeignKey('user.id', ondelete='CASCADE')
-    ),
-    db.PrimaryKeyConstraint('subproject_id', 'user_id')
+    db.Column("user_id", db.Integer, db.ForeignKey("user.id", ondelete="CASCADE")),
+    db.PrimaryKeyConstraint("subproject_id", "user_id"),
 )
 
 
 # Association table between Payment and File for attachments
 payment_attachment = db.Table(
-    'payment_attachment',
+    "payment_attachment",
     db.Column(
-        'payment_id', db.Integer, db.ForeignKey(
-            'payment.id', ondelete='CASCADE'
-        )
+        "payment_id", db.Integer, db.ForeignKey("payment.id", ondelete="CASCADE")
     ),
-    db.Column(
-        'file_id', db.Integer, db.ForeignKey('file.id', ondelete='CASCADE')
-    ),
-    db.PrimaryKeyConstraint('payment_id', 'file_id')
+    db.Column("file_id", db.Integer, db.ForeignKey("file.id", ondelete="CASCADE")),
+    db.PrimaryKeyConstraint("payment_id", "file_id"),
 )
 
 
 # Assocation table between Project and File for images
 project_image = db.Table(
-    'project_image',
+    "project_image",
     db.Column(
-        'project_id', db.Integer, db.ForeignKey(
-            'project.id', ondelete='CASCADE'
-        )
+        "project_id", db.Integer, db.ForeignKey("project.id", ondelete="CASCADE")
     ),
-    db.Column(
-        'file_id', db.Integer, db.ForeignKey('file.id', ondelete='CASCADE')
-    ),
-    db.PrimaryKeyConstraint('project_id', 'file_id')
+    db.Column("file_id", db.Integer, db.ForeignKey("file.id", ondelete="CASCADE")),
+    db.PrimaryKeyConstraint("project_id", "file_id"),
 )
 
 
 # Assocation table between Subproject and File for images
 subproject_image = db.Table(
-    'subproject_image',
+    "subproject_image",
     db.Column(
-        'subproject_id', db.Integer, db.ForeignKey(
-            'subproject.id', ondelete='CASCADE'
-        )
+        "subproject_id", db.Integer, db.ForeignKey("subproject.id", ondelete="CASCADE")
     ),
-    db.Column(
-        'file_id', db.Integer, db.ForeignKey('file.id', ondelete='CASCADE')
-    ),
-    db.PrimaryKeyConstraint('subproject_id', 'file_id')
+    db.Column("file_id", db.Integer, db.ForeignKey("file.id", ondelete="CASCADE")),
+    db.PrimaryKeyConstraint("subproject_id", "file_id"),
 )
 
 
 # Assocation table between Funder and File for images
 funder_image = db.Table(
-    'funder_image',
-    db.Column(
-        'funder_id', db.Integer, db.ForeignKey(
-            'funder.id', ondelete='CASCADE'
-        )
-    ),
-    db.Column(
-        'file_id', db.Integer, db.ForeignKey('file.id', ondelete='CASCADE')
-    ),
-    db.PrimaryKeyConstraint('funder_id', 'file_id')
+    "funder_image",
+    db.Column("funder_id", db.Integer, db.ForeignKey("funder.id", ondelete="CASCADE")),
+    db.Column("file_id", db.Integer, db.ForeignKey("file.id", ondelete="CASCADE")),
+    db.PrimaryKeyConstraint("funder_id", "file_id"),
 )
 
 
 # Assocation table between UserStory and File for images
 user_story_image = db.Table(
-    'userstory_image',
+    "userstory_image",
     db.Column(
-        'user_story_id', db.Integer, db.ForeignKey(
-            'user_story.id', ondelete='CASCADE'
-        )
+        "user_story_id", db.Integer, db.ForeignKey("user_story.id", ondelete="CASCADE")
     ),
-    db.Column(
-        'file_id', db.Integer, db.ForeignKey('file.id', ondelete='CASCADE')
-    ),
-    db.PrimaryKeyConstraint('user_story_id', 'file_id')
+    db.Column("file_id", db.Integer, db.ForeignKey("file.id", ondelete="CASCADE")),
+    db.PrimaryKeyConstraint("user_story_id", "file_id"),
 )
 
 
@@ -130,7 +100,7 @@ class DefaultCRUD(object):
 
 class BNGAccount(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
     consent_id = db.Column(db.String(36))
     access_token = db.Column(db.String(2048))
     expires_on = db.Column(db.DateTime())
@@ -148,7 +118,7 @@ class User(UserMixin, db.Model, DefaultCRUD):
     biography = db.Column(db.String(1000))
     hidden = db.Column(db.Boolean, default=False)
     active = db.Column(db.Boolean, default=True)
-    image = db.Column(db.Integer, db.ForeignKey('file.id', ondelete='SET NULL'))
+    image = db.Column(db.Integer, db.ForeignKey("file.id", ondelete="SET NULL"))
 
     def is_active(self):
         return self.active
@@ -156,7 +126,7 @@ class User(UserMixin, db.Model, DefaultCRUD):
     def set_password(self, password):
         if len(password) < 12:
             raise RuntimeError(
-                'Attempted to set password with length less than 12 characters'
+                "Attempted to set password with length less than 12 characters"
             )
         self.password_hash = generate_password_hash(password)
 
@@ -165,28 +135,23 @@ class User(UserMixin, db.Model, DefaultCRUD):
 
     def get_reset_password_token(self, expires_in=86400):
         return jwt.encode(
-            {
-                'reset_password': self.id,
-                'exp': time() + expires_in
-            },
-            app.config['SECRET_KEY'],
-            algorithm='HS256'
-        ).decode('utf-8')
+            {"reset_password": self.id, "exp": time() + expires_in},
+            app.config["SECRET_KEY"],
+            algorithm="HS256",
+        ).decode("utf-8")
 
     @staticmethod
     def verify_reset_password_token(token):
         try:
-            user_id = jwt.decode(
-                token,
-                app.config['SECRET_KEY'],
-                algorithms='HS256'
-            )['reset_password']
+            user_id = jwt.decode(token, app.config["SECRET_KEY"], algorithms="HS256")[
+                "reset_password"
+            ]
         except:
             return
         return User.query.get(user_id)
 
     def __repr__(self):
-        return '<User {}>'.format(self.email)
+        return "<User {}>".format(self.email)
 
     @property
     def redirect_after_edit(self):
@@ -232,57 +197,44 @@ class Project(db.Model, DefaultCRUD):
     budget = db.Column(db.Integer)
 
     subprojects = db.relationship(
-        'Subproject',
-        backref='project',
-        lazy='dynamic',
-        order_by='Subproject.name.asc()',
-        cascade="all,delete,delete-orphan"
+        "Subproject",
+        backref="project",
+        lazy="dynamic",
+        order_by="Subproject.name.asc()",
+        cascade="all,delete,delete-orphan",
     )
     users = db.relationship(
-        'User',
-        secondary=project_user,
-        backref='projects',
-        lazy='dynamic'
+        "User", secondary=project_user, backref="projects", lazy="dynamic"
     )
-    funders = db.relationship('Funder', backref='project', lazy='dynamic')
+    funders = db.relationship("Funder", backref="project", lazy="dynamic")
     # This has to become passes I guess.
-    ibans = db.relationship('IBAN', backref='project', lazy='dynamic')
+    ibans = db.relationship("IBAN", backref="project", lazy="dynamic")
     payments = db.relationship(
-        'Payment',
-        backref='project',
-        lazy='dynamic',
-        order_by='Payment.transaction_id.desc()'
+        "Payment",
+        backref="project",
+        lazy="dynamic",
+        order_by="Payment.transaction_id.desc()",
     )
-    images = db.relationship(
-        'File',
-        secondary=project_image,
-        lazy='dynamic'
-    )
-    categories = db.relationship('Category', backref='project', lazy='dynamic')
-    debit_cards = db.relationship(
-        'DebitCard',
-        backref='project',
-        lazy='dynamic'
-    )
+    images = db.relationship("File", secondary=project_image, lazy="dynamic")
+    categories = db.relationship("Category", backref="project", lazy="dynamic")
+    debit_cards = db.relationship("DebitCard", backref="project", lazy="dynamic")
 
     def set_bank_name(self, bank_name):
         self.bank_name = bank_name
 
     # Returns true if the project is linked to the given user_id
     def has_user(self, user_id):
-        return self.users.filter(
-            project_user.c.user_id == user_id
-        ).count() > 0
+        return self.users.filter(project_user.c.user_id == user_id).count() > 0
 
     # Create category select options to be shown in a dropdown menu
     def make_category_select_options(self):
-        select_options = [('', '')]
+        select_options = [("", "")]
         for category in Category.query.filter_by(project_id=self.id):
             select_options.append((str(category.id), category.name))
         return select_options
 
     def make_subproject_select_options(self):
-        select_options = [('', 'Hoofdactiviteit')]
+        select_options = [("", "Hoofdactiviteit")]
         for subproject in self.subprojects.all():
             select_options.append((str(subproject.id), subproject.name))
         return select_options
@@ -320,9 +272,7 @@ class Project(db.Model, DefaultCRUD):
 
 class Subproject(db.Model, DefaultCRUD):
     id = db.Column(db.Integer, primary_key=True)
-    project_id = db.Column(
-        db.Integer, db.ForeignKey('project.id', ondelete='CASCADE')
-    )
+    project_id = db.Column(db.Integer, db.ForeignKey("project.id", ondelete="CASCADE"))
     # This needs to be removed, or needs to become something linked to BNG.
     iban = db.Column(db.String(34), index=True, unique=True)
     iban_name = db.Column(db.String(120), index=True)
@@ -332,38 +282,27 @@ class Subproject(db.Model, DefaultCRUD):
     budget = db.Column(db.Integer)
 
     users = db.relationship(
-        'User',
-        secondary=subproject_user,
-        backref='subprojects',
-        lazy='dynamic'
+        "User", secondary=subproject_user, backref="subprojects", lazy="dynamic"
     )
-    payments = db.relationship('Payment', backref='subproject', lazy='dynamic')
-    images = db.relationship(
-        'File',
-        secondary=subproject_image,
-        lazy='dynamic'
-    )
+    payments = db.relationship("Payment", backref="subproject", lazy="dynamic")
+    images = db.relationship("File", secondary=subproject_image, lazy="dynamic")
     categories = db.relationship(
-        'Category',
-        backref='subproject',
-        lazy='dynamic',
-        cascade="all,delete,delete-orphan"
+        "Category",
+        backref="subproject",
+        lazy="dynamic",
+        cascade="all,delete,delete-orphan",
     )
 
     # Subproject names must be unique within a project
-    __table_args__ = (
-        db.UniqueConstraint('project_id', 'name'),
-    )
+    __table_args__ = (db.UniqueConstraint("project_id", "name"),)
 
     # Returns true if the subproject is linked to the given user_id
     def has_user(self, user_id):
-        return self.users.filter(
-            subproject_user.c.user_id == user_id
-        ).count() > 0
+        return self.users.filter(subproject_user.c.user_id == user_id).count() > 0
 
     # Create select options to be shown in a dropdown menu
     def make_category_select_options(self):
-        select_options = [('', '')]
+        select_options = [("", "")]
         for category in Category.query.filter_by(subproject_id=self.id):
             select_options.append((str(category.id), category.name))
         return select_options
@@ -382,11 +321,9 @@ class Subproject(db.Model, DefaultCRUD):
 
     @property
     def redirect_after_edit(self):
-        return redirect(url_for(
-            'subproject',
-            project_id=self.project_id,
-            subproject_id=self.id
-        ))
+        return redirect(
+            url_for("subproject", project_id=self.project_id, subproject_id=self.id)
+        )
 
     @property
     def redirect_after_create(self):
@@ -407,12 +344,8 @@ class Subproject(db.Model, DefaultCRUD):
 class DebitCard(db.Model, DefaultCRUD):
     id = db.Column(db.Integer, primary_key=True)
     card_number = db.Column(db.String(22), unique=True, nullable=False)
-    payments = db.relationship(
-        'Payment',
-        backref='debit_card',
-        lazy='dynamic'
-    )
-    project_id = db.Column(db.ForeignKey('project.id', ondelete="SET NULL"))
+    payments = db.relationship("Payment", backref="debit_card", lazy="dynamic")
+    project_id = db.Column(db.ForeignKey("project.id", ondelete="SET NULL"))
     last_used_project_id = db.Column(db.Integer)
 
     @property
@@ -434,7 +367,9 @@ class DebitCard(db.Model, DefaultCRUD):
 
     @classmethod
     def create(cls, data):
-        present_debit_card = cls.query.filter_by(card_number=data["card_number"]).first()
+        present_debit_card = cls.query.filter_by(
+            card_number=data["card_number"]
+        ).first()
         if present_debit_card:
             present_debit_card.update(data)
             return present_debit_card
@@ -443,30 +378,40 @@ class DebitCard(db.Model, DefaultCRUD):
 
     def update(self, data):
         if data.get("remove_from_project"):
+            payments = (
+                db.session.query(Payment)
+                .join(DebitCard)
+                .filter(DebitCard.id == self.id)
+                .all()
+            )
+            if len(payments) > 0:
+                raise ValueError(
+                    "Payments have already been done with this debit card."
+                )
             self.last_used_project_id = self.project.id
             del self.project
-            # Payments are assigned manually to a subproject, so they should also be explicitely removed.
-            payments = db.session.query(Payment).join(DebitCard).filter(DebitCard.id == self.id).all()
-            for payment in payments:
-                payment.subproject = None
             db.session.commit()
         else:
             return super(DebitCard, self).update(data)
 
     def message_after_error(self, error, data):
-        return "Aanpassen mislukt vanwege een onbekende fout. De beheerder van Open Poen is op de hoogte gesteld."
+        if type(error) == ValueError:
+            return (
+                "Betaalpas verwijderen is mislukt. Een betaalpas mag alleen worden verwijderd, als er "
+                "nog geen betalingen mee zijn gedaan."
+            )
+        else:
+            return "Aanpassen mislukt vanwege een onbekende fout. De beheerder van Open Poen is op de hoogte gesteld."
 
 
 # TODO: Make this compatible with BNG payments if necessary.
 class Payment(db.Model):
     subproject_id = db.Column(
-        db.Integer, db.ForeignKey('subproject.id', ondelete='SET NULL')
+        db.Integer, db.ForeignKey("subproject.id", ondelete="SET NULL")
     )
-    project_id = db.Column(
-        db.Integer, db.ForeignKey('project.id', ondelete='SET NULL')
-    )
+    project_id = db.Column(db.Integer, db.ForeignKey("project.id", ondelete="SET NULL"))
     category_id = db.Column(
-        db.Integer, db.ForeignKey('category.id', ondelete='SET NULL')
+        db.Integer, db.ForeignKey("category.id", ondelete="SET NULL")
     )
 
     # Fields coming from the BNG API (Snake case conversion is done by us.)
@@ -499,7 +444,7 @@ class Payment(db.Model):
     remittance_information_structured = db.Column(db.Text())
     # Can be 'inbesteding', 'uitgaven' or 'inkomsten'
     route = db.Column(db.String(12))
-    card_number = db.Column(db.String(22), db.ForeignKey('debit_card.card_number'))
+    card_number = db.Column(db.String(22), db.ForeignKey("debit_card.card_number"))
     type = db.Column(db.String(20))
 
     # Fields coming from the user
@@ -507,11 +452,7 @@ class Payment(db.Model):
     long_user_description = db.Column(db.String(1000))
     hidden = db.Column(db.Boolean, default=False)
 
-    attachments = db.relationship(
-        'File',
-        secondary=payment_attachment,
-        lazy='dynamic'
-    )
+    attachments = db.relationship("File", secondary=payment_attachment, lazy="dynamic")
 
     def get_formatted_currency(self):
         return locale.format(
@@ -520,7 +461,7 @@ class Payment(db.Model):
 
     def get_formatted_balance(self):
         # TODO: How do I implement this for BNG?
-        return_value = ''
+        return_value = ""
         # Manually added payments don't have the balance_after_mutation_value
         # field
         # if not self.balance_after_mutation_value == None:
@@ -541,20 +482,14 @@ class Payment(db.Model):
 
 class Funder(db.Model, DefaultCRUD):
     id = db.Column(db.Integer, primary_key=True)
-    project_id = db.Column(
-        db.Integer, db.ForeignKey('project.id', ondelete='CASCADE')
-    )
+    project_id = db.Column(db.Integer, db.ForeignKey("project.id", ondelete="CASCADE"))
     name = db.Column(db.String(120), index=True)
     url = db.Column(db.String(2000))
-    images = db.relationship(
-        'File',
-        secondary=funder_image,
-        lazy='dynamic'
-    )
+    images = db.relationship("File", secondary=funder_image, lazy="dynamic")
 
     @property
     def redirect_after_edit(self):
-        return redirect(url_for('project', project_id=self.project_id))
+        return redirect(url_for("project", project_id=self.project_id))
 
     @property
     def redirect_after_create(self):
@@ -563,7 +498,7 @@ class Funder(db.Model, DefaultCRUD):
     @property
     def redirect_after_delete(self):
         return redirect(url_for("project", project_id=self.project_id))
-    
+
     @property
     def message_after_edit(self):
         return f"Sponsor {self.name} is aangepast."
@@ -571,7 +506,7 @@ class Funder(db.Model, DefaultCRUD):
     @property
     def message_after_create(self):
         return f"Sponsor {self.name} is aangemaakt."
-    
+
     @property
     def message_after_delete(self):
         return f"Sponsor {self.name} is verwijderd."
@@ -583,9 +518,7 @@ class Funder(db.Model, DefaultCRUD):
 # Make these BNG accounts?
 class IBAN(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    project_id = db.Column(
-        db.Integer, db.ForeignKey('project.id', ondelete='CASCADE')
-    )
+    project_id = db.Column(db.Integer, db.ForeignKey("project.id", ondelete="CASCADE"))
     iban = db.Column(db.String(34), index=True)
 
 
@@ -595,11 +528,7 @@ class UserStory(db.Model):
     title = db.Column(db.String(200))
     text = db.Column(db.String(200))
     hidden = db.Column(db.Boolean, default=False)
-    images = db.relationship(
-        'File',
-        secondary=user_story_image,
-        lazy='dynamic'
-    )
+    images = db.relationship("File", secondary=user_story_image, lazy="dynamic")
 
 
 class File(db.Model):
@@ -612,18 +541,14 @@ class File(db.Model):
 class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     subproject_id = db.Column(
-        db.Integer, db.ForeignKey('subproject.id', ondelete='CASCADE')
+        db.Integer, db.ForeignKey("subproject.id", ondelete="CASCADE")
     )
-    project_id = db.Column(
-        db.Integer, db.ForeignKey('project.id', ondelete='CASCADE')
-    )
+    project_id = db.Column(db.Integer, db.ForeignKey("project.id", ondelete="CASCADE"))
     name = db.Column(db.String(120), index=True)
-    payments = db.relationship('Payment', backref='category', lazy='dynamic')
+    payments = db.relationship("Payment", backref="category", lazy="dynamic")
 
     # Category names must be unique within a (sub)project
-    __table_args__ = (
-        db.UniqueConstraint('project_id', 'subproject_id', 'name'),
-    )
+    __table_args__ = (db.UniqueConstraint("project_id", "subproject_id", "name"),)
 
 
 @login_manager.user_loader
