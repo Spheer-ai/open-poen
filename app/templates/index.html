@@ -238,7 +238,8 @@
                             {% if project_form.funders|length > 0 %}
                             <div class="project-unit">
                               <h2>Sponsoren</h2>
-                              <p>Voer hier de sponsoren van het initiatief in.</p>
+                              <p>Voer hier de sponsoren van het initiatief in. De URL moet het volgende format hebben:
+                                http(s)://voorbeeld.com</p>
                               {% for funder in project_form.funders %}
                               <p>Sponsor {{ loop.index }}</p>
                               {{ wtf.form_field(funder.form.name) }}

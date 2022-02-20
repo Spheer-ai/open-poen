@@ -458,34 +458,36 @@ def process_new_payment_form(form, project, subproject):
 
 
 def process_new_project_form(form):
-    if form_in_request(form, request):
-        # We need to rerender the form if the user wants to add funders, debit cards or subprojects, but hasn't
-        # received the rerendered form yet to actually enter those.
-        # TODO: Refactor.
-        rerender = False
+    if not util.validate_on_submit(form, request):
+        return
+
+    # We need to rerender the form if the user wants to add funders, debit cards or subprojects, but hasn't
+    # received the rerendered form yet to actually enter those.
+    # TODO: Refactor.
+    rerender = False
+    if form.funders_amount.data is not None:
         funders_to_add = form.funders_amount.data - len(form.funders)
         if funders_to_add > 0:
             for x in range(0, funders_to_add):
                 form.funders.append_entry()
             rerender = True
+    if form.card_numbers_amount.data is not None:
         debit_cards_to_add = form.card_numbers_amount.data - len(form.card_numbers)
         if debit_cards_to_add > 0:
             for x in range(0, debit_cards_to_add):
                 form.card_numbers.append_entry()
             rerender = True
+    if form.subprojects_amount.data is not None:
         subprojects_to_add = form.subprojects_amount.data - len(form.subprojects)
         if subprojects_to_add > 0:
             for x in range(0, subprojects_to_add):
                 form.subprojects.append_entry()
             rerender = True
-        if rerender:
-            del form.funders_amount
-            del form.card_numbers_amount
-            del form.subprojects_amount
-            form.errors["rerender"] = "rerender"
-            return
-
-    if not util.validate_on_submit(form, request):
+    if rerender:
+        del form.funders_amount
+        del form.card_numbers_amount
+        del form.subprojects_amount
+        form.errors["rerender"] = "rerender"
         return
 
     # TODO: We don't want this hardcoded.

@@ -109,6 +109,13 @@ def validate_budget(form, field):
         )
 
 
+def positive_integer(form, field):
+    if field.data is None:
+        return
+    if field.data < 0:
+        raise ValidationError(f"{field.data} is niet een positief getal.")
+
+
 class BNGLinkForm(FlaskForm):
     iban = StringField("IBAN", validators=[DataRequired(), validate_iban])
     valid_until = DateField(
@@ -201,15 +208,27 @@ class NewProjectForm(FlaskForm):
     budget = IntegerField(
         "Budget voor dit initiatief", validators=[Optional(), validate_budget]
     )
-    card_numbers_amount = IntegerField("Aantal toe te voegen betaalpassen.*", default=0)
+    card_numbers_amount = IntegerField(
+        "Aantal toe te voegen betaalpassen.*",
+        default=0,
+        validators=[positive_integer, Optional()],
+    )
     card_numbers = FieldList(
         FormField(DebitCardForm), min_entries=0, max_entries=None, validators=[]
     )
-    funders_amount = IntegerField("Aantal toe te voegen sponsoren.*", default=0)
+    funders_amount = IntegerField(
+        "Aantal toe te voegen sponsoren.*",
+        default=0,
+        validators=[positive_integer, Optional()],
+    )
     funders = FieldList(
         FormField(NewProjectFunderForm), min_entries=0, max_entries=None, validators=[]
     )
-    subprojects_amount = IntegerField("Aantal toe te voegen activiteiten.*", default=0)
+    subprojects_amount = IntegerField(
+        "Aantal toe te voegen activiteiten.*",
+        default=0,
+        validators=[positive_integer, Optional()],
+    )
     subprojects = FieldList(
         FormField(NewProjectSubprojectForm),
         min_entries=0,
@@ -372,9 +391,8 @@ class EditAttachmentForm(FlaskForm):
 class FunderForm(FlaskForm):
     name = StringField("Naam", validators=[DataRequired(), Length(max=120)])
     url = StringField(
-        "URL",
+        "URL (format: http(s)://voorbeeld.com)",
         validators=[DataRequired(), URL(), Length(max=2000)],
-        default="https://voorbeeldurl.com",
     )
     id = IntegerField(widget=HiddenInput())
     project_id = IntegerField(widget=HiddenInput())
