@@ -301,7 +301,8 @@ class PaymentForm(FlaskForm):
         "Lange beschrijving", validators=[Length(max=2000)]
     )
     transaction_amount = FlexibleDecimalField(
-        'Bedrag (begin met een "-" als het een uitgave is)'
+        'Bedrag (begin met een "-" als het een uitgave is)',
+        validators=[validate_topup_amount],
     )
     booking_date = DateField("Datum (notatie: 31-12-2020)", format="%d-%m-%Y")
     hidden = BooleanField("Transactie verbergen")
