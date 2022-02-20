@@ -478,7 +478,7 @@ def project(project_id):
         return redirect(url_for("project", project_id=project.id))
     else:
         if len(edit_project_owner_form.errors) > 0:
-            modal_id = ["#project-bewerken", "#project-owner-toevoegen"]
+            modal_id = ["#project-beheren", "#project-owner-toevoegen"]
 
     edit_project_owner_forms = {}
     temp_edit_project_owner_forms = {}
@@ -515,7 +515,7 @@ def project(project_id):
         return redirect(url_for("project", project_id=project.id))
     else:
         if len(add_user_form.errors) > 0:
-            modal_id = ["#project-bewerken", "#project-owner-toevoegen"]
+            modal_id = ["#project-beheren", "#project-owner-toevoegen"]
 
     # PROJECT
     # Notice how it's not allowed to change contains_subprojects after creation.
@@ -526,7 +526,7 @@ def project(project_id):
     if form_redirect:
         return form_redirect
     if len(project_form.errors) > 0:
-        modal_id = ["#project-bewerken"]
+        modal_id = ["#project-beheren"]
 
     if not util.form_in_request(project_form, request):
         project_form = EditProjectForm(
@@ -550,7 +550,7 @@ def project(project_id):
     if form_redirect:
         return form_redirect
     if len(add_debit_card_form.errors) > 0:
-        modal_id = ["#project-bewerken", "#betaalpas-toevoegen"]
+        modal_id = ["#project-beheren", "#betaalpas-toevoegen"]
     add_debit_card_form.project_id.data = project.id
 
     edit_debit_card_form = EditDebitCardForm(prefix="edit_debit_card_form")
@@ -714,7 +714,7 @@ def subproject(project_id, subproject_id):
     if form_redirect:
         return form_redirect
     if len(subproject_form.errors) > 0:
-        modal_id = ["#subproject-bewerken"]
+        modal_id = ["#subproject-beheren"]
     else:
         subproject_form = SubprojectForm(
             prefix="subproject_form",

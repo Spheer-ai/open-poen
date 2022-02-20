@@ -102,6 +102,13 @@ def validate_topup_amount(form, field):
         )
 
 
+def validate_budget(form, field):
+    if field.data < 0 and field.data is not None:
+        raise ValidationError(
+            f"{field.data} is een negatief bedrag. Een budget moet altijd positief of leeg zijn."
+        )
+
+
 class BNGLinkForm(FlaskForm):
     iban = StringField("IBAN", validators=[DataRequired(), validate_iban])
     valid_until = DateField(
@@ -177,7 +184,9 @@ class NewProjectSubprojectForm(FlaskForm):
     name = StringField("Naam", validators=[DataRequired(), Length(max=120)])
     description = TextAreaField("Beschrijving", validators=[DataRequired()])
     hidden = BooleanField("Activiteit verbergen")
-    budget = IntegerField("Budget voor deze activiteit", validators=[Optional()])
+    budget = IntegerField(
+        "Budget voor deze activiteit", validators=[Optional(), validate_budget]
+    )
 
 
 class NewProjectForm(FlaskForm):
@@ -189,7 +198,9 @@ class NewProjectForm(FlaskForm):
     )
     hidden = BooleanField("Initiatief verbergen")
     hidden_sponsors = BooleanField("Sponsoren verbergen")
-    budget = IntegerField("Budget voor dit initiatief", validators=[Optional()])
+    budget = IntegerField(
+        "Budget voor dit initiatief", validators=[Optional(), validate_budget]
+    )
     card_numbers_amount = IntegerField("Aantal toe te voegen betaalpassen.*", default=0)
     card_numbers = FieldList(
         FormField(DebitCardForm), min_entries=0, max_entries=None, validators=[]
@@ -218,7 +229,9 @@ class EditProjectForm(FlaskForm):
     )
     hidden = BooleanField("Initiatief verbergen")
     hidden_sponsors = BooleanField("Sponsoren verbergen")
-    budget = IntegerField("Budget voor dit initiatief", validators=[Optional()])
+    budget = IntegerField(
+        "Budget voor dit initiatief", validators=[Optional(), validate_budget]
+    )
     id = IntegerField(widget=HiddenInput())
     submit = SubmitField("Opslaan", render_kw={"class": "btn btn-info"})
     remove = SubmitField("Verwijderen", render_kw={"class": "btn btn-danger"})
@@ -228,7 +241,9 @@ class SubprojectForm(FlaskForm):
     name = StringField("Naam", validators=[DataRequired(), Length(max=120)])
     description = TextAreaField("Beschrijving", validators=[DataRequired()])
     hidden = BooleanField("Activiteit verbergen")
-    budget = IntegerField("Budget voor deze activiteit", validators=[Optional()])
+    budget = IntegerField(
+        "Budget voor deze activiteit", validators=[Optional(), validate_budget]
+    )
     project_id = IntegerField(widget=HiddenInput())
     id = IntegerField(widget=HiddenInput())
 
