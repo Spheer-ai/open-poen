@@ -7,7 +7,7 @@ import os
 from app import app, db
 from app.forms import CategoryForm, PaymentForm, EditAttachmentForm
 from app.models import Category, Payment, File, User
-from app.util import flash_form_errors
+from app.util import flash_form_errors, form_in_request
 
 
 def return_redirect(project_id, subproject_id):
@@ -94,7 +94,14 @@ def process_category_form(request):
 
 # Process filled in payment form
 def process_payment_form(request, project_or_subproject, project_owner, user_subproject_ids, is_subproject):
-    payment_form = PaymentForm(prefix="payment_form")
+    form_keys = list(request.form.keys())
+    if len(form_keys) > 0 and form_keys[0].startswith("payment_form_"):
+        id_key = [x for x in list(request.form.keys()) if "-id" in x][0]
+        id_key = id_key.split("-")[0]
+    else:
+        return
+
+    payment_form = PaymentForm(prefix=id_key)
     # Somehow we need to repopulate the category_id.choices with the same
     # values as used when the form was generated. Probably to validate
     # if the selected value is valid. We don't know the subproject in the
@@ -114,20 +121,23 @@ def process_payment_form(request, project_or_subproject, project_owner, user_sub
         # payment on a project page)
         if not project_owner and not temppayment.subproject.id in user_subproject_ids:
             return
+        # Make sure the transaction amount can't be changed if the transaction is not manual.
+        if temppayment.type != "MANUAL":
+            payment_form.amount_value.data = temppayment.amount_value
     else:
         return
 
     payment_form.route.choices = [
-        ('subsidie', 'subsidie'),
+        ('inkomsten', 'inkomsten'),
         ('inbesteding', 'inbesteding'),
-        ('aanbesteding', 'aanbesteding')
+        ('uitgaven', 'uitgaven')
     ]
 
     # When the user removes a manually added payment, the route selection
     # field will have no value and validate_on_submit will fail, so add a
     # default value
     if payment_form.route.data == 'None':
-        payment_form.route.data = 'subsidie'
+        payment_form.route.data = 'inkomsten'
 
     if payment_form.validate_on_submit():
         # Remove payment
@@ -200,7 +210,7 @@ def process_payment_form(request, project_or_subproject, project_owner, user_sub
             )
         )
     else:
-        flash_form_errors(payment_form, request)
+        return payment_form
 
 
 # Populate the payment forms which allows the user to edit it
@@ -212,10 +222,11 @@ def create_payment_forms(payments, project_owner):
         selected_category = ''
         if payment.category:
             selected_category = payment.category.id
-        payment_form = PaymentForm(prefix='payment_form', **{
+        payment_form = PaymentForm(prefix=f'payment_form_{payment.id}', **{
             'short_user_description': payment.short_user_description,
             'long_user_description': payment.long_user_description,
             'created': payment.created,
+            'amount_value': payment.amount_value,
             'id': payment.id,
             'hidden': payment.hidden,
             'category_id': selected_category,
@@ -236,9 +247,9 @@ def create_payment_forms(payments, project_owner):
             payment_form.category_id.choices = payment.project.make_category_select_options()
 
         payment_form.route.choices = [
-            ('subsidie', 'subsidie'),
+            ('inkomsten', 'inkomsten'),
             ('inbesteding', 'inbesteding'),
-            ('aanbesteding', 'aanbesteding')
+            ('uitgaven', 'uitgaven')
         ]
 
         # Only allow manually added payments to be removed
@@ -289,37 +300,38 @@ def save_attachment(f, mediatype, db_object, folder):
 
 # Process filled in transaction attachment form
 def process_transaction_attachment_form(request, transaction_attachment_form, project_owner, user_subproject_ids, project_id=0, subproject_id=0):
-    if transaction_attachment_form.validate_on_submit():
-        payment = Payment.query.get(
-            transaction_attachment_form.payment_id.data
-        )
-        # Make sure the user is allowed to edit this payment
-        # (especially needed when a normal users edits a subproject
-        # payment on a project page)
-        if not project_owner and not payment.subproject.id in user_subproject_ids:
-            return
+    if form_in_request(transaction_attachment_form, request):
+        if transaction_attachment_form.validate_on_submit():
+            payment = Payment.query.get(
+                transaction_attachment_form.payment_id.data
+            )
+            # Make sure the user is allowed to edit this payment
+            # (especially needed when a normal users edits a subproject
+            # payment on a project page)
+            if not project_owner and not payment.subproject.id in user_subproject_ids:
+                return
 
-        save_attachment(transaction_attachment_form.data_file.data, transaction_attachment_form.mediatype.data, payment, 'transaction-attachment')
+            save_attachment(transaction_attachment_form.data_file.data, transaction_attachment_form.mediatype.data, payment, 'transaction-attachment')
 
-        # Redirect back to clear form data
-        if subproject_id:
             # Redirect back to clear form data
+            if subproject_id:
+                # Redirect back to clear form data
+                return redirect(
+                    url_for(
+                        'subproject',
+                        project_id=project_id,
+                        subproject_id=subproject_id
+                    )
+                )
+
             return redirect(
                 url_for(
-                    'subproject',
+                    'project',
                     project_id=project_id,
-                    subproject_id=subproject_id
                 )
             )
-
-        return redirect(
-            url_for(
-                'project',
-                project_id=project_id,
-            )
-        )
-    else:
-        flash_form_errors(transaction_attachment_form, request)
+        else:
+            flash_form_errors(transaction_attachment_form, request)
 
 # Populate the edit attachment forms which allows the user to edit it
 def create_edit_attachment_forms(attachments):

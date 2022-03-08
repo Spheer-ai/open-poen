@@ -348,7 +348,7 @@ class Payment(db.Model):
     # Currently 'MANUAL' or types coming from BUNQ, e.g., 'BUNQ', 'IDEAL',
     # 'MASTERCARD', 'EBA_SCT', 'INTEREST', 'BUNQME', 'PAYMENT_ALLOCATE'
     type = db.Column(db.String(20))
-    # Can be 'inbesteding', 'aanbesteding' or 'subsidie'
+    # Can be 'inbesteding', 'uitgaven' or 'inkomsten'
     route = db.Column(db.String(12))
 
     # Fields coming from the user
@@ -383,6 +383,12 @@ class Payment(db.Model):
                 monetary=True
             )
         return return_value
+    
+    def get_export_currency(self):
+        return self.get_formatted_currency().replace("\u202f", "")
+
+    def get_export_balance(self):
+        return self.get_formatted_balance().replace("\u202f", "")
 
 
 class Funder(db.Model):

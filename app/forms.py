@@ -11,6 +11,10 @@ from wtforms import (
 )
 from wtforms.fields.html5 import EmailField
 
+allowed_extensions = [
+    'jpg', 'jpeg', 'png', 'txt', 'pdf', 'ods', 'xls', 'xlsx', 'odt', 'doc',
+    'docx'
+]
 
 class ResetPasswordRequestForm(FlaskForm):
     email = StringField(
@@ -75,15 +79,15 @@ class ProjectForm(FlaskForm):
     name = StringField('Naam', validators=[DataRequired(), Length(max=120)])
     description = TextAreaField('Beschrijving', validators=[DataRequired()])
     contains_subprojects = BooleanField(
-        'Uitgaven van dit project gebeuren via subrekeningen en subprojecten',
+        'Uitgaven van dit initiatief gebeuren via subrekeningen en deelactiviteiten',
         render_kw={
             'checked': '',
             'value': 'y'
         }
     )
-    hidden = BooleanField('Project verbergen')
+    hidden = BooleanField('Initiatief verbergen')
     hidden_sponsors = BooleanField('Sponsoren verbergen')
-    budget = IntegerField('Budget voor dit project', validators=[Optional()])
+    budget = IntegerField('Budget voor dit initiatief', validators=[Optional()])
     iban = SelectField('IBAN', validators=[Optional()], choices=[])
     id = IntegerField(widget=HiddenInput())
 
@@ -105,8 +109,8 @@ class ProjectForm(FlaskForm):
 class SubprojectForm(FlaskForm):
     name = StringField('Naam', validators=[DataRequired(), Length(max=120)])
     description = TextAreaField('Beschrijving', validators=[DataRequired()])
-    hidden = BooleanField('Initiatief verbergen')
-    budget = IntegerField('Budget voor dit initiatief', validators=[Optional()])
+    hidden = BooleanField('Activiteit verbergen')
+    budget = IntegerField('Budget voor deze activiteit', validators=[Optional()])
     iban = SelectField(
         'IBAN', validators=[Optional()], choices=[]
     )
@@ -144,7 +148,7 @@ class NewPaymentForm(FlaskForm):
     # subproject (only on project pages) as we need to set new categories
     # that belong to that subproject
     subproject_id = SelectField(
-        'Initiatief',
+        'Activiteit',
         coerce=int,
         choices=[],
         render_kw={'onchange': 'set_category(this)'}
@@ -155,15 +159,15 @@ class NewPaymentForm(FlaskForm):
     route = SelectField(
         'Route',
         choices=[
-            ('subsidie', 'subsidie'),
+            ('inkomsten', 'inkomsten'),
             ('inbesteding', 'inbesteding'),
-            ('aanbesteding', 'aanbesteding')
+            ('uitgaven', 'uitgaven')
         ]
     )
 
     amount_value = FlexibleDecimalField('Bedrag (begin met een "-" als het een uitgave is)')
 
-    created = DateField('Datum (notatie: 2020-12-31)')
+    created = DateField('Datum (notatie: dd-mm-jjjj)', format="%d-%m-%Y")
 
     alias_name = StringField(
         'Verstuurder naam', validators=[Length(max=120)]
@@ -188,6 +192,31 @@ class NewPaymentForm(FlaskForm):
 
     hidden = BooleanField('Transactie verbergen')
 
+    data_file = FileField(
+        'Bestand',
+        validators=[
+            FileAllowed(
+                allowed_extensions,
+                (
+                    'bestandstype niet toegstaan. Enkel de volgende '
+                    'bestandstypen worden geaccepteerd: %s' % ', '.join(
+                        allowed_extensions
+                    )
+                )
+            ),
+            Optional()
+        ]
+    )
+    mediatype = RadioField(
+        'Media type',
+        choices=[
+            ('media', 'media'),
+            ('bon', 'bon')
+        ],
+        default="bon",
+        validators=[Optional()]
+    )
+
     submit = SubmitField(
         'Opslaan',
         render_kw={
@@ -204,10 +233,11 @@ class PaymentForm(FlaskForm):
     long_user_description = TextAreaField(
         'Lange beschrijving', validators=[Length(max=2000)]
     )
-    created = DateField('Datum (notatie: 2020-12-31)')
+    amount_value = FlexibleDecimalField('Bedrag (begin met een "-" als het een uitgave is)')
+    created = DateField('Datum (notatie: dd-mm-jjjj)', format="%d-%m-%Y")
     hidden = BooleanField('Transactie verbergen')
     category_id = SelectField('Categorie', validators=[Optional()], choices=[])
-    route = SelectField('Route', choices=['inbesteding', 'aanbesteding', 'subsidie'])
+    route = SelectField('Route', choices=['inbesteding', 'uitgaven', 'inkomsten'])
     id = IntegerField(widget=HiddenInput())
 
     submit = SubmitField(
@@ -227,10 +257,6 @@ class PaymentForm(FlaskForm):
 
 
 class TransactionAttachmentForm(FlaskForm):
-    allowed_extensions = [
-        'jpg', 'jpeg', 'png', 'txt', 'pdf', 'ods', 'xls', 'xlsx', 'odt', 'doc',
-        'docx'
-    ]
     data_file = FileField(
         'Bestand',
         validators=[
@@ -252,6 +278,7 @@ class TransactionAttachmentForm(FlaskForm):
             ('media', 'media'),
             ('bon', 'bon')
         ],
+        default="bon",
         validators=[DataRequired()]
     )
     payment_id = IntegerField(widget=HiddenInput())
@@ -292,7 +319,8 @@ class EditAttachmentForm(FlaskForm):
 class FunderForm(FlaskForm):
     name = StringField('Naam', validators=[DataRequired(), Length(max=120)])
     url = StringField(
-        'URL', validators=[DataRequired(), URL(), Length(max=2000)]
+        'URL', validators=[DataRequired(), URL(), Length(max=2000)],
+        default="https://voorbeeldurl.com"
     )
     id = IntegerField(widget=HiddenInput())
 
@@ -341,11 +369,11 @@ class EditAdminForm(FlaskForm):
 
 
 class EditProjectOwnerForm(FlaskForm):
-    hidden = BooleanField('Project owner verbergen in initiatiefnemersoverzicht')
+    hidden = BooleanField('Initiatiefnemer verbergen in initiatiefnemersoverzicht')
     remove_from_project = BooleanField(
-        'Verwijder project owner van dit project'
+        'Verwijder initiatiefnemer van dit initiatief'
     )
-    active = BooleanField('Project owner account is actief')
+    active = BooleanField('Initiatiefnemer account is actief')
     id = IntegerField(widget=HiddenInput())
     project_id = IntegerField(widget=HiddenInput())
 
@@ -358,11 +386,11 @@ class EditProjectOwnerForm(FlaskForm):
 
 
 class EditUserForm(FlaskForm):
-    hidden = BooleanField('Initiatiefnemer verbergen in initiatiefnemersoverzicht')
+    hidden = BooleanField('Activiteitnemer verbergen in activiteitnemersoverzicht')
     remove_from_subproject = BooleanField(
-        'Verwijder initiatiefnemer van dit project'
+        'Verwijder activiteitnemer van dit project'
     )
-    active = BooleanField('Initiatiefnemer account is actief')
+    active = BooleanField('Activiteitnemer account is actief')
     id = IntegerField(widget=HiddenInput())
     subproject_id = IntegerField(widget=HiddenInput())
 

@@ -20,3 +20,6 @@ docker/letsencrypt/
 notes.md
 .vscode/
 .python-version
+
+server_backups/*
+get_backups.sh

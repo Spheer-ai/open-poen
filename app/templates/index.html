@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
 {% set active_page = "Home" %}
 {% block head %}
   <title>Open Poen</title>
@@ -42,9 +43,9 @@
           <div class="col-4 text-center small-gutter">
             <h4 class="text-red">{{ project_data|length }}</h4>
             {% if project_data|length == 1 %}
-              <h2>buurtproject</h2>
+              <h2>buurtinitiatief</h2>
             {% else %}
-              <h2>buurtprojecten</h2>
+              <h2>buurtinitiatieven</h2>
             {% endif %}
           </div>
           <div class="col-4 text-right border-l small-gutter-left">
@@ -109,7 +110,7 @@
                                       <div>
                                         {{ add_user_form.csrf_token }}
 
-                                        {{ add_user_form.email }}
+                                        {{ wtf.form_field(add_user_form.email, class="form-control") }}
                                         {{ add_user_form.admin(**{'value': 1}) }}
                                       </div>
                                     </div>
@@ -149,10 +150,7 @@
 
                                             {% for f in edit_admin_form %}
                                               {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' %}
-                                                <div>
-                                                  {{ f }}
-                                                  {{ f.label }}
-                                                </div>
+                                                {{ wtf.form_field(f, class="form-control") }}
                                               {% endif %}
                                             {% endfor %}
                                           </div>
@@ -181,18 +179,18 @@
 
                 <div class="col-12">
                   <!-- Button trigger modal -->
-                  <button type="button" class="btn amounts-half-card w-100 bg-green-light text-white" data-toggle="modal" data-target="#project-toevoegen">
-                    <h1>project toevoegen</h1>
+                  <button type="button" class="btn amounts-half-card w-100 bg-green-light text-white" data-toggle="modal" data-target="#modal-project-toevoegen">
+                    <h1>initiatief toevoegen</h1>
                     <h5>+</h5>
                   </button>
 
                   <!-- Modal -->
-                  <div class="modal fade" id="project-toevoegen" tabindex="-1" role="dialog" aria-labelledby="projectToevoegenLabel" aria-hidden="true">
+                  <div class="modal fade" id="modal-project-toevoegen" tabindex="-1" role="dialog" aria-labelledby="projectToevoegenLabel" aria-hidden="true">
                     <div class="modal-dialog" role="document">
                       <div class="modal-content">
                         <form method="POST">
                           <div class="modal-header">
-                            <h5 class="modal-title" id="projectToevoegenLabel">Project Toevoegen</h5>
+                            <h5 class="modal-title" id="projectToevoegenLabel">Initiatief Toevoegen</h5>
                             <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
                               <span aria-hidden="true">&times;</span>
                             </button>
@@ -204,9 +202,7 @@
                               {% for f in project_form %}
                                 {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' and f.label.text != 'IBAN' %}
                                   <div>
-                                    {{ f.label }}
-                                    <br>
-                                    {{ f }}
+                                    {{ wtf.form_field(f, class="form-control") }}
                                     <br>
                                     <br>
                                   </div>
@@ -233,7 +229,7 @@
                 <a class="card-button" role="button" href="{{ url_for('project', project_id=project.id) }}">
                   <div class="amounts-card bg-green-light">
                     {% if project.hidden %}
-                      <p><i>Dit project is verborgen en dus niet te zien door het publiek</i><p>
+                      <p><i>Dit initiatief is verborgen en dus niet te zien door het publiek</i><p>
                     {% endif %}
                     <div class="amounts-card-title">
                       <h1 class="text-center">{{ project.name }}</h1>
@@ -253,10 +249,10 @@
                       </div>
                     </div>
                     {% if project.budget %}
-                      <h3 class="text-center totaal">totaal {{ project.budget }}</h3>
-                      <p class="text-center">banksaldo {{ project.amounts.awarded_str }}</p>
+                      <h3 class="text-center totaal">budget {{ project.budget }}</h3>
+                      <p class="text-center">waarvan ontvangen {{ project.amounts.awarded_str }}</p>
                     {% else %}
-                      <h3 class="text-center totaal">totaal {{ project.amounts.awarded_str }}</h3>
+                      <h3 class="text-center totaal">ontvangen inkomsten {{ project.amounts.awarded_str }}</h3>
                     {% endif %}
                   </div>
                 </a>
@@ -279,4 +275,12 @@
       </div>
     </div>
   </div>
+{% endblock %}
+{% block scripts %}
+  {% if modal_id is not none %}
+    <script>
+      window.modal_id = {{ modal_id|safe }};
+    </script>
+  {% endif %}
+  {{ super() }}
 {% endblock %}

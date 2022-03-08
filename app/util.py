@@ -16,6 +16,7 @@ from app import app, db
 from app.email import send_invite
 from app.models import Payment, Project, Subproject, IBAN, User
 
+from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 from bunq.sdk.context.bunq_context import ApiContext
 from bunq.sdk.context.api_environment_type import ApiEnvironmentType
@@ -43,7 +44,7 @@ def process_bunq_oauth_callback(request, current_user):
         )
     except Exception as e:
         flash(
-            '<span class="text-default-red">Bunq account koppelen aan het project '
+            '<span class="text-default-red">Bunq account koppelen aan het initiatief '
             ' is mislukt. Probeer het later nog een keer of neem contact '
             'op met <a href="mailto:info@openpoen.nl>info@openpoen.nl</a>.'
         )
@@ -100,11 +101,11 @@ def process_bunq_oauth_callback(request, current_user):
 
                     flash(
                         '<span class="text-default-green">Bunq account succesvol '
-                        'gekoppeld aan project "%s". De transacties '
+                        'gekoppeld aan initiatief "%s". De transacties '
                         'worden nu op de achtergrond binnengehaald. '
-                        'Bewerk het nieuwe project om aan te geven welk '
-                        'IBAN bij het project hoort. Maak nieuwe '
-                        'subprojecten aan en koppel ook daar de IBANs die '
+                        'Bewerk het nieuwe initiatief om aan te geven welk '
+                        'IBAN bij het initiatief hoort. Maak nieuwe '
+                        'activiteiten aan en koppel ook daar de IBANs die '
                         'daarbij horen.</span>' % (
                             project.name
                         )
@@ -112,7 +113,7 @@ def process_bunq_oauth_callback(request, current_user):
                 else:
                     flash(
                         '<span class="text-default-red">Bunq account koppelen aan '
-                        'het project is mislukt. Probeer het later nog '
+                        'het initiatief is mislukt. Probeer het later nog '
                         'een keer of neem contact op met '
                         '<a href="mailto:info@openpoen.nl>info@openpoen.nl'
                         '</a>.'
@@ -275,7 +276,10 @@ def get_new_payments(project_id):
                             del payment['batch_id']
 
                         p = Payment(**payment)
-                        p.route = 'subsidie'
+                        if float(p.amount_value.replace(",", ".")) > 0:
+                            p.route = 'inkomsten'
+                        else:
+                            p.route = 'uitgaven'
                         db.session.add(p)
                         db.session.commit()
                         new_payments_count += 1
@@ -326,69 +330,30 @@ def format_currency(num, currency_symbol='€ '):
 
 def calculate_project_amounts(project_id):
     project = Project.query.get(project_id)
+    subprojects = Subproject.query.filter_by(project_id=project_id).all()
+    payments = Payment.query.filter(or_(
+        Payment.project_id == project_id,
+        Payment.subproject_id.in_([x.id for x in subprojects])
+    )).all()
 
-    # Calculate amounts awarded
-    subproject_ibans = [s.iban for s in project.subprojects]
-    project_awarded = 0
-    # If the project has payments then add the incoming/positive
-    # payments, but skip the incoming/positive payments from
-    # subprojects as we don't want to count them double
-    if len(list(project.payments)) > 0:
-        for payment in project.payments:
-            if payment.amount_value > 0:
-                if payment.counterparty_alias_value in subproject_ibans:
-                    continue
-                else:
-                    project_awarded += payment.amount_value
-
-    # Also add any incoming/positive payments for all subprojects, which
-    # can come from external IBANs or by manually adding transactions
-    if project.contains_subprojects:
-        subprojects = Subproject.query.filter_by(project_id=project_id).all()
-        for subproject in subprojects:
-            if len(list(subproject.payments)) > 0:
-                for payment in subproject.payments:
-                    if payment.amount_value > 0:
-                        # If there is a project IBAN then only add
-                        # payments if they don't come from the project
-                        # IBAN to make sure that they aren't counted
-                        # double
-                        if project.iban:
-                            if payment.counterparty_alias_value != project.iban:
-                                project_awarded += payment.amount_value
-                        # If there is no project IBAN simply add all
-                        # incoming/positive payments
-                        else:
-                            project_awarded += payment.amount_value
+    project_awarded, aanbesteding, inbesteding = 0, 0, 0
+    project_awarded += sum([x.amount_value for x in payments if x.route == "inkomsten"])
+    # Make spent a positive number to make the output of this function consistent with
+    # previous versions.
+    aanbesteding += -sum([x.amount_value for x in payments if x.route == "uitgaven"])
+    inbesteding += -sum([x.amount_value for x in payments if x.route == "inbesteding"])
+    
+    if project.budget:
+        spent = aanbesteding + inbesteding
+    else:
+        spent = aanbesteding
 
     amounts = {
         'id': project.id,
         'awarded': project_awarded,
         'awarded_str': format_currency(project_awarded),
-        'spent': 0
+        'spent': spent
     }
-
-    # Calculate amounts spent
-    if project.contains_subprojects:
-        subprojects = Subproject.query.filter_by(project_id=project_id).all()
-        for subproject in subprojects:
-            subproject_spent = 0
-            for payment in subproject.payments:
-                if payment.amount_value < 0:
-                    # If there is a project IBAN then only add payments
-                    # if they don't go to the project IBAN to make sure
-                    # that they aren't counted double
-                    if subproject.project.iban:
-                        if payment.counterparty_alias_value != subproject.project.iban:
-                            amounts['spent']+= abs(payment.amount_value)
-                    # If there is no project IBAN simply add all
-                    # outgoing/negative payments
-                    else:
-                        amounts['spent']+= abs(payment.amount_value)
-    else:
-        for payment in project.payments:
-            if payment.amount_value < 0:
-                amounts['spent'] += abs(payment.amount_value)
 
     # Calculate percentage spent
     denominator = amounts['awarded']
@@ -409,11 +374,11 @@ def calculate_project_amounts(project_id):
     amounts['spent_str'] = format_currency(amounts['spent'])
 
     amounts['left_str'] = format_currency(
-        round(amounts['awarded']) - round(amounts['spent'])
+        round(amounts['awarded'] - amounts['spent'])
     )
     if project.budget:
         amounts['left_str'] = format_currency(
-            round(project.budget) - round(amounts['spent'])
+            round(project.budget - amounts['spent'])
         )
 
     return amounts
@@ -421,62 +386,53 @@ def calculate_project_amounts(project_id):
 
 def calculate_subproject_amounts(subproject_id):
     subproject = Subproject.query.get(subproject_id)
+    payments = Payment.query.filter(
+        Payment.subproject_id == subproject.id
+    ).all()
 
-    # Calculate amounts awarded
-    subproject_awarded = 0
-    if len(list(subproject.payments)) > 0:
-        for payment in subproject.payments:
-            if payment.amount_value > 0:
-                subproject_awarded += payment.amount_value
+    subproject_awarded, aanbesteding, inbesteding = 0, 0, 0
+    subproject_awarded += sum([x.amount_value for x in payments if x.route == "inkomsten"])
+    # Make spent a positive number to make the output of this function consistent with
+    # previous versions.
+    aanbesteding += -sum([x.amount_value for x in payments if x.route == "uitgaven"])
+    inbesteding += -sum([x.amount_value for x in payments if x.route == "inbesteding"])
+    
+    if subproject.budget:
+        spent = aanbesteding + inbesteding
+    else:
+        spent = aanbesteding
 
     amounts = {
         'id': subproject.id,
         'awarded': subproject_awarded,
         'awarded_str': format_currency(subproject_awarded),
-        'spent': 0
+        'spent': spent
     }
 
-    # Calculate amounts spent
-    subproject_spent = 0
-    for payment in subproject.payments:
-        if payment.amount_value < 0:
-            # If there is a project IBAN then only add payments
-            # if they don't go to the project IBAN to make sure
-            # that they aren't counted double
-            if subproject.project.iban:
-                if payment.counterparty_alias_value != subproject.project.iban:
-                    amounts['spent']+= abs(payment.amount_value)
-            # If there is no project IBAN simply add all
-            # outgoing/negative payments
-            else:
-                amounts['spent']+= abs(payment.amount_value)
-
     # Calculate percentage spent
-    if amounts['awarded'] == 0:
+    denominator = amounts['awarded']
+    if subproject.budget:
+        denominator = subproject.budget
+
+    if denominator == 0:
         amounts['percentage_spent_str'] = (
             format_percent(0)
         )
     else:
         amounts['percentage_spent_str'] = (
             format_percent(
-                amounts['spent'] / amounts['awarded']
+                amounts['spent'] / denominator
             )
         )
-        if subproject.budget:
-            amounts['percentage_spent_str'] = (
-                format_percent(
-                    amounts['spent'] / subproject.budget
-                )
-            )
 
     amounts['spent_str'] = format_currency(amounts['spent'])
 
     amounts['left_str'] = format_currency(
-        round(amounts['awarded']) - round(amounts['spent'])
+        round(amounts['awarded'] - amounts['spent'])
     )
     if subproject.budget:
         amounts['left_str'] = format_currency(
-            round(subproject.budget) - round(amounts['spent'])
+            round(subproject.budget - amounts['spent'])
         )
 
     return amounts
@@ -509,6 +465,13 @@ def flash_form_errors(form, request):
             )
 
 
+def validate_on_submit(form, request):
+    if form_in_request(form, request):
+        return form.validate_on_submit()
+    else:
+        return False
+
+
 def _set_user_role(user, admin=False, project_id=0, subproject_id=0):
     if admin:
         user.admin = True
@@ -516,13 +479,13 @@ def _set_user_role(user, admin=False, project_id=0, subproject_id=0):
     if project_id:
         project = Project.query.get(project_id)
         if user in project.users:
-            raise ValueError('Gebruiker niet toegevoegd: deze gebruiker was al project owner van dit project')
+            raise ValueError('Gebruiker niet toegevoegd: deze gebruiker was al initiatiefnemer van dit initiatief')
         project.users.append(user)
         db.session.commit()
     if subproject_id:
         subproject = Subproject.query.get(subproject_id)
         if user in subproject.users:
-            raise ValueError('Gebruiker niet toegevoegd: deze gebruiker was al project owner van dit project')
+            raise ValueError('Gebruiker niet toegevoegd: deze gebruiker was al activiteitnemer van deze activiteit')
         subproject.users.append(user)
         db.session.commit()
 
@@ -543,6 +506,7 @@ def add_user(email, admin=False, project_id=0, subproject_id=0):
 
         # Send the new user an invitation email
         send_invite(user)
+
 
 def get_export_timestamp():
     return datetime.now(
