@@ -153,17 +153,14 @@ class User(UserMixin, db.Model, DefaultCRUD):
     def __repr__(self):
         return "<User {}>".format(self.email)
 
-    @property
-    def redirect_after_edit(self):
-        return redirect(url_for("index"))
-
-    @property
-    def redirect_after_create(self):
-        return redirect(url_for("index"))
-
-    @property
-    def redirect_after_delete(self):
-        return redirect(url_for("index"))
+    def update(self, data):
+        if data.get("remove_from_project"):
+            self.projects.remove(Project.query.get(data["project_id"]))
+            db.session.commit()
+        else:
+            del data["remove_from_project"]
+            del data["project_id"]
+            return super(User, self).update(data)
 
     @property
     def message_after_edit(self):
@@ -240,18 +237,6 @@ class Project(db.Model, DefaultCRUD):
         return select_options
 
     @property
-    def redirect_after_edit(self):
-        return redirect(url_for("project", project_id=self.id))
-
-    @property
-    def redirect_after_create(self):
-        return redirect(url_for("index"))
-
-    @property
-    def redirect_after_delete(self):
-        return redirect(url_for("index"))
-
-    @property
     def message_after_edit(self):
         return f"Initiatief {self.name} is aangepast."
 
@@ -319,20 +304,6 @@ class Subproject(db.Model, DefaultCRUD):
     def message_after_delete(self):
         return f"Activiteit {self.name} is verwijderd."
 
-    @property
-    def redirect_after_edit(self):
-        return redirect(
-            url_for("subproject", project_id=self.project_id, subproject_id=self.id)
-        )
-
-    @property
-    def redirect_after_create(self):
-        return redirect(url_for("project", project_id=self.project_id))
-
-    @property
-    def redirect_after_delete(self):
-        return redirect(url_for("project", project_id=self.project_id))
-
     def message_after_error(self, error, data):
         if type(error) == IntegrityError:
             return f"Aanpassen mislukt. De naam {data['name']} is al gebruikt voor een andere activiteit in dit project."
@@ -355,15 +326,6 @@ class DebitCard(db.Model, DefaultCRUD):
     @property
     def message_after_create(self):
         return f"Betaalpas {self.card_number} is toegevoegd."
-
-    @property
-    def redirect_after_edit(self):
-        project_id = self.project_id if self.project_id else self.last_used_project_id
-        return redirect(url_for("project", project_id=project_id))
-
-    @property
-    def redirect_after_create(self):
-        return redirect(url_for("project", project_id=self.project_id))
 
     @classmethod
     def create(cls, data):
@@ -486,18 +448,6 @@ class Funder(db.Model, DefaultCRUD):
     name = db.Column(db.String(120), index=True)
     url = db.Column(db.String(2000))
     images = db.relationship("File", secondary=funder_image, lazy="dynamic")
-
-    @property
-    def redirect_after_edit(self):
-        return redirect(url_for("project", project_id=self.project_id))
-
-    @property
-    def redirect_after_create(self):
-        return redirect(url_for("project", project_id=self.project_id))
-
-    @property
-    def redirect_after_delete(self):
-        return redirect(url_for("project", project_id=self.project_id))
 
     @property
     def message_after_edit(self):

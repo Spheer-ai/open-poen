@@ -12,6 +12,7 @@ from app import app, db
 from app.controllers.funder import (
     FunderController,
     ProjectController,
+    ProjectOwnerController,
     SubprojectProjectController,
     SubprojectSubprojectController,
 )
@@ -286,17 +287,17 @@ def project(project_id):
 
     # FUNDER
     funder_controller = FunderController(project)
-    redirect = funder_controller.process_forms()
-    if redirect:
-        return redirect
+    controller_redirect = funder_controller.process_forms()
+    if controller_redirect:
+        return controller_redirect
     funder_forms = funder_controller.get_forms()
     modal_id = funder_controller.get_modal_ids(modal_id)
 
     # SUBPROJECT
     subproject_controller = SubprojectProjectController(project)
-    redirect = subproject_controller.process_forms()
-    if redirect:
-        return redirect
+    controller_redirect = subproject_controller.process_forms()
+    if controller_redirect:
+        return controller_redirect
     subproject_form = subproject_controller.get_forms()
     modal_id = subproject_controller.get_modal_ids(modal_id)
 
@@ -414,55 +415,14 @@ def project(project_id):
     )
 
     # PROJECT OWNER
-    # TODO: This really should be refactored to use process_form.
-    # --------------------------------------------------------------------------------
-    edit_project_owner_form = EditProjectOwnerForm(prefix="edit_project_owner_form")
-
-    if util.validate_on_submit(edit_project_owner_form, request):
-        edited_project_owner = User.query.filter_by(id=edit_project_owner_form.id.data)
-        new_project_owner_data = {}
-        remove_from_project = False
-        remove_from_project_id = 0
-        for f in edit_project_owner_form:
-            if f.type != "SubmitField" and f.type != "CSRFTokenField":
-                if f.short_name == "remove_from_project":
-                    remove_from_project = f.data
-                elif f.short_name == "project_id":
-                    remove_from_project_id = f.data
-                else:
-                    new_project_owner_data[f.short_name] = f.data
-
-        if len(edited_project_owner.all()):
-            edited_project_owner.update(new_project_owner_data)
-            if remove_from_project:
-                # We need to get the user using '.first()' otherwise we
-                # can't remove the project because of garbage collection
-                edited_project_owner = edited_project_owner.first()
-                edited_project_owner.projects.remove(
-                    Project.query.get(remove_from_project_id)
-                )
-
-            db.session.commit()
-            flash('<span class="text-default-green">gebruiker is bijgewerkt</span>')
-
-        return redirect(url_for("project", project_id=project.id))
-    else:
-        if len(edit_project_owner_form.errors) > 0:
-            modal_id = ["#project-beheren", "#project-owner-toevoegen"]
-
-    edit_project_owner_forms = {}
-    temp_edit_project_owner_forms = {}
-    for project_owner in project.users:
-        temp_edit_project_owner_forms[project_owner.email] = EditProjectOwnerForm(
-            prefix="edit_project_owner_form",
-            **{
-                "hidden": project_owner.hidden,
-                "active": project_owner.active,
-                "id": project_owner.id,
-                "project_id": project.id,
-            },
-        )
-    edit_project_owner_forms[project.id] = temp_edit_project_owner_forms
+    project_owner_controller = ProjectOwnerController(project)
+    controller_redirect = project_owner_controller.process()
+    if controller_redirect:
+        return controller_redirect
+    project_owner_forms = project_owner_controller.get_forms()
+    project_owner_emails = project_owner_controller.emails
+    project_owners = list(zip(project_owner_forms, project_owner_emails))
+    modal_id = project_owner_controller.get_modal_ids(modal_id)
 
     add_user_form = AddUserForm(prefix="add_user_form")
 
@@ -489,9 +449,9 @@ def project(project_id):
 
     # PROJECT
     project_controller = ProjectController(project)
-    redirect = project_controller.process_forms()
-    if redirect:
-        return redirect
+    controller_redirect = project_controller.process_forms()
+    if controller_redirect:
+        return controller_redirect
     project_form = project_controller.get_forms()
     modal_id = project_controller.get_modal_ids(modal_id)
 
@@ -604,7 +564,10 @@ def project(project_id):
         budget=budget,
         payments=payments,
         project_form=project_form,
-        edit_project_owner_forms=edit_project_owner_forms,
+        # edit_project_owner_forms=edit_project_owner_forms,
+        # project_owner_forms=project_owner_forms,
+        # project_owner_emails=project_owner_emails,
+        project_owners=project_owners,
         add_user_form=add_user_form,
         add_debit_card_form=add_debit_card_form,
         subproject_form=subproject_form,

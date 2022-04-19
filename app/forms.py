@@ -252,6 +252,7 @@ class EditProjectForm(FlaskForm):
         "Budget voor dit initiatief", validators=[Optional(), validate_budget]
     )
     id = IntegerField(widget=HiddenInput())
+    project_id = IntegerField(widget=HiddenInput())
     submit = SubmitField("Opslaan", render_kw={"class": "btn btn-info"})
     remove = SubmitField("Verwijderen", render_kw={"class": "btn btn-danger"})
 

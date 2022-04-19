@@ -305,8 +305,7 @@
                           <br>
                           <br>
 
-                          {% for project_owner_email, edit_project_owner_form in
-                          edit_project_owner_forms[project_data.id].items() %}
+                          {% for edit_project_owner_form, project_owner_email in project_owners %}
                           <div>
                             <!-- Button trigger modal -->
                             <button type="button" class="btn button-poen-small bg-grey-blue" data-toggle="modal"
@@ -1206,7 +1205,7 @@
     </div>
   </div>
 
-  {% for project_owner_email, edit_project_owner_form in edit_project_owner_forms[project_data.id].items() %}
+  {% for edit_project_owner_form, project_owner_email in project_owners %}
   <!-- Modal for 'Project owner beheren' -->
   <div class="modal fade" id="project-owner-beheren-{{ edit_project_owner_form.id.data }}" tabindex="-1" role="dialog"
     aria-labelledby="projectOwnerbeherenLabel" aria-hidden="true">

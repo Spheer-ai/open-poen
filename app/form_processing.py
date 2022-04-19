@@ -28,11 +28,13 @@ import jwt
 from flask_login import current_user
 from time import time
 from requests import ConnectionError
+from enum import Enum
+from typing import Union
 
 fields_to_exclude = ["SubmitField", "CSRFTokenField"]
 
 
-def return_redirect(project_id, subproject_id):
+def return_redirect(project_id: int, subproject_id: Union[None, int]):
     # Redirect back to clear form data
     if subproject_id:
         return redirect(
@@ -642,17 +644,28 @@ def process_bng_link_form(form):
     return redirect(oauth_url.format(bng_token))
 
 
-def process_form(form, object):
+class Status(Enum):
+    succesful_delete = 1
+    succesful_edit = 2
+    failed_edit = 3
+    succesful_create = 4
+    failed_create = 5
+    not_found = 6
+
+
+def process_form(form, object) -> Union[None, Status]:
     # TODO: Ensure that the form is not validated if an instance is removed.
     if not util.validate_on_submit(form, request):
-        return
+        return None
 
     if hasattr(form, "remove") and form.remove.data:
         instance = object.query.get(form.id.data)
+        if instance is None:
+            return Status.not_found
         db.session.delete(instance)
         db.session.commit()
         util.formatted_flash(instance.message_after_delete, color="green")
-        return instance.redirect_after_delete
+        return Status.succesful_delete
 
     data = {x.short_name: x.data for x in form if x.type not in fields_to_exclude}
 
@@ -660,29 +673,25 @@ def process_form(form, object):
         instance = object.query.get(data["id"])
         if not instance:
             util.formatted_flash(
-                "Verwijderen mislukt. Dit object bestaat niet.", color="red"
+                "Aanpassen mislukt. Dit object bestaat niet.", color="red"
             )
-            return render_template(
-                "404.html",
-                use_square_borders=app.config["USE_SQUARE_BORDERS"],
-                footer=app.config["FOOTER"],
-            )
+            return Status.not_found
         try:
             instance.update(data)
             util.formatted_flash(instance.message_after_edit, color="green")
-            return instance.redirect_after_edit
+            return Status.succesful_edit
         except (ValueError, IntegrityError) as e:
             app.logger.error(repr(e))
             db.session().rollback()
             util.formatted_flash(instance.message_after_error(e, data), color="red")
-            return instance.redirect_after_edit
+            return Status.failed_edit
     else:
         instance = object.create(data)
         try:
             util.formatted_flash(instance.message_after_create, color="green")
-            return instance.redirect_after_create
+            return Status.succesful_create
         except (ValueError, IntegrityError) as e:
             app.logger.error(repr(e))
             db.session().rollback()
             util.formatted_flash(instance.message_after_error(e, data), color="red")
-            return
+            return Status.failed_create
