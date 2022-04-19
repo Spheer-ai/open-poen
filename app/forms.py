@@ -103,7 +103,7 @@ def validate_topup_amount(form, field):
 
 
 def validate_budget(form, field):
-    if field.data < 0 and field.data is not None:
+    if field.data is not None and field.data < 0:
         raise ValidationError(
             f"{field.data} is een negatief bedrag. Een budget moet altijd positief of leeg zijn."
         )

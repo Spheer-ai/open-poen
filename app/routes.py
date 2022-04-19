@@ -9,7 +9,12 @@ from flask import (
 from flask_login import login_required, login_user, logout_user, current_user
 
 from app import app, db
-from app.controllers.funder import FunderController
+from app.controllers.funder import (
+    FunderController,
+    ProjectController,
+    SubprojectProjectController,
+    SubprojectSubprojectController,
+)
 from app.forms import (
     DebitCardForm,
     EditDebitCardForm,
@@ -242,7 +247,7 @@ def index():
 
 @app.route("/project/<project_id>", methods=["GET", "POST"])
 def project(project_id):
-    modal_id = None  # This is used to pop open a modal on page load in case of
+    modal_id = []  # This is used to pop open a modal on page load in case of
     # form errors.
     payment_id = None  # This is used to pop open the right detail view of a
     # payment in the bootstrap table of payments in case of form errors.
@@ -285,20 +290,15 @@ def project(project_id):
     if redirect:
         return redirect
     funder_forms = funder_controller.get_forms()
-    modal_id = funder_controller.get_modal_ids()
+    modal_id = funder_controller.get_modal_ids(modal_id)
 
     # SUBPROJECT
-    # --------------------------------------------------------------------------------
-    subproject_form = SubprojectForm(prefix="subproject_form")
-    form_redirect = process_form(subproject_form, Subproject)
-    if form_redirect:
-        return form_redirect
-    if len(subproject_form.errors) > 0:
-        modal_id = ["#subproject-toevoegen"]
-    else:
-        subproject_form = SubprojectForm(
-            prefix="subproject_form", **{"project_id": project.id}
-        )
+    subproject_controller = SubprojectProjectController(project)
+    redirect = subproject_controller.process_forms()
+    if redirect:
+        return redirect
+    subproject_form = subproject_controller.get_forms()
+    modal_id = subproject_controller.get_modal_ids(modal_id)
 
     # Retrieve any subprojects a normal logged in user is part of
     user_subproject_ids = []
@@ -488,30 +488,12 @@ def project(project_id):
             modal_id = ["#project-beheren", "#project-owner-toevoegen"]
 
     # PROJECT
-    # Notice how it's not allowed to change contains_subprojects after creation.
-    # --------------------------------------------------------------------------------
-    project_form = EditProjectForm(prefix="project_form")
-    project_form.contains_subprojects.data = project.contains_subprojects
-    form_redirect = process_form(project_form, Project)
-    if form_redirect:
-        return form_redirect
-    if len(project_form.errors) > 0:
-        modal_id = ["#project-beheren"]
-
-    if not util.form_in_request(project_form, request):
-        project_form = EditProjectForm(
-            prefix="project_form",
-            **{
-                "name": project.name,
-                "description": project.description,
-                "hidden": project.hidden,
-                "hidden_sponsors": project.hidden_sponsors,
-                "budget": project.budget,
-                "id": project.id,
-                "contains_subprojects": project.contains_subprojects,
-            },
-        )
-    project_form.contains_subprojects.render_kw = {"disabled": ""}
+    project_controller = ProjectController(project)
+    redirect = project_controller.process_forms()
+    if redirect:
+        return redirect
+    project_form = project_controller.get_forms()
+    modal_id = project_controller.get_modal_ids(modal_id)
 
     # DEBIT CARD
     # --------------------------------------------------------------------------------
@@ -609,6 +591,9 @@ def project(project_id):
     if project.budget:
         budget = util.format_currency(project.budget)
 
+    if len(modal_id) == 0:
+        modal_id = None
+
     return render_template(
         "project.html",
         use_square_borders=app.config["USE_SQUARE_BORDERS"],
@@ -644,7 +629,7 @@ def project(project_id):
 
 @app.route("/project/<project_id>/subproject/<subproject_id>", methods=["GET", "POST"])
 def subproject(project_id, subproject_id):
-    modal_id = None  # This is used to pop open a modal on page load in case of
+    modal_id = []  # This is used to pop open a modal on page load in case of
     # form errors.
     payment_id = None  # This is used to pop open the right detail view of a
     # payment in the bootstrap table of payments in case of form errors.
@@ -678,25 +663,12 @@ def subproject(project_id, subproject_id):
         )
 
     # SUBPROJECT
-    # --------------------------------------------------------------------------------
-    subproject_form = SubprojectForm(prefix="subproject_form")
-    form_redirect = process_form(subproject_form, Subproject)
-    if form_redirect:
-        return form_redirect
-    if len(subproject_form.errors) > 0:
-        modal_id = ["#subproject-beheren"]
-    else:
-        subproject_form = SubprojectForm(
-            prefix="subproject_form",
-            **{
-                "name": subproject.name,
-                "description": subproject.description,
-                "hidden": subproject.hidden,
-                "budget": subproject.budget,
-                "project_id": subproject.project.id,
-                "id": subproject.id,
-            },
-        )
+    subproject_controller = SubprojectSubprojectController(subproject)
+    redirect = subproject_controller.process_forms()
+    if redirect:
+        return redirect
+    subproject_form = subproject_controller.get_forms()
+    modal_id = subproject_controller.get_modal_ids(modal_id)
 
     # Retrieve the subproject id a normal logged in user is part of
     user_subproject_ids = []
@@ -878,6 +850,9 @@ def subproject(project_id, subproject_id):
     budget = ""
     if subproject.budget:
         budget = util.format_currency(subproject.budget)
+
+    if len(modal_id) == 0:
+        modal_id = None
 
     return render_template(
         "subproject.html",

@@ -643,6 +643,7 @@ def process_bng_link_form(form):
 
 
 def process_form(form, object):
+    # TODO: Ensure that the form is not validated if an instance is removed.
     if not util.validate_on_submit(form, request):
         return
 
