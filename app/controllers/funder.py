@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
-from typing import Union, List
+from typing import Union, List, Dict
 from app.forms import EditProjectForm, EditProjectOwnerForm, FunderForm, SubprojectForm
 from app.form_processing import process_form, Status, return_redirect
 from app.models import Funder, Subproject, Project, User
 import re
-from flask import request
+from flask import request, Response
 from flask.templating import render_template
 from app import app
 from flask_wtf import FlaskForm
@@ -28,15 +28,17 @@ class Controller(ABC):
         pass
 
     @abstractmethod
-    def process_forms(self):
+    def process_forms(self) -> Union[None, Response]:
         pass
 
     @abstractmethod
-    def get_modal_ids(self):
+    def get_modal_ids(self, modals: List[str]) -> List[str]:
         pass
 
 
-def create_redirects(project_id: int, subproject_id: Union[None, int]):
+def create_redirects(
+    project_id: int, subproject_id: Union[None, int]
+) -> Dict[Union[None, Status], Union[None, Response]]:
     redirects = dict.fromkeys(
         [
             Status.succesful_delete,
@@ -80,7 +82,7 @@ class FunderController(Controller):
             id = data["id"]
             forms[id] = FunderForm(prefix=f"edit_funder_form_{id}", **data)
 
-        # If a funder has previously been edited with an error, we have to insert it.
+        # If a funder has previously beeformsn edited with an error, we have to insert it.
         if len(self.edit_form.errors) > 0:
             forms[self.get_id_of_submitted_form] = self.edit_form
 
@@ -197,7 +199,7 @@ class ProjectOwnerController(Controller):
         self.project = project
         self.form = EditProjectOwnerForm(prefix="edit_project_owner_form")
         self.redirects = create_redirects(self.project.id, None)
-        self.emails = []
+        self.emails: List[str] = []
 
     def process(self):
         status = process_form(self.form, User)
@@ -210,7 +212,7 @@ class ProjectOwnerController(Controller):
             forms.append(EditProjectOwnerForm(prefix="edit_project_owner_form", **data))
             self.emails.append(data["email"])
         # Not inserting the form with an error because this shouldn't be able to happen.
-        # See FunderController.
+        # See FunderController on how it should actually be done.
         return forms
 
     def process_forms(self):

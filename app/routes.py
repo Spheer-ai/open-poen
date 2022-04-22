@@ -1,14 +1,17 @@
+import json
+
 from flask import (
-    render_template,
-    redirect,
-    url_for,
     flash,
+    redirect,
+    render_template,
     request,
     send_from_directory,
+    url_for,
 )
-from flask_login import login_required, login_user, logout_user, current_user
+from flask_login import current_user, login_required, login_user, logout_user
 
-from app import app, db
+from app import app, db, util
+from app.bng import get_bng_info, get_bng_payments, process_bng_callback
 from app.controllers.funder import (
     FunderController,
     ProjectController,
@@ -16,58 +19,55 @@ from app.controllers.funder import (
     SubprojectProjectController,
     SubprojectSubprojectController,
 )
-from app.forms import (
-    DebitCardForm,
-    EditDebitCardForm,
-    ResetPasswordRequestForm,
-    ResetPasswordForm,
-    LoginForm,
-    NewProjectForm,
-    EditProjectForm,
-    SubprojectForm,
-    TransactionAttachmentForm,
-    EditAttachmentForm,
-    FunderForm,
-    AddUserForm,
-    EditAdminForm,
-    EditProjectOwnerForm,
-    EditUserForm,
-    EditProfileForm,
-    CategoryForm,
-    NewPaymentForm,
-    PaymentForm,
-    BNGLinkForm,
-)
 from app.email import send_password_reset_email
-from app.models import (
-    User,
-    Project,
-    Subproject,
-    Payment,
-    UserStory,
-    File,
-    Funder,
-    Category,
-    BNGAccount,
-    DebitCard,
-    payment_attachment,
-)
 from app.form_processing import (
+    create_edit_attachment_forms,
+    create_payment_forms,
+    process_bng_link_form,
     process_category_form,
+    process_edit_attachment_form,
     process_form,
     process_new_payment_form,
-    process_payment_form,
-    create_payment_forms,
-    process_transaction_attachment_form,
-    create_edit_attachment_forms,
-    process_edit_attachment_form,
-    save_attachment,
-    process_bng_link_form,
     process_new_project_form,
+    process_payment_form,
+    process_transaction_attachment_form,
+    save_attachment,
 )
-from app.bng import process_bng_callback, get_bng_info, get_bng_payments
-import json
-from app import util
+from app.forms import (
+    AddUserForm,
+    BNGLinkForm,
+    CategoryForm,
+    DebitCardForm,
+    EditAdminForm,
+    EditAttachmentForm,
+    EditDebitCardForm,
+    EditProfileForm,
+    EditProjectForm,
+    EditProjectOwnerForm,
+    EditUserForm,
+    FunderForm,
+    LoginForm,
+    NewPaymentForm,
+    NewProjectForm,
+    PaymentForm,
+    ResetPasswordForm,
+    ResetPasswordRequestForm,
+    SubprojectForm,
+    TransactionAttachmentForm,
+)
+from app.models import (
+    BNGAccount,
+    Category,
+    DebitCard,
+    File,
+    Funder,
+    Payment,
+    Project,
+    Subproject,
+    User,
+    UserStory,
+    payment_attachment,
+)
 
 
 # Add 'Cache-Control': 'private' header if users are logged in
