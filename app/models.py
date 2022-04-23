@@ -570,7 +570,7 @@ class File(db.Model):
     mediatype = db.Column(db.String(32))
 
 
-class Category(db.Model):
+class Category(db.Model, DefaultCRUD):
     id = db.Column(db.Integer, primary_key=True)
     subproject_id = db.Column(
         db.Integer, db.ForeignKey("subproject.id", ondelete="CASCADE")
@@ -581,6 +581,25 @@ class Category(db.Model):
 
     # Category names must be unique within a (sub)project
     __table_args__ = (db.UniqueConstraint("project_id", "subproject_id", "name"),)
+
+    @property
+    def message_after_edit(self):
+        return f"Categorie {self.name} is aangepast."
+
+    @property
+    def message_after_create(self):
+        return f"Categorie {self.name} is aangemaakt."
+
+    @property
+    def message_after_delete(self):
+        return f"Categorie {self.name} is verwijderd."
+
+    def message_after_edit_error(self, error, data):
+        return "Aanpassen mislukt vanwege een onbekende fout. De beheerder van Open Poen is op de hoogte gesteld."
+
+    @classmethod
+    def message_after_create_error(cls, error, data):
+        return "Aanmaken mislukt vanwege een onbekende fout. De beheerder van Open Poen is op de hoogte gesteld."
 
 
 @login_manager.user_loader

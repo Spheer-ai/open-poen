@@ -351,20 +351,20 @@
                           <br>
                           <!-- Button trigger modal -->
                           <button type="button" class="btn button-poen-small bg-grey" data-toggle="modal"
-                            data-target="#categorie-toevoegen-{{ project_data.category_form.project_id.data }}">
+                            data-target="#categorie-toevoegen">
                             categorie toevoegen
                           </button>
                           <br>
                           <br>
 
-                          {% for category_form in project_data.category_forms %}
+                          {% for category_form, category_name in project_data.category_forms %}
                           <!-- Button trigger modal -->
                           <div>
                             <button type="button" class="btn button-poen-small bg-grey-blue" data-toggle="modal"
                               data-target="#categorie-beheren-{{ category_form.id.data }}">
                               categorie beheren
                             </button>
-                            {{ category_form.name.data }}
+                            {{ category_name }}
                           </div>
                           <br>
                           {% endfor %}
@@ -1303,8 +1303,8 @@
 
   {% if not project_data['contains_subprojects'] %}
   <!-- Modal for 'Categorie toevoegen' -->
-  <div class="modal fade" id="categorie-toevoegen-{{ project_data.category_form.project_id.data }}" tabindex="-1"
-    role="dialog" aria-labelledby="categorieToevoegenLabel" aria-hidden="true">
+  <div class="modal fade" id="categorie-toevoegen" tabindex="-1" role="dialog" aria-labelledby="categorieToevoegenLabel"
+    aria-hidden="true">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <form method="POST">
@@ -1317,11 +1317,11 @@
           <div class="modal-body">
             <div>
               {{ project_data.category_form.csrf_token }}
-              {{ project_data.category_form.name }}
+              {{ wtf.form_field(project_data.category_form.name, class="form-control") }}
+              {{ project_data.category_form.project_id }}
             </div>
           </div>
           <div class="modal-footer">
-            {{ project_data.category_form.project_id }}
             <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
             {{ project_data.category_form.submit }}
           </div>
@@ -1330,7 +1330,7 @@
     </div>
   </div>
 
-  {% for category_form in project_data.category_forms %}
+  {% for category_form, category_name in project_data.category_forms %}
   <!-- Modal for categorie beheren -->
   <div class="modal fade" id="categorie-beheren-{{ category_form.id.data }}" tabindex="-1" role="dialog"
     aria-labelledby="categoriebeherenLabel" aria-hidden="true">
@@ -1349,10 +1349,7 @@
 
               {% for f in category_form %}
               {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' %}
-              <div>
-                {{ f }}
-                {{ f.label }}
-              </div>
+              {{ wtf.form_field(f, class="form-control") }}
               {% endif %}
               {% endfor %}
             </div>
@@ -1383,7 +1380,7 @@
                     </div>
                     <div class="modal-body">
                       <div>
-                        <p>Weet u zeker dat u categorie "<b>{{ category_form.name.data }}</b>" wilt verwijderen? Hiermee
+                        <p>Weet u zeker dat u categorie "<b>{{ category_name }}</b>" wilt verwijderen? Hiermee
                           wordt deze categorie ook weggehaald bij alle transacties waar de categorie aan toegevoegd is!
                         </p>
                       </div>

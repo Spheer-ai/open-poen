@@ -830,12 +830,10 @@
             </button>
           </div>
           <div class="modal-body">
-            {{ category_form.subproject_id }}
-            {{ category_form.project_id }}
             <div>
               {{ category_form.csrf_token }}
-
               {{ wtf.form_field(category_form.name, class="form-control") }}
+              {{ category_form.subproject_id }}
             </div>
           </div>
           <div class="modal-footer">

@@ -428,29 +428,15 @@ def project(project_id):
     debit_card_donuts = debit_card_controller.get_donuts()
 
     # CATEGORY
-    # --------------------------------------------------------------------------------
-    category_form_return = process_category_form(request)
-    if category_form_return:
-        return category_form_return
-
-    category_forms = []
-    if not project.contains_subprojects:
-        for category in Category.query.filter_by(project_id=project.id).order_by(
-            "name"
-        ):
-            category_forms.append(
-                CategoryForm(
-                    prefix="category_form",
-                    **{
-                        "id": category.id,
-                        "name": category.name,
-                        "project_id": project.id,
-                    },
-                )
-            )
+    category_controller = pc.Category(project)
+    controller_redirect = category_controller.process_forms()
+    if controller_redirect:
+        return controller_redirect
+    unnamed_category_forms = category_controller.get_forms()
+    edit_category_forms = list(zip(unnamed_category_forms, category_controller.names))
+    modal_id = category_controller.get_modal_ids(modal_id)
 
     # PROJECT DATA
-    # --------------------------------------------------------------------------------
     amounts = util.calculate_amounts(
         Project,
         project.id,
@@ -469,10 +455,8 @@ def project(project_id):
         "hidden_sponsors": project.hidden_sponsors,
         "amounts": amounts,
         "contains_subprojects": project.contains_subprojects,
-        "category_forms": category_forms,
-        "category_form": CategoryForm(
-            prefix="category_form", **{"project_id": project.id}
-        ),
+        "category_forms": edit_category_forms,
+        "category_form": category_controller.add_form,
     }
 
     budget = ""
