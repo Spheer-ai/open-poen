@@ -29,9 +29,16 @@ from flask_login import current_user
 from time import time
 from requests import ConnectionError
 from enum import Enum
-from typing import Union
+from typing import Callable, Union, Dict, Optional
+from flask_wtf import FlaskForm
 
-fields_to_exclude = ["SubmitField", "CSRFTokenField"]
+
+def filter_fields(form: FlaskForm) -> Dict:
+    return {
+        x.short_name: x.data
+        for x in form
+        if x.type not in ["SubmitField", "CSRFTokenField"]
+    }
 
 
 def return_redirect(project_id: int, subproject_id: Union[None, int]):
@@ -653,8 +660,14 @@ class Status(Enum):
     not_found = 6
 
 
-def process_form(form, object) -> Union[None, Status]:
+def process_form(
+    form: FlaskForm,
+    object,
+    alt_update: Optional[Callable] = None,
+    alt_create: Optional[Callable] = None,
+) -> Union[None, Status]:
     # TODO: Ensure that the form is not validated if an instance is removed.
+    # TODO: Type hint for object argument.
     if not util.validate_on_submit(form, request):
         return None
 
@@ -667,7 +680,7 @@ def process_form(form, object) -> Union[None, Status]:
         util.formatted_flash(instance.message_after_delete, color="green")
         return Status.succesful_delete
 
-    data = {x.short_name: x.data for x in form if x.type not in fields_to_exclude}
+    data = filter_fields(form)
 
     if hasattr(form, "id") and form.id.data is not None:
         instance = object.query.get(data["id"])
@@ -677,7 +690,10 @@ def process_form(form, object) -> Union[None, Status]:
             )
             return Status.not_found
         try:
-            instance.update(data)
+            if alt_update is not None:
+                alt_update(instance, **data)  # Executes an instance method.
+            else:
+                instance.update(data)
             util.formatted_flash(instance.message_after_edit, color="green")
             return Status.succesful_edit
         except (ValueError, IntegrityError) as e:
@@ -686,12 +702,16 @@ def process_form(form, object) -> Union[None, Status]:
             util.formatted_flash(instance.message_after_error(e, data), color="red")
             return Status.failed_edit
     else:
-        instance = object.create(data)
+        if alt_create is not None:
+            instance = alt_create(**data)  # Executes a class method.
+        else:
+            instance = object.create(data)
         try:
             util.formatted_flash(instance.message_after_create, color="green")
             return Status.succesful_create
         except (ValueError, IntegrityError) as e:
             app.logger.error(repr(e))
             db.session().rollback()
+            # TODO: Add a static method for displaying an error after failing to create.
             util.formatted_flash(instance.message_after_error(e, data), color="red")
             return Status.failed_create

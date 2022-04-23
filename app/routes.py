@@ -104,10 +104,7 @@ def index():
     # form errors.
     bng_info = {}
 
-    # get_bng_payments()
-
     # ADMIN
-    # --------------------------------------------------------------------------------
     edit_admin_form = EditAdminForm(prefix="edit_admin_form")
     form_redirect = process_form(edit_admin_form, User)
     if form_redirect:
@@ -146,7 +143,6 @@ def index():
         util.flash_form_errors(add_user_form, request)
 
     # PROJECT
-    # --------------------------------------------------------------------------------
     project_form = NewProjectForm(prefix="project_form")
     form_redirect = process_new_project_form(project_form)
     if form_redirect:
@@ -155,7 +151,6 @@ def index():
         modal_id = ["#modal-project-toevoegen"]
 
     # BNG
-    # --------------------------------------------------------------------------------
     if current_user.is_authenticated:
         if current_user.admin:
             bng_info = get_bng_info(BNGAccount.query.all())
@@ -173,7 +168,6 @@ def index():
         modal_id = ["#modal-bng-koppeling-beheren"]
 
     # PROJECT DATA
-    # --------------------------------------------------------------------------------
     total_awarded = 0
     total_spent = 0
     project_data = []
@@ -406,36 +400,13 @@ def project(project_id):
 
     # PROJECT OWNER
     project_owner_controller = pc.ProjectOwner(project)
-    controller_redirect = project_owner_controller.process()
+    controller_redirect = project_owner_controller.process_forms()
     if controller_redirect:
         return controller_redirect
     project_owner_forms = project_owner_controller.get_forms()
     project_owner_emails = project_owner_controller.emails
     project_owners = list(zip(project_owner_forms, project_owner_emails))
     modal_id = project_owner_controller.get_modal_ids(modal_id)
-
-    add_user_form = AddUserForm(prefix="add_user_form")
-
-    if util.validate_on_submit(add_user_form, request):
-        new_user_data = {}
-        for f in add_user_form:
-            if f.type != "SubmitField" and f.type != "CSRFTokenField":
-                new_user_data[f.short_name] = f.data
-
-        try:
-            util.add_user(**new_user_data)
-            flash(
-                '<span class="text-default-green">"%s" is uitgenodigd als admin of '
-                "initiatiefnemer (of toegevoegd als admin of initiatiefnemer als de "
-                "gebruiker al bestond)" % (new_user_data["email"])
-            )
-        except ValueError as e:
-            flash(str(e))
-
-        return redirect(url_for("project", project_id=project.id))
-    else:
-        if len(add_user_form.errors) > 0:
-            modal_id = ["#project-beheren", "#project-owner-toevoegen"]
 
     # PROJECT
     project_controller = pc.Project(project)
@@ -554,11 +525,8 @@ def project(project_id):
         budget=budget,
         payments=payments,
         project_form=project_form,
-        # edit_project_owner_forms=edit_project_owner_forms,
-        # project_owner_forms=project_owner_forms,
-        # project_owner_emails=project_owner_emails,
         project_owners=project_owners,
-        add_user_form=add_user_form,
+        add_user_form=project_owner_controller.add_form,
         add_debit_card_form=add_debit_card_form,
         subproject_form=subproject_form,
         new_payment_form=new_payment_form,

@@ -1,7 +1,8 @@
 from app.controllers.util import Controller, create_redirects
 from app.forms import FunderForm
 from app.models import Project, Funder
-from app.form_processing import process_form
+from app.form_processing import process_form, Status
+from app.util import formatted_flash
 
 
 class FunderController(Controller):

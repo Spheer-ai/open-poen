@@ -7,6 +7,8 @@ from time import time
 import jwt
 import locale
 from sqlalchemy.exc import IntegrityError
+from app.email import send_invite
+from os import urandom
 
 
 # Association table between Project and User
@@ -153,14 +155,30 @@ class User(UserMixin, db.Model, DefaultCRUD):
     def __repr__(self):
         return "<User {}>".format(self.email)
 
-    def update(self, data):
-        if data.get("remove_from_project"):
-            self.projects.remove(Project.query.get(data["project_id"]))
+    def edit_project_owner(self, remove_from_project, **kwargs):
+        if remove_from_project:
+            self.projects.remove(Project.query.get(kwargs["project_id"]))
             db.session.commit()
         else:
-            del data["remove_from_project"]
-            del data["project_id"]
-            return super(User, self).update(data)
+            del kwargs["remove_from_project"]
+            del kwargs["project_id"]
+            return super(User, self).update(kwargs)
+
+    @classmethod
+    def add_user(cls, email, admin=False, project_id=0, subproject_id=0):
+        user = cls.query.filter_by(email=email).first()
+
+        if user:
+            _set_user_role(user, admin, project_id, subproject_id)
+        if not user:
+            user = cls(email=email)
+            user.set_password(urandom(24))
+            db.session.add(user)
+            db.session.commit()
+            _set_user_role(user, admin, project_id, subproject_id)
+            send_invite(user)
+
+        return user
 
     @property
     def message_after_edit(self):
@@ -309,6 +327,28 @@ class Subproject(db.Model, DefaultCRUD):
             return f"Aanpassen mislukt. De naam {data['name']} is al gebruikt voor een andere activiteit in dit project."
         else:
             return "Aanpassen mislukt vanwege een onbekende fout. De beheerder van Open Poen is op de hoogte gesteld."
+
+
+def _set_user_role(user, admin=False, project_id=0, subproject_id=0):
+    if admin:
+        user.admin = True
+        db.session.commit()
+    if project_id:
+        project = Project.query.get(project_id)
+        if user in project.users:
+            raise ValueError(
+                "Gebruiker niet toegevoegd: deze gebruiker was al initiatiefnemer van dit initiatief"
+            )
+        project.users.append(user)
+        db.session.commit()
+    if subproject_id:
+        subproject = Subproject.query.get(subproject_id)
+        if user in subproject.users:
+            raise ValueError(
+                "Gebruiker niet toegevoegd: deze gebruiker was al activiteitnemer van deze activiteit"
+            )
+        subproject.users.append(user)
+        db.session.commit()
 
 
 # TODO: Use this for BNG.

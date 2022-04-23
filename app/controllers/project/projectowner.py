@@ -1,19 +1,33 @@
 from app.controllers.util import Controller, create_redirects
-from app.forms import EditProjectOwnerForm
+from app.forms import AddUserForm, EditProjectOwnerForm
 from app.models import Project, User
-from app.form_processing import process_form
+from app.form_processing import filter_fields, process_form, Status
 from typing import List
+
+from app.util import formatted_flash, validate_on_submit, add_user
+from flask import request
 
 
 class ProjectOwnerController(Controller):
     def __init__(self, project: Project):
         self.project = project
-        self.form = EditProjectOwnerForm(prefix="edit_project_owner_form")
+        # Using two different forms: AddUserForm and EditProjectOwnerForm. In my
+        # opinion, there should be only one form to edit the User model...
+        self.add_form = AddUserForm(prefix="add_user_form")
+        self.edit_form = EditProjectOwnerForm(prefix="edit_project_owner_form")
         self.redirects = create_redirects(self.project.id, None)
         self.emails: List[str] = []
 
-    def process(self):
-        status = process_form(self.form, User)
+    def add(self):
+        status = process_form(self.add_form, User, alt_create=User.add_user)
+        if status == Status.succesful_create:
+            formatted_flash(
+                "Gebruiker is succesvol toegevoegd als initiatiefnemer.", color="green"
+            )
+        return self.redirects[status]
+
+    def edit(self):
+        status = process_form(self.edit_form, User, alt_update=User.edit_project_owner)
         return self.redirects[status]
 
     def get_forms(self):
@@ -27,10 +41,16 @@ class ProjectOwnerController(Controller):
         return forms
 
     def process_forms(self):
-        redirect = self.process()
+        redirect = self.add()
+        if redirect:
+            return redirect
+        redirect = self.edit()
         if redirect:
             return redirect
 
     def get_modal_ids(self, modals):
-        # Not implemented. Errors shouldn't be able to happen.
+        # Not implemented for EditProjectOwnerForm. Errors shouldn't be able to happen.
+        if len(self.add_form.errors) > 0:
+            assert len(modals) == 0
+            modals.extend(["#project-beheren", "#project-owner-toevoegen"])
         return modals

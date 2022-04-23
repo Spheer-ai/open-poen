@@ -13,7 +13,7 @@ from sqlalchemy.exc import IntegrityError
 
 
 def formatted_flash(text, color):
-    return flash(f'<span class="text-default-{color}">' + text + '</span>')
+    return flash(f'<span class="text-default-{color}">' + text + "</span>")
 
 
 def human_format(num):
@@ -23,17 +23,15 @@ def human_format(num):
         num /= 1000.0
 
     if magnitude > 0:
-        return '%s%s' % (locale.format("%.1f", num), ['', 'K', 'M'][magnitude])
+        return "%s%s" % (locale.format("%.1f", num), ["", "K", "M"][magnitude])
     else:
         return locale.format("%.1f", round(num))
 
 
-def format_currency(num, currency_symbol='€ '):
-    return '%s%s' % (
+def format_currency(num, currency_symbol="€ "):
+    return "%s%s" % (
         currency_symbol,
-        locale.format(
-            "%d", round(num), grouping=True, monetary=True
-        )
+        locale.format("%d", round(num), grouping=True, monetary=True),
     )
 
 
@@ -45,9 +43,13 @@ def calculate_amounts(model, id, payments):
     # Make spent a positive number to make the output of this function consistent with
     # previous versions.
     expenses += -sum([x.transaction_amount for x in payments if x.route == "uitgaven"])
-    insourcing += -sum([x.transaction_amount for x in payments if x.route == "inbesteding"])
+    insourcing += -sum(
+        [x.transaction_amount for x in payments if x.route == "inbesteding"]
+    )
 
-    if not hasattr(instance, "budget"):  # Hack to make this function work with debit cards.
+    if not hasattr(
+        instance, "budget"
+    ):  # Hack to make this function work with debit cards.
         instance.budget = None
 
     if instance.budget:
@@ -56,39 +58,29 @@ def calculate_amounts(model, id, payments):
         spent = expenses
 
     amounts = {
-        'id': id,
-        'awarded': awarded,
-        'awarded_str': format_currency(awarded),
-        'spent': spent
+        "id": id,
+        "awarded": awarded,
+        "awarded_str": format_currency(awarded),
+        "spent": spent,
     }
 
     # Calculate percentage spent
-    denominator = amounts['awarded']
+    denominator = amounts["awarded"]
     if instance.budget:
         denominator = instance.budget
 
     if denominator == 0:
-        amounts['percentage_spent_str'] = (
-            format_percent(0)
-        )
+        amounts["percentage_spent_str"] = format_percent(0)
         amounts["percentage"] = 0
     else:
-        amounts['percentage_spent_str'] = (
-            format_percent(
-                amounts['spent'] / denominator
-            )
-        )
-        amounts["percentage"] = round(amounts['spent'] / denominator * 100)
+        amounts["percentage_spent_str"] = format_percent(amounts["spent"] / denominator)
+        amounts["percentage"] = round(amounts["spent"] / denominator * 100)
 
-    amounts['spent_str'] = format_currency(amounts['spent'])
+    amounts["spent_str"] = format_currency(amounts["spent"])
 
-    amounts['left_str'] = format_currency(
-        round(amounts['awarded'] - amounts['spent'])
-    )
+    amounts["left_str"] = format_currency(round(amounts["awarded"] - amounts["spent"]))
     if instance.budget:
-        amounts['left_str'] = format_currency(
-            round(instance.budget - amounts['spent'])
-        )
+        amounts["left_str"] = format_currency(round(instance.budget - amounts["spent"]))
 
     return amounts
 
@@ -115,9 +107,7 @@ def flash_form_errors(form, request):
 
     for f in form:
         for error in f.errors:
-            flash(
-                '<span class="text-default-red">%s: %s</span>' % (f.label, error)
-            )
+            flash('<span class="text-default-red">%s: %s</span>' % (f.label, error))
 
 
 def validate_on_submit(form, request):
@@ -134,13 +124,17 @@ def _set_user_role(user, admin=False, project_id=0, subproject_id=0):
     if project_id:
         project = Project.query.get(project_id)
         if user in project.users:
-            raise ValueError('Gebruiker niet toegevoegd: deze gebruiker was al initiatiefnemer van dit initiatief')
+            raise ValueError(
+                "Gebruiker niet toegevoegd: deze gebruiker was al initiatiefnemer van dit initiatief"
+            )
         project.users.append(user)
         db.session.commit()
     if subproject_id:
         subproject = Subproject.query.get(subproject_id)
         if user in subproject.users:
-            raise ValueError('Gebruiker niet toegevoegd: deze gebruiker was al activiteitnemer van deze activiteit')
+            raise ValueError(
+                "Gebruiker niet toegevoegd: deze gebruiker was al activiteitnemer van deze activiteit"
+            )
         subproject.users.append(user)
         db.session.commit()
 
@@ -164,6 +158,10 @@ def add_user(email, admin=False, project_id=0, subproject_id=0):
 
 
 def get_export_timestamp():
-    return datetime.now(
-        app.config['TZ']
-    ).isoformat()[:19].replace('-', '_').replace('T', '-').replace(':', '_')
+    return (
+        datetime.now(app.config["TZ"])
+        .isoformat()[:19]
+        .replace("-", "_")
+        .replace("T", "-")
+        .replace(":", "_")
+    )
