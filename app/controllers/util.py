@@ -1,0 +1,57 @@
+import re
+from abc import ABC, abstractmethod
+from typing import Dict, List, Union
+
+from app import app
+from app.form_processing import Status, return_redirect
+from flask import Response, request
+from flask.templating import render_template
+from flask_wtf import FlaskForm
+
+
+class Controller(ABC):
+    @property
+    def get_id_of_submitted_form(self):
+        keys = list(request.form.keys())
+        if len(keys) > 0:
+            try:
+                id = int(re.search("\d+", keys[0]).group(0))
+            except (IndexError, AttributeError):
+                id = None
+            return id
+        else:
+            return None
+
+    @abstractmethod
+    def get_forms(self) -> Union[FlaskForm, List[FlaskForm]]:
+        pass
+
+    @abstractmethod
+    def process_forms(self) -> Union[None, Response]:
+        pass
+
+    @abstractmethod
+    def get_modal_ids(self, modals: List[str]) -> List[str]:
+        pass
+
+
+def create_redirects(
+    project_id: int, subproject_id: Union[None, int]
+) -> Dict[Union[None, Status], Union[None, Response]]:
+    redirects = dict.fromkeys(
+        [
+            Status.succesful_delete,
+            Status.succesful_edit,
+            Status.failed_edit,
+            Status.succesful_create,
+            Status.failed_create,
+        ],
+        return_redirect(project_id, subproject_id),
+    )
+    redirects[Status.not_found] = render_template(
+        "404.html",
+        use_square_borders=app.config["USE_SQUARE_BORDERS"],
+        footer=app.config["FOOTER"],
+    )
+    redirects[None] = None
+    return redirects

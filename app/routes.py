@@ -12,13 +12,8 @@ from flask_login import current_user, login_required, login_user, logout_user
 
 from app import app, db, util
 from app.bng import get_bng_info, get_bng_payments, process_bng_callback
-from app.controllers.funder import (
-    FunderController,
-    ProjectController,
-    ProjectOwnerController,
-    SubprojectProjectController,
-    SubprojectSubprojectController,
-)
+import app.controllers.project as pc
+import app.controllers.subproject as subpc
 from app.email import send_password_reset_email
 from app.form_processing import (
     create_edit_attachment_forms,
@@ -42,17 +37,13 @@ from app.forms import (
     EditAttachmentForm,
     EditDebitCardForm,
     EditProfileForm,
-    EditProjectForm,
-    EditProjectOwnerForm,
     EditUserForm,
-    FunderForm,
     LoginForm,
     NewPaymentForm,
     NewProjectForm,
     PaymentForm,
     ResetPasswordForm,
     ResetPasswordRequestForm,
-    SubprojectForm,
     TransactionAttachmentForm,
 )
 from app.models import (
@@ -60,7 +51,6 @@ from app.models import (
     Category,
     DebitCard,
     File,
-    Funder,
     Payment,
     Project,
     Subproject,
@@ -286,7 +276,7 @@ def project(project_id):
         )
 
     # FUNDER
-    funder_controller = FunderController(project)
+    funder_controller = pc.Funder(project)
     controller_redirect = funder_controller.process_forms()
     if controller_redirect:
         return controller_redirect
@@ -294,7 +284,7 @@ def project(project_id):
     modal_id = funder_controller.get_modal_ids(modal_id)
 
     # SUBPROJECT
-    subproject_controller = SubprojectProjectController(project)
+    subproject_controller = pc.Subproject(project)
     controller_redirect = subproject_controller.process_forms()
     if controller_redirect:
         return controller_redirect
@@ -415,7 +405,7 @@ def project(project_id):
     )
 
     # PROJECT OWNER
-    project_owner_controller = ProjectOwnerController(project)
+    project_owner_controller = pc.ProjectOwner(project)
     controller_redirect = project_owner_controller.process()
     if controller_redirect:
         return controller_redirect
@@ -448,7 +438,7 @@ def project(project_id):
             modal_id = ["#project-beheren", "#project-owner-toevoegen"]
 
     # PROJECT
-    project_controller = ProjectController(project)
+    project_controller = pc.Project(project)
     controller_redirect = project_controller.process_forms()
     if controller_redirect:
         return controller_redirect
@@ -626,7 +616,7 @@ def subproject(project_id, subproject_id):
         )
 
     # SUBPROJECT
-    subproject_controller = SubprojectSubprojectController(subproject)
+    subproject_controller = subpc.Subproject(subproject)
     redirect = subproject_controller.process_forms()
     if redirect:
         return redirect
