@@ -164,6 +164,15 @@ class User(UserMixin, db.Model, DefaultCRUD):
             del kwargs["project_id"]
             return super(User, self).update(kwargs)
 
+    def edit_subproject_owner(self, remove_from_subproject, **kwargs):
+        if remove_from_subproject:
+            self.subprojects.remove(Subproject.query.get(kwargs["subproject_id"]))
+            db.session.commit()
+        else:
+            del kwargs["remove_from_subproject"]
+            del kwargs["subproject_id"]
+            return super(User, self).update(kwargs)
+
     @classmethod
     def add_user(cls, email, admin=False, project_id=0, subproject_id=0):
         user = cls.query.filter_by(email=email).first()
@@ -192,8 +201,15 @@ class User(UserMixin, db.Model, DefaultCRUD):
     def message_after_delete(self):
         return f"Gebruiker {self.email} is verwijderd."
 
-    def message_after_error(self, error, data):
+    def message_after_edit_error(self, error, data):
         return "Aanpassen mislukt vanwege een onbekende fout. De beheerder van Open Poen is op de hoogte gesteld."
+
+    @classmethod
+    def message_after_create_error(cls, error, data):
+        if type(error) == ValueError:
+            return str(error)
+        else:
+            return "Aanmaken mislukt vanwege een onbekende fout. De beheerder van Open Poen is op de hoogte gesteld."
 
 
 class Project(db.Model, DefaultCRUD):
@@ -266,11 +282,18 @@ class Project(db.Model, DefaultCRUD):
     def message_after_delete(self):
         return f"Initiatief {self.name} is verwijderd."
 
-    def message_after_error(self, error, data):
+    def message_after_edit_error(self, error, data):
         if type(error) == IntegrityError:
             return f"Aanpassen mislukt. De naam {data['name']} is al gebruikt voor een ander initiatief."
         else:
             return "Aanpassen mislukt vanwege een onbekende fout. De beheerder van Open Poen is op de hoogte gesteld."
+
+    @classmethod
+    def message_after_create_error(cls, error, data):
+        if type(error) == IntegrityError:
+            return f"Aanmaken mislukt. De naam {data['name']} is al gebruikt voor een ander initiatief."
+        else:
+            return "Aanmaken mislukt vanwege een onbekende fout. De beheerder van Open Poen is op de hoogte gesteld."
 
 
 class Subproject(db.Model, DefaultCRUD):
@@ -322,11 +345,18 @@ class Subproject(db.Model, DefaultCRUD):
     def message_after_delete(self):
         return f"Activiteit {self.name} is verwijderd."
 
-    def message_after_error(self, error, data):
+    def message_after_edit_error(self, error, data):
         if type(error) == IntegrityError:
             return f"Aanpassen mislukt. De naam {data['name']} is al gebruikt voor een andere activiteit in dit project."
         else:
             return "Aanpassen mislukt vanwege een onbekende fout. De beheerder van Open Poen is op de hoogte gesteld."
+
+    @classmethod
+    def message_after_create_error(cls, error, data):
+        if type(error) == IntegrityError:
+            return f"Aanmaken mislukt. De naam {data['name']} is al gebruikt voor een andere activiteit in dit project."
+        else:
+            return "Aanmaken mislukt vanwege een onbekende fout. De beheerder van Open Poen is op de hoogte gesteld."
 
 
 def _set_user_role(user, admin=False, project_id=0, subproject_id=0):
@@ -337,7 +367,7 @@ def _set_user_role(user, admin=False, project_id=0, subproject_id=0):
         project = Project.query.get(project_id)
         if user in project.users:
             raise ValueError(
-                "Gebruiker niet toegevoegd: deze gebruiker was al initiatiefnemer van dit initiatief"
+                "Gebruiker niet toegevoegd: deze gebruiker was al initiatiefnemer van dit initiatief."
             )
         project.users.append(user)
         db.session.commit()
@@ -345,7 +375,7 @@ def _set_user_role(user, admin=False, project_id=0, subproject_id=0):
         subproject = Subproject.query.get(subproject_id)
         if user in subproject.users:
             raise ValueError(
-                "Gebruiker niet toegevoegd: deze gebruiker was al activiteitnemer van deze activiteit"
+                "Gebruiker niet toegevoegd: deze gebruiker was al activiteitnemer van deze activiteit."
             )
         subproject.users.append(user)
         db.session.commit()
@@ -396,7 +426,7 @@ class DebitCard(db.Model, DefaultCRUD):
         else:
             return super(DebitCard, self).update(data)
 
-    def message_after_error(self, error, data):
+    def message_after_edit_error(self, error, data):
         if type(error) == ValueError:
             return (
                 "Betaalpas verwijderen is mislukt. Een betaalpas mag alleen worden verwijderd, als er "
@@ -404,6 +434,16 @@ class DebitCard(db.Model, DefaultCRUD):
             )
         else:
             return "Aanpassen mislukt vanwege een onbekende fout. De beheerder van Open Poen is op de hoogte gesteld."
+
+    @classmethod
+    def message_after_create_error(cls, error, data):
+        if type(error) == ValueError:
+            return (
+                "Betaalpas verwijderen is mislukt. Een betaalpas mag alleen worden verwijderd, als er "
+                "nog geen betalingen mee zijn gedaan."
+            )
+        else:
+            return "Aanmaken mislukt vanwege een onbekende fout. De beheerder van Open Poen is op de hoogte gesteld."
 
 
 # TODO: Make this compatible with BNG payments if necessary.
@@ -501,8 +541,12 @@ class Funder(db.Model, DefaultCRUD):
     def message_after_delete(self):
         return f"Sponsor {self.name} is verwijderd."
 
-    def message_after_error(self, error, data):
+    def message_after_edit_error(self, error, data):
         return "Aanpassen mislukt vanwege een onbekende fout. De beheerder van Open Poen is op de hoogte gesteld."
+
+    @classmethod
+    def message_after_create_error(cls, error, data):
+        return "Aanmaken mislukt vanwege een onbekende fout. De beheerder van Open Poen is op de hoogte gesteld."
 
 
 # Make these BNG accounts?

@@ -699,19 +699,22 @@ def process_form(
         except (ValueError, IntegrityError) as e:
             app.logger.error(repr(e))
             db.session().rollback()
-            util.formatted_flash(instance.message_after_error(e, data), color="red")
+            util.formatted_flash(
+                instance.message_after_edit_error(e, data), color="red"
+            )
             return Status.failed_edit
     else:
-        if alt_create is not None:
-            instance = alt_create(**data)  # Executes a class method.
-        else:
-            instance = object.create(data)
         try:
+            if alt_create is not None:
+                instance = alt_create(**data)  # Executes a class method.
+            else:
+                instance = object.create(data)
             util.formatted_flash(instance.message_after_create, color="green")
             return Status.succesful_create
         except (ValueError, IntegrityError) as e:
             app.logger.error(repr(e))
             db.session().rollback()
-            # TODO: Add a static method for displaying an error after failing to create.
-            util.formatted_flash(instance.message_after_error(e, data), color="red")
+            util.formatted_flash(
+                object.message_after_create_error(e, data), color="red"
+            )
             return Status.failed_create

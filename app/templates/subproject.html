@@ -1,35 +1,41 @@
 {% extends "base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
 {% block head %}
-  <title>Open Poen - {{ subproject.name }}</title>
-  <meta property="og:title" content="Open Poen - {{ subproject.name }}" />
-  {{ super() }}
+<title>Open Poen - {{ subproject.name }}</title>
+<meta property="og:title" content="Open Poen - {{ subproject.name }}" />
+{{ super() }}
 {% endblock %}
 
 {% block body %}
-  <body onresize="createDonuts()" class="bg-grey subproject transaction{% if use_square_borders %} use-square-borders{% endif %}">
-{% endblock %}
 
-{% block content %}
+<body onresize="createDonuts()"
+  class="bg-grey subproject transaction{% if use_square_borders %} use-square-borders{% endif %}">
+  {% endblock %}
+
+  {% block content %}
   <div class="container poen-lead project-lead bg-blue-light">
     <div class="text-center poen-breadcrumb">
-      <a href="/">Home</a> > <a href="{{ url_for('project', project_id=subproject.project.id) }}">{{ subproject.project.name }}</a> > {{ subproject.name }}
+      <a href="/">Home</a> > <a href="{{ url_for('project', project_id=subproject.project.id) }}">{{
+        subproject.project.name }}</a> > {{ subproject.name }}
     </div>
 
     <div class="row">
       <div class="col-10 offset-1">
         <div class="row">
-          <div class="lead-side-col col-6 col-lg-3 col-xxl-4 order-6 order-lg-1 d-flex flex-column justify-content-between">
+          <div
+            class="lead-side-col col-6 col-lg-3 col-xxl-4 order-6 order-lg-1 d-flex flex-column justify-content-between">
             <button type="button" class="btn button-poen-small bg-grey-blue mx-auto">
-              <a href="{{ url_for('project', project_id=subproject.project.id) }}">< terug</a>
+              <a href="{{ url_for('project', project_id=subproject.project.id) }}">
+                < terug</a>
             </button>
           </div>
 
           <div class="col-12 col-lg-6 col-xxl-4 order-1 order-lg-4">
             <div class="amounts-card bg-white">
               {% if subproject.hidden %}
-                <p><i>Deze activiteit is verborgen en dus niet te zien door het publiek</i><p>
-              {% endif %}
+              <p><i>Deze activiteit is verborgen en dus niet te zien door het publiek</i>
+              <p>
+                {% endif %}
               <div class="amounts-card-title">
                 <h1 class="text-center">{{ subproject.name }}</h1>
               </div>
@@ -48,105 +54,113 @@
                 </div>
               </div>
               {% if budget %}
-                <h3 class="text-center totaal">budget {{ budget }}</h3>
+              <h3 class="text-center totaal">budget {{ budget }}</h3>
               {% else %}
-                <h3 class="text-center totaal">ontvangen inkomsten {{ amounts.awarded_str }}</h3>
+              <h3 class="text-center totaal">ontvangen inkomsten {{ amounts.awarded_str }}</h3>
               {% endif %}
 
               {% if project_owner %}
-                <br>
-                <!-- Button trigger modal -->
-                <div class="text-center">
-                  <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#subproject-beheren">
-                    activiteit beheren
-                  </button>
-                </div>
+              <br>
+              <!-- Button trigger modal -->
+              <div class="text-center">
+                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#subproject-beheren">
+                  activiteit beheren
+                </button>
+              </div>
 
-                <!-- Modal -->
-                <div class="modal fade text-left" id="subproject-beheren" tabindex="-1" role="dialog" aria-labelledby="subprojectbeherenLabel" aria-hidden="true">
-                  <div class="modal-dialog" role="document">
-                    <div class="modal-content">
-                      <form method="POST">
-                        <div class="modal-header">
-                          <h5 class="modal-title" id="subprojectbeherenLabel">Activiteit beheren</h5>
-                          <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
-                            <span aria-hidden="true">&times;</span>
+              <!-- Modal -->
+              <div class="modal fade text-left" id="subproject-beheren" tabindex="-1" role="dialog"
+                aria-labelledby="subprojectbeherenLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                  <div class="modal-content">
+                    <form method="POST">
+                      <div class="modal-header">
+                        <h5 class="modal-title" id="subprojectbeherenLabel">Activiteit beheren</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
+                          <span aria-hidden="true">&times;</span>
+                        </button>
+                      </div>
+                      <div class="modal-body">
+                        <b>Categoriën</b>
+                        <br>
+                        <br>
+                        <!-- Button trigger modal -->
+                        <button type="button" class="btn button-poen-small bg-grey" data-toggle="modal"
+                          data-target="#categorie-toevoegen">
+                          categorie toevoegen
+                        </button>
+                        <br>
+                        <br>
+
+                        {% for category_form in category_forms %}
+                        <!-- Button trigger modal -->
+                        <div>
+                          <button type="button" class="btn button-poen-small bg-grey-blue" data-toggle="modal"
+                            data-target="#categorie-beheren-{{ category_form.id.data }}">
+                            categorie beheren
                           </button>
+                          {{ category_form.name.data }}
                         </div>
-                        <div class="modal-body">
-                          <b>Categoriën</b>
-                          <br>
-                          <br>
-                          <!-- Button trigger modal -->
-                          <button type="button" class="btn button-poen-small bg-grey" data-toggle="modal" data-target="#categorie-toevoegen">
-                            categorie toevoegen
-                          </button>
-                          <br>
-                          <br>
+                        <br>
+                        {% endfor %}
 
-                          {% for category_form in category_forms %}
-                            <!-- Button trigger modal -->
-                            <div>
-                              <button type="button" class="btn button-poen-small bg-grey-blue" data-toggle="modal" data-target="#categorie-beheren-{{ category_form.id.data }}">
-                                categorie beheren
-                              </button>
-                            {{ category_form.name.data }}
-                            </div>
-                            <br>
+                        <hr>
+
+                        <div>
+                          {{ subproject_form.csrf_token }}
+
+                          {% for f in subproject_form %}
+                          {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' %}
+                          {{ wtf.form_field(f, class="form-control") }}
+                          {% endif %}
                           {% endfor %}
-
-                          <hr>
-
-                          <div>
-                            {{ subproject_form.csrf_token }}
-
-                            {% for f in subproject_form %}
-                              {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' %}
-                                {{ wtf.form_field(f, class="form-control") }}
-                              {% endif %}
-                            {% endfor %}
-                            {{ subproject_form.project_id }}
-                            {{ subproject_form.id }}
-                          </div>
+                          {{ subproject_form.project_id }}
+                          {{ subproject_form.id }}
                         </div>
-                        <div class="modal-footer">
-                          <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
-                          <!-- Button trigger modal -->
-                          <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#subproject-verwijder">
-                            Verwijderen
-                          </button>
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
+                        <!-- Button trigger modal -->
+                        <button type="button" class="btn btn-danger" data-toggle="modal"
+                          data-target="#subproject-verwijder">
+                          Verwijderen
+                        </button>
 
-                          {{ subproject_form.submit }}
+                        {{ subproject_form.submit }}
 
-                          <!-- Modal -->
-                          <div class="modal fade" id="subproject-verwijder" tabindex="-1" role="dialog" aria-labelledby="subprojectVerwijderLabel" aria-hidden="true">
-                            <div class="modal-dialog" role="document">
-                              <div class="modal-content">
-                                <form method="POST">
-                                  <div class="modal-header">
-                                    <h5 class="modal-title" id="subprojectVerwijderLabel">Activiteit Verwijderen</h5>
-                                    <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
-                                      <span aria-hidden="true">&times;</span>
-                                    </button>
+                        <!-- Modal -->
+                        <div class="modal fade" id="subproject-verwijder" tabindex="-1" role="dialog"
+                          aria-labelledby="subprojectVerwijderLabel" aria-hidden="true">
+                          <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                              <form method="POST">
+                                <div class="modal-header">
+                                  <h5 class="modal-title" id="subprojectVerwijderLabel">Activiteit Verwijderen</h5>
+                                  <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
+                                    <span aria-hidden="true">&times;</span>
+                                  </button>
+                                </div>
+                                <div class="modal-body">
+                                  <div>
+                                    <p>Weet u zeker dat u activiteit "<b>{{ subproject['name'] }}</b>" wilt verwijderen?
+                                      Als u een activiteit niet wilt tonen aan het publiek kunt u de activiteit ook
+                                      'verbergen' in plaats van verwijderen.</p>
                                   </div>
-                                  <div class="modal-body">
-                                    <div>
-                                      <p>Weet u zeker dat u activiteit "<b>{{ subproject['name'] }}</b>" wilt verwijderen? Als u een activiteit niet wilt tonen aan het publiek kunt u de activiteit ook 'verbergen' in plaats van verwijderen.</p>
-                                    </div>
-                                  </div>
-                                  <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
-                                    {{ subproject_form.remove }}
-                                  </div>
-                                </form>
-                              </div>
+                                </div>
+                                <div class="modal-footer">
+                                  <button type="button" class="btn btn-secondary"
+                                    data-dismiss="modal">Annuleren</button>
+                                  {{ subproject_form.remove }}
+                                </div>
+                              </form>
                             </div>
                           </div>
                         </div>
-                      </form>
-                    </div>
+                      </div>
+                    </form>
                   </div>
                 </div>
+              </div>
               {% endif %}
             </div>
           </div>
@@ -157,118 +171,130 @@
             <div class="card-small bg-white mx-auto d-flex">
               <ul class="card-small-list mx-auto my-auto">
                 {% for user in subproject.users|list %}
-                  {% if user.first_name and not user.hidden %}
-                    <li><a href="{{ url_for('profile', user_id=user.id) }}">{{ user.first_name }} {{ user.last_name }}</a></li>
-                  {% endif %}
+                {% if user.first_name and not user.hidden %}
+                <li><a href="{{ url_for('profile', user_id=user.id) }}">{{ user.first_name }} {{ user.last_name }}</a>
+                </li>
+                {% endif %}
                 {% endfor %}
               </ul>
             </div>
 
             {% if project_owner %}
-              <!-- Button trigger modal -->
-              <button type="button" class="btn button-poen-small bg-grey-blue mx-auto" data-toggle="modal" data-target="#activiteitnemers-beheren">activiteit&shy;nemers beheren ></button>
+            <!-- Button trigger modal -->
+            <button type="button" class="btn button-poen-small bg-grey-blue mx-auto" data-toggle="modal"
+              data-target="#activiteitnemers-beheren">activiteit&shy;nemers beheren ></button>
 
-              <!-- Modal -->
-              <div class="modal fade" id="activiteitnemers-beheren" tabindex="-1" role="dialog" aria-labelledby="activiteitnemersBeherenLabel" aria-hidden="true">
-                <div class="modal-dialog" role="document">
-                  <div class="modal-content">
-                    <div class="modal-header">
-                      <h5 class="modal-title" id="activiteitnemersBeherenLabel">Activiteitnemers Beheren</h5>
-                      <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
-                        <span aria-hidden="true">&times;</span>
+            <!-- Modal -->
+            <div class="modal fade" id="activiteitnemers-beheren" tabindex="-1" role="dialog"
+              aria-labelledby="activiteitnemersBeherenLabel" aria-hidden="true">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="activiteitnemersBeherenLabel">Activiteitnemers Beheren</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-body">
+                    <div>
+                      <!-- Button trigger modal -->
+                      <button type="button" class="btn button-poen-small bg-grey-blue" data-toggle="modal"
+                        data-target="#activiteitnemer-toevoegen">
+                        activiteitnemer toevoegen
                       </button>
-                    </div>
-                    <div class="modal-body">
+
+                      <!-- Modal -->
+                      <div class="modal fade" id="activiteitnemer-toevoegen" tabindex="-1" role="dialog"
+                        aria-labelledby="activiteitnemerToevoegenLabel" aria-hidden="true">
+                        <div class="modal-dialog" role="document">
+                          <div class="modal-content">
+                            <form method="POST">
+                              <div class="modal-header">
+                                <h5 class="modal-title" id="activiteitnemerToevoegenLabel">Activiteitnemer Toevoegen
+                                </h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
+                                  <span aria-hidden="true">&times;</span>
+                                </button>
+                              </div>
+                              <div class="modal-body">
+                                <p>Als er nog geen gebruiker bestaat met dit e-mailadres dan krijgt deze een
+                                  uitnodigingsmail met daarin een link om een wachtwoord aan te maken. Als er wel al een
+                                  gebruiker bestaat met dit e-mailadres dan krijgt deze gebruiker toegang tot deze
+                                  activiteit (er wordt daar geen e-mail over verstuurd).</p>
+                                <div>
+                                  {{ add_user_form.csrf_token }}
+
+                                  {{ wtf.form_field(add_user_form.email, class="form-control") }}
+                                  {{ add_user_form.subproject_id(**{'value': subproject.id}) }}
+                                </div>
+                              </div>
+                              <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
+                                {{ add_user_form.submit }}
+                              </div>
+                            </form>
+                          </div>
+                        </div>
+                      </div>
+
+                      <hr>
+
+                      {% for edit_user_form, user_email in subproject_owners %}
                       <div>
                         <!-- Button trigger modal -->
-                        <button type="button" class="btn button-poen-small bg-grey-blue" data-toggle="modal" data-target="#activiteitnemer-toevoegen">
-                          activiteitnemer toevoegen
+                        <button type="button" class="btn button-poen-small bg-grey-blue" data-toggle="modal"
+                          data-target="#activiteitnemer-beheren-{{ edit_user_form.id.data }}">
+                          activiteitnemer beheren
                         </button>
+                        {{ user_email }}
 
                         <!-- Modal -->
-                        <div class="modal fade" id="activiteitnemer-toevoegen" tabindex="-1" role="dialog" aria-labelledby="activiteitnemerToevoegenLabel" aria-hidden="true">
+                        <div class="modal fade" id="activiteitnemer-beheren-{{ edit_user_form.id.data }}" tabindex="-1"
+                          role="dialog" aria-labelledby="activiteitnemerbeherenLabel" aria-hidden="true">
                           <div class="modal-dialog" role="document">
                             <div class="modal-content">
                               <form method="POST">
                                 <div class="modal-header">
-                                  <h5 class="modal-title" id="activiteitnemerToevoegenLabel">Activiteitnemer Toevoegen</h5>
+                                  <h5 class="modal-title" id="activiteitnemerbeherenLabel">Activiteitnemer beheren</h5>
                                   <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
                                     <span aria-hidden="true">&times;</span>
                                   </button>
                                 </div>
                                 <div class="modal-body">
-                                  <p>Als er nog geen gebruiker bestaat met dit e-mailadres dan krijgt deze een uitnodigingsmail met daarin een link om een wachtwoord aan te maken. Als er wel al een gebruiker bestaat met dit e-mailadres dan krijgt deze gebruiker toegang tot deze activiteit (er wordt daar geen e-mail over verstuurd).</p>
                                   <div>
-                                    {{ add_user_form.csrf_token }}
+                                    {{ edit_user_form.csrf_token }}
 
-                                    {{ wtf.form_field(add_user_form.email, class="form-control") }}
-                                    {{ add_user_form.subproject_id(**{'value': subproject.id}) }}
+                                    {% for f in edit_user_form %}
+                                    {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' %}
+                                    {{ wtf.form_field(f, class="form-control") }}
+                                    {% endif %}
+                                    {% endfor %}
                                   </div>
                                 </div>
                                 <div class="modal-footer">
-                                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
-                                  {{ add_user_form.submit }}
+                                  <button type="button" class="btn btn-secondary"
+                                    data-dismiss="modal">Annuleren</button>
+                                  {{ edit_user_form.id }}
+                                  {{ edit_user_form.subproject_id }}
+                                  {{ edit_user_form.submit }}
                                 </div>
                               </form>
                             </div>
                           </div>
                         </div>
-
-                        <hr>
-
-                        {% for user_email, edit_user_form in edit_user_forms.items() %}
-                          <div>
-                            <!-- Button trigger modal -->
-                            <button type="button" class="btn button-poen-small bg-grey-blue" data-toggle="modal" data-target="#activiteitnemer-beheren-{{ edit_user_form.id.data }}">
-                              activiteitnemer beheren
-                            </button>
-                            {{ user_email }}
-
-                            <!-- Modal -->
-                            <div class="modal fade" id="activiteitnemer-beheren-{{ edit_user_form.id.data }}" tabindex="-1" role="dialog" aria-labelledby="activiteitnemerbeherenLabel" aria-hidden="true">
-                              <div class="modal-dialog" role="document">
-                                <div class="modal-content">
-                                  <form method="POST">
-                                    <div class="modal-header">
-                                      <h5 class="modal-title" id="activiteitnemerbeherenLabel">Activiteitnemer beheren</h5>
-                                      <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
-                                        <span aria-hidden="true">&times;</span>
-                                      </button>
-                                    </div>
-                                    <div class="modal-body">
-                                      <div>
-                                        {{ edit_user_form.csrf_token }}
-
-                                        {% for f in edit_user_form %}
-                                          {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' %}
-                                            {{ wtf.form_field(f, class="form-control") }}
-                                          {% endif %}
-                                        {% endfor %}
-                                      </div>
-                                    </div>
-                                    <div class="modal-footer">
-                                      <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
-                                      {{ edit_user_form.id }}
-                                      {{ edit_user_form.subproject_id }}
-                                      {{ edit_user_form.submit }}
-                                    </div>
-                                  </form>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          <br>
-                        {% endfor %}
                       </div>
+                      <br>
+                      {% endfor %}
                     </div>
-                    <div class="modal-footer">
-                      <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
-                    </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
                   </div>
                 </div>
               </div>
+            </div>
             {% else %}
-              <div class="d-none d-lg-block button-poen-small-hidden bg-blue-light mx-auto"></div>
+            <div class="d-none d-lg-block button-poen-small-hidden bg-blue-light mx-auto"></div>
             {% endif %}
           </div>
         </div>
@@ -283,12 +309,14 @@
           <div class="col-12">
             <div id="toolbar">
               <!-- Button trigger modal -->
-              <button type="button" class="btn button-poen-small button-toolbar bg-grey-blue mx-auto" data-toggle="modal" data-target="#alle-media">
-               alle media
+              <button type="button" class="btn button-poen-small button-toolbar bg-grey-blue mx-auto"
+                data-toggle="modal" data-target="#alle-media">
+                alle media
               </button>
 
               <!-- Modal -->
-              <div class="modal fade" id="alle-media" tabindex="-1" role="dialog" aria-labelledby="alleMediaLabel" aria-hidden="true">
+              <div class="modal fade" id="alle-media" tabindex="-1" role="dialog" aria-labelledby="alleMediaLabel"
+                aria-hidden="true">
                 <div class="modal-dialog wide-modal" role="document">
                   <div class="modal-content">
                     <div class="modal-header">
@@ -300,26 +328,32 @@
                     <div class="modal-body">
                       <div class="row">
                         {% for payment in subproject.payments|sort(attribute='booking_date', reverse=true) %}
-                          {% if not payment.hidden or (project_owner or user_in_subproject) %}
-                            {% for attachment in payment.attachments %}
-                              <div class="col-6 col-sm-2">
-                                <div class="attachment-div">
-                                  {% if attachment.mimetype in ['image/jpeg', 'image/jpg', 'image/png'] %}
-                                    <a class="embed-responsive embed-responsive-1by1" href="{{ url_for('upload', filename='transaction-attachment/' + attachment.filename) }}" data-toggle="lightbox" data-gallery="transaction-gallery-alle-media">
-                                      <img class="img-fluid embed-responsive-item attachment" src="{{ url_for('upload', filename='transaction-attachment/' + attachment.filename) }}">
-                                    </a>
-                                  {% else %}
-                                  <a class="embed-responsive embed-responsive-1by1" data-toggle="modal", data-target="#pdf{{attachment.id}}">
-                                    <div class="embed-responsive-item bg-grey attachment d-flex" style="word-wrap: break-word">
-                                      <i class="fas fa-file w-75 h-75 mx-auto my-auto text-blue-light"></i>
-                                      <span class="w-100 fa-layers-text text-color-main">{{ attachment.mimetype.split('/')[1] }}</span>
-                                    </div>
-                                  </a>
-                                  {% endif %}
-                                </div>
+                        {% if not payment.hidden or (project_owner or user_in_subproject) %}
+                        {% for attachment in payment.attachments %}
+                        <div class="col-6 col-sm-2">
+                          <div class="attachment-div">
+                            {% if attachment.mimetype in ['image/jpeg', 'image/jpg', 'image/png'] %}
+                            <a class="embed-responsive embed-responsive-1by1"
+                              href="{{ url_for('upload', filename='transaction-attachment/' + attachment.filename) }}"
+                              data-toggle="lightbox" data-gallery="transaction-gallery-alle-media">
+                              <img class="img-fluid embed-responsive-item attachment"
+                                src="{{ url_for('upload', filename='transaction-attachment/' + attachment.filename) }}">
+                            </a>
+                            {% else %}
+                            <a class="embed-responsive embed-responsive-1by1" data-toggle="modal" ,
+                              data-target="#pdf{{attachment.id}}">
+                              <div class="embed-responsive-item bg-grey attachment d-flex"
+                                style="word-wrap: break-word">
+                                <i class="fas fa-file w-75 h-75 mx-auto my-auto text-blue-light"></i>
+                                <span class="w-100 fa-layers-text text-color-main">{{ attachment.mimetype.split('/')[1]
+                                  }}</span>
                               </div>
-                            {% endfor %}
-                          {% endif %}
+                            </a>
+                            {% endif %}
+                          </div>
+                        </div>
+                        {% endfor %}
+                        {% endif %}
                         {% endfor %}
                       </div>
                     </div>
@@ -328,41 +362,53 @@
               </div>
 
               {% for payment in subproject.payments|sort(attribute='created', reverse=true) %}
-                {% if not payment.hidden or (project_owner or user_in_subproject) %}
-                  {% for attachment in payment.attachments %}
-                    {% if attachment.mimetype not in ['image/jpeg', 'image/jpg', 'image/png'] %}
-                      <div class="modal fade" id="pdf{{attachment.id}}" tabindex="-1" role="dialog"
-                        aria-labelledby="{{ attachment.filename }}">
-                        <div class="modal-dialog wide-modal" role="document">
-                          <div class="modal-content" style="height: 90vh">
-                            <div class="modal-body">
-                              <object data="{{ url_for('upload', filename='transaction-attachment/' + attachment.filename) }}"
-                                type="application/pdf" width="100%" height="100%">
-                                <p>Je hebt geen PDF-viewer geïnstalleerd op je browser. Klik <a
-                                    href="{{ url_for('upload', filename='transaction-attachment/' + attachment.filename) }}">hier</a> om de
-                                  PDF te downloaden.</p>
-                              </object>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    {% endif %}
-                  {% endfor %}
-                {% endif %}
+              {% if not payment.hidden or (project_owner or user_in_subproject) %}
+              {% for attachment in payment.attachments %}
+              {% if attachment.mimetype not in ['image/jpeg', 'image/jpg', 'image/png'] %}
+              <div class="modal fade" id="pdf{{attachment.id}}" tabindex="-1" role="dialog"
+                aria-labelledby="{{ attachment.filename }}">
+                <div class="modal-dialog wide-modal" role="document">
+                  <div class="modal-content" style="height: 90vh">
+                    <div class="modal-body">
+                      <object data="{{ url_for('upload', filename='transaction-attachment/' + attachment.filename) }}"
+                        type="application/pdf" width="100%" height="100%">
+                        <p>Je hebt geen PDF-viewer geïnstalleerd op je browser. Klik <a
+                            href="{{ url_for('upload', filename='transaction-attachment/' + attachment.filename) }}">hier</a>
+                          om de
+                          PDF te downloaden.</p>
+                      </object>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {% endif %}
+              {% endfor %}
+              {% endif %}
               {% endfor %}
 
             </div>
-            <table class="payment-table" data-pagination="true" data-locale="nl-NL" data-toolbar="#toolbar" data-cookie="true" data-cookie-id-table="project-{{ subproject.project.id }}-subproject-{{ subproject.id }}" data-detail-view="true" data-detail-view-by-click="true" data-detail-view-icon="false" data-detail-formatter="detailFormatter" data-show-export="true" data-export-data-type="all" data-export-types="['csv', 'txt', 'json', 'xml', 'sql']" data-export-options='{"fileName": "{{ timestamp }}-{{ subproject.project.name | replace(' ', '_') }}-{{ subproject.name | replace(' ', '_')  }}", "preventInjection": false}'>
+            <table class="payment-table" data-pagination="true" data-locale="nl-NL" data-toolbar="#toolbar"
+              data-cookie="true"
+              data-cookie-id-table="project-{{ subproject.project.id }}-subproject-{{ subproject.id }}"
+              data-detail-view="true" data-detail-view-by-click="true" data-detail-view-icon="false"
+              data-detail-formatter="detailFormatter" data-show-export="true" data-export-data-type="all"
+              data-export-types="['csv', 'txt', 'json', 'xml', 'sql']"
+              data-export-options='{"fileName": "{{ timestamp }}-{{ subproject.project.name | replace(' ', ' _') }}-{{
+              subproject.name | replace(' ', ' _') }}", "preventInjection" : false}'>
               <thead>
                 <tr>
-                  {# Hidden column used to make search work with the detailed view; NOTE: the id should always be the first column of the table #}
+                  {# Hidden column used to make search work with the detailed view; NOTE: the id should always be the
+                  first column of the table #}
                   <th data-force-hide="true" class="d-none">id</th>
-                  <th data-force-hide="true" data-sortable="true" data-field="bedrag" data-sorter="customSort">bedrag €</th>
+                  <th data-force-hide="true" data-sortable="true" data-field="bedrag" data-sorter="customSort">bedrag €
+                  </th>
                   <th data-sortable="true" data-field="betaalpas" class="d-none d-xl-table-cell">betaalpas</th>
                   <th data-sortable="true" data-field="ontvanger" class="d-none d-md-table-cell">ontvanger</th>
                   <th data-sortable="true" data-field="omschrijving" class="d-none d-sm-table-cell">omschrijving</th>
-                  <th data-sortable="true" data-field="datum" data-sorter="sortByDate" class="d-none d-xl-table-cell">datum</th>
-                  <th data-sortable="true" data-field="media" data-force-hide="true" class="d-none d-xl-table-cell">media</th>
+                  <th data-sortable="true" data-field="datum" data-sorter="sortByDate" class="d-none d-xl-table-cell">
+                    datum</th>
+                  <th data-sortable="true" data-field="media" data-force-hide="true" class="d-none d-xl-table-cell">
+                    media</th>
                   <th data-force-hide="true">details</th>
                   {# The columns below are hidden, but need to be included to make their content exportable #}
                   <th class="d-none">betaalomschrijving</th>
@@ -379,367 +425,389 @@
               </thead>
               <tbody>
                 {% for payment in subproject.payments|sort(attribute='booking_date', reverse=true) %}
-                  {% set bonnen = [] %}
-                  {% set media = [] %}
-                  {% for attachment in payment.attachments %}
-                    {% if attachment.mediatype == 'bon' %}
-                      {{ bonnen.append(attachment)|default("", True) }}
-                    {% elif attachment.mediatype == 'media' %}
-                      {{ media.append(attachment)|default("", True) }}
-                    {% endif %}
-                  {% endfor %}
+                {% set bonnen = [] %}
+                {% set media = [] %}
+                {% for attachment in payment.attachments %}
+                {% if attachment.mediatype == 'bon' %}
+                {{ bonnen.append(attachment)|default("", True) }}
+                {% elif attachment.mediatype == 'media' %}
+                {{ media.append(attachment)|default("", True) }}
+                {% endif %}
+                {% endfor %}
 
-                  {% if not payment.hidden or (project_owner or user_in_subproject) %}
-                    <tr{% if payment.type == 'MANUAL' %} class="manual-payment"{% endif %} id="payment_row_{{ payment.id }}">
-                      <td>
-                        <div class="cell">
-                          {{ payment.id }}
-                        </div>
-                      </td>
-                      <td>
-                        <div class="cell justify-content-end">
-                          {% if payment.transaction_amount >= 0 %}
-                            <h1 class="text-blue text-right">+{{ payment.get_formatted_currency() }}</h1>
-                          {% else %}
-                            <h1 class="text-red text-right">{{ payment.get_formatted_currency() }}</h1>
-                          {% endif %}
-                        </div>
-                      </td>
-                      <td>
-                        <div class="cell">
-                          {{ payment.debit_card.card_number }}
-                        </div>
-                      </td>
-                      <td>
-                        <div class="cell">
-                          {% if payment.creditor_name and payment.route == "uitgaven" %}
+                {% if not payment.hidden or (project_owner or user_in_subproject) %}
+                <tr{% if payment.type=='MANUAL' %} class="manual-payment" {% endif %} id="payment_row_{{ payment.id }}">
+                  <td>
+                    <div class="cell">
+                      {{ payment.id }}
+                    </div>
+                  </td>
+                  <td>
+                    <div class="cell justify-content-end">
+                      {% if payment.transaction_amount >= 0 %}
+                      <h1 class="text-blue text-right">+{{ payment.get_formatted_currency() }}</h1>
+                      {% else %}
+                      <h1 class="text-red text-right">{{ payment.get_formatted_currency() }}</h1>
+                      {% endif %}
+                    </div>
+                  </td>
+                  <td>
+                    <div class="cell">
+                      {{ payment.debit_card.card_number }}
+                    </div>
+                  </td>
+                  <td>
+                    <div class="cell">
+                      {% if payment.creditor_name and payment.route == "uitgaven" %}
+                      {{ payment.creditor_name }}
+                      {% elif payment.route == "inkomsten" %}
+                      Betaalpas
+                      {% endif %}
+                    </div>
+                  </td>
+                  <td>
+                    <div class="cell">
+                      {% if payment.short_user_description %}
+                      {{ payment.short_user_description }}
+                      {% else %}
+                      <i>nog niet toegevoegd</i>
+                      {% endif %}
+                    </div>
+                  </td>
+                  <td>
+                    <div class="cell">
+                      {{ payment.booking_date.strftime('%d-%m-\'%y') }}
+                    </div>
+                  </td>
+                  <td>
+                    <div class="cell justify-content-center">
+                      {% if bonnen %}
+                      <i class="fas fa-2x fa-receipt"></i></center>
+                      {% endif %}
+                      {% if bonnen and media %}
+                      &nbsp;
+                      {% endif %}
+                      {% if media %}
+                      <i class="fas fa-2x fa-camera"></i></center>
+                      {% endif %}
+                    </div>
+                  </td>
+                  <td>
+                    <div class="cell last-cell justify-content-center">
+                      <button type="button" class="btn button-detail"><i class="fas fa-chevron-down"></i></button>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="cell">
+                      {{ payment.remittance_information_structured }}
+                    </div>
+                  </td>
+                  <td>
+                    <div class="cell">
+                      {% if payment.long_user_description %}
+                      {{ payment.long_user_description }}
+                      {% endif %}
+                    </div>
+                  </td>
+                  <td>
+                    <div class="cell">
+                      {{ payment.get_export_currency() }}
+                    </div>
+                  </td>
+                  <td>
+                    <div class="cell">
+                      {{ payment.category.name }}
+                    </div>
+                  </td>
+                  <td>
+                    <div class="cell">
+                      {% if payment.creditor_account %}
+                      {{ payment.creditor_account }}
+                      {% endif %}
+                    </div>
+                  </td>
+                  <td>
+                    <div class="cell">
+                      {{ payment.route }}
+                    </div>
+                  </td>
+                  <td>
+                    <div class="cell">
+                      {% if payment.type == "MANUAL" %}
+                      handmatig
+                      {% else %}
+                      BNG
+                      {% endif %}
+                    </div>
+                  </td>
+                  <td>
+                    <div class="cell">
+                      {% if payment.hidden %}
+                      verborgen
+                      {% else %}
+                      zichtbaar
+                      {% endif %}
+                    </div>
+                  </td>
+                  <td>
+                    <div id="detail-{{ payment.id }}">
+                      <div class="detail-row">
+                        <div class="row">
+                          <div class="col-5">
+                            <b>Type</b>
+                            <br>
+                            {% if payment.type == "BNG" and payment.route == "uitgaven" %}
+                            <i>Betaling met betaalpas.</i>
+                            {% elif payment.type == "BNG" and payment.route == "inkomsten" %}
+                            <i>Topup naar betaalpas.</i>
+                            {% elif payment.type == "MANUAL" %}
+                            <i>Handmatige topup naar betaalpas.</i>
+                            {% endif %}
+                            <br>
+                            <br>
+                            <b>Betaalpas</b>
+                            <br>
+                            {{ payment.debit_card.card_number }}
+                            <br>
+                            <br>
+                            <b>Ontvanger</b>
+                            <br>
+                            {% if payment.creditor_name and payment.route == "uitgaven" %}
                             {{ payment.creditor_name }}
-                          {% elif payment.route == "inkomsten" %}
+                            {% elif not payment.creditor_name and payment.route == "uitgaven" %}
+                            <i>Niet ingevuld.</i>
+                            {% elif payment.route == "inkomsten" %}
                             Betaalpas
-                          {% endif %}
-                        </div>
-                      </td>
-                      <td>
-                        <div class="cell">
-                          {% if payment.short_user_description %}
-                            {{ payment.short_user_description }}
-                          {% else %}
-                            <i>nog niet toegevoegd</i>
-                          {% endif %}
-                        </div>
-                      </td>
-                      <td>
-                        <div class="cell">
-                          {{ payment.booking_date.strftime('%d-%m-\'%y') }}
-                        </div>
-                      </td>
-                      <td>
-                        <div class="cell justify-content-center">
-                          {% if bonnen %}
-                            <i class="fas fa-2x fa-receipt"></i></center>
-                          {% endif %}
-                          {% if bonnen and media %}
-                            &nbsp;
-                          {% endif %}
-                          {% if media %}
-                            <i class="fas fa-2x fa-camera"></i></center>
-                          {% endif %}
-                        </div>
-                      </td>
-                      <td>
-                        <div class="cell last-cell justify-content-center">
-                          <button type="button" class="btn button-detail"><i class="fas fa-chevron-down"></i></button>
-                        </div>
-                      </td>
-                      <td>
-                        <div class="cell">
-                          {{ payment.remittance_information_structured }}
-                        </div>
-                      </td>
-                      <td>
-                        <div class="cell">
-                          {% if payment.long_user_description %}
-                            {{ payment.long_user_description }}
-                          {% endif %}
-                        </div>
-                      </td>
-                      <td>
-                        <div class="cell">
-                          {{ payment.get_export_currency() }}
-                        </div>
-                      </td>
-                      <td>
-                        <div class="cell">
-                          {{ payment.category.name }}
-                        </div>
-                      </td>
-                      <td>
-                        <div class="cell">
-                          {% if payment.creditor_account %}
-                            {{ payment.creditor_account }}
-                          {% endif %}
-                        </div>
-                      </td>
-                      <td>
-                        <div class="cell">
-                          {{ payment.route }}
-                        </div>
-                      </td>
-                      <td>
-                        <div class="cell">
-                          {% if payment.type == "MANUAL" %}
-                            handmatig
-                          {% else %}
-                            BNG
-                          {% endif %}
-                        </div>
-                      </td>
-                      <td>
-                        <div class="cell">
-                          {% if payment.hidden %}
-                            verborgen
-                          {% else %}
-                            zichtbaar
-                          {% endif %}
-                        </div>
-                      </td>
-                      <td>
-                        <div id="detail-{{ payment.id }}">
-                          <div class="detail-row">
+                            {% endif %}
+                            <br>
+                            <br>
+                            {% if payment.type != 'MANUAL' %}
+                            <b>Betaal&shy;omschrijving</b>
+                            <br>
+                            {% if payment.remittance_information_structured %}
+                            {{ payment.remittance_information_structured }}
+                            {% else %}
+                            <i>geen beschrijving</i>
+                            {% endif %}
+                            <br>
+                            <br>
+                            {% endif %}
+                            {% if not (payment.id in payment_forms and 'booking_date' in payment_forms[payment.id]) %}
+                            <b>Transactiedatum</b>
+                            <br>
+                            {{ payment.booking_date.strftime('%d-%m-\'%y') }}
+                            <br>
+                            <br>
+                            {% endif %}
+                            <b>Route</b>
+                            <br>
+                            {{ payment.route }}
+                            <br>
+                            <br>
+                            <b>bedrag €</b>
+                            {% if payment.transaction_amount >= 0 %}
+                            <h6 class="text-blue">+{{ payment.get_formatted_currency() }}</h6>
+                            {% else %}
+                            <h6 class="text-red">{{ payment.get_formatted_currency() }}</h6>
+                            {% endif %}
+                            {% if payment.attachments.all() %}
+                            <br>
+                            <hr>
                             <div class="row">
-                              <div class="col-5">
-                                <b>Type</b>
-                                <br>
-                                {% if payment.type == "BNG" and payment.route == "uitgaven" %}
-                                  <i>Betaling met betaalpas.</i>
-                                {% elif payment.type == "BNG" and payment.route == "inkomsten" %}
-                                  <i>Topup naar betaalpas.</i>
-                                {% elif payment.type == "MANUAL" %}
-                                  <i>Handmatige topup naar betaalpas.</i>
-                                {% endif %}
-                                <br>
-                                <br>
-                                <b>Betaalpas</b>
-                                <br>
-                                {{ payment.debit_card.card_number }}
-                                <br>
-                                <br>
-                                <b>Ontvanger</b>
-                                <br>
-                                {% if payment.creditor_name and payment.route == "uitgaven" %}
-                                  {{ payment.creditor_name }}
-                                {% elif not payment.creditor_name and payment.route == "uitgaven" %}
-                                  <i>Niet ingevuld.</i>
-                                {% elif payment.route == "inkomsten" %}
-                                  Betaalpas
-                                {% endif %}
-                                <br>
-                                <br>
-                                {% if payment.type != 'MANUAL' %}
-                                  <b>Betaal&shy;omschrijving</b>
-                                  <br>
-                                  {% if payment.remittance_information_structured %}
-                                    {{ payment.remittance_information_structured }}
+                              {% if bonnen %}
+                              <div class="col-12">
+                                <b>Bonnen</b>
+                              </div>
+                              {% for attachment in bonnen %}
+                              <div class="col-6 col-sm-4">
+                                <div class="attachment-div">
+                                  {% if attachment.mimetype in ['image/jpeg', 'image/jpg', 'image/png'] %}
+                                  <a class="embed-responsive embed-responsive-1by1"
+                                    href="{{ url_for('upload', filename='transaction-attachment/' + attachment.filename) }}"
+                                    data-toggle="lightbox" data-gallery="transaction-gallery-{{ payment.id }}">
+                                    <img class="img-fluid embed-responsive-item attachment"
+                                      src="{{ url_for('upload', filename='transaction-attachment/' + attachment.filename) }}">
+                                  </a>
                                   {% else %}
-                                    <i>geen beschrijving</i>
-                                  {% endif %}
-                                  <br>
-                                  <br>
-                                {% endif %}
-                                {% if not (payment.id in payment_forms and 'booking_date' in payment_forms[payment.id]) %}
-                                <b>Transactiedatum</b>
-                                <br>
-                                {{ payment.booking_date.strftime('%d-%m-\'%y') }}
-                                <br>
-                                <br>
-                                {% endif %}
-                                <b>Route</b>
-                                <br>
-                                {{ payment.route }}
-                                <br>
-                                <br>
-                                <b>bedrag €</b>
-                                {% if payment.transaction_amount >= 0 %}
-                                  <h6 class="text-blue">+{{ payment.get_formatted_currency() }}</h6>
-                                {% else %}
-                                  <h6 class="text-red">{{ payment.get_formatted_currency() }}</h6>
-                                {% endif %}
-                                {% if payment.attachments.all() %}
-                                <br>
-                                <hr>
-                                <div class="row">
-                                  {% if bonnen %}
-                                    <div class="col-12">
-                                      <b>Bonnen</b>
+                                  <a class="embed-responsive embed-responsive-1by1" data-toggle="modal"
+                                    data-target="#pdf{{attachment.id}}">
+                                    <div class="embed-responsive-item bg-grey attachment d-flex"
+                                      style="word-wrap: break-word">
+                                      <i class="fas fa-file w-75 h-75 mx-auto my-auto text-blue-light"></i>
+                                      <span class="w-100 fa-layers-text text-color-main">{{
+                                        attachment.mimetype.split('/')[1] }}</span>
                                     </div>
-                                    {% for attachment in bonnen %}
-                                      <div class="col-6 col-sm-4">
-                                        <div class="attachment-div">
-                                          {% if attachment.mimetype in ['image/jpeg', 'image/jpg', 'image/png'] %}
-                                            <a class="embed-responsive embed-responsive-1by1" href="{{ url_for('upload', filename='transaction-attachment/' + attachment.filename) }}" data-toggle="lightbox" data-gallery="transaction-gallery-{{ payment.id }}">
-                                              <img class="img-fluid embed-responsive-item attachment" src="{{ url_for('upload', filename='transaction-attachment/' + attachment.filename) }}">
-                                            </a>
-                                          {% else %}
-                                            <a class="embed-responsive embed-responsive-1by1" data-toggle="modal" data-target="#pdf{{attachment.id}}">
-                                              <div class="embed-responsive-item bg-grey attachment d-flex" style="word-wrap: break-word">
-                                                <i class="fas fa-file w-75 h-75 mx-auto my-auto text-blue-light"></i>
-                                                <span class="w-100 fa-layers-text text-color-main">{{ attachment.mimetype.split('/')[1] }}</span>
-                                              </div>
-                                            </a>
-                                          {% endif %}
-
-                                          {% if project_owner or user_in_subproject %}
-                                            {% if attachment.id in edit_attachment_forms %}
-                                              <form method="post">
-                                                {{ edit_attachment_forms[attachment.id]['csrf_token'] }}
-                                                {{ edit_attachment_forms[attachment.id]['id'] }}
-                                                {{ wtf.form_field(edit_attachment_forms[attachment.id]['mediatype'], class="form-control") }}
-                                                {{ edit_attachment_forms[attachment.id]['submit'] }}
-                                              </form>
-                                              <br>
-                                              <!-- Button trigger modal -->
-                                              <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#bijlage-verwijder-{{ attachment.id }}">
-                                                Verwijderen
-                                              </button>
-                                            {% endif %}
-                                          {% endif %}
-                                        </div>
-                                      </div>
-                                    {% endfor %}
+                                  </a>
                                   {% endif %}
 
-                                  {% if media %}
-                                    <div class="col-12">
-                                      <b>Media</b>
-                                    </div>
-                                    {% for attachment in media %}
-                                      <div class="col-6 col-sm-4">
-                                        <div class="attachment-div">
-                                          {% if attachment.mimetype in ['image/jpeg', 'image/jpg', 'image/png'] %}
-                                            <a class="embed-responsive embed-responsive-1by1" href="{{ url_for('upload', filename='transaction-attachment/' + attachment.filename) }}" data-toggle="lightbox" data-gallery="transaction-gallery-{{ payment.id }}">
-                                              <img class="img-fluid embed-responsive-item attachment" src="{{ url_for('upload', filename='transaction-attachment/' + attachment.filename) }}">
-                                            </a>
-                                          {% else %}
-                                            <a class="embed-responsive embed-responsive-1by1" data-toggle="modal" data-target="#pdf{{attachment.id}}">
-                                              <div class="embed-responsive-item bg-grey attachment d-flex" style="word-wrap: break-word">
-                                                <i class="fas fa-file w-75 h-75 mx-auto my-auto text-blue-light"></i>
-                                                <span class="w-100 fa-layers-text text-color-main">{{ attachment.mimetype.split('/')[1] }}</span>
-                                              </div>
-                                            </a>
-                                          {% endif %}
-
-                                          {% if project_owner or user_in_subproject %}
-                                            {% if attachment.id in edit_attachment_forms %}
-                                              <form method="post">
-                                                {{ edit_attachment_forms[attachment.id]['csrf_token'] }}
-                                                {{ edit_attachment_forms[attachment.id]['id'] }}
-                                                {{ wtf.form_field(edit_attachment_forms[attachment.id]['mediatype'], class="form-control") }}
-                                                {{ edit_attachment_forms[attachment.id]['submit'] }}
-                                              </form>
-                                              <br>
-                                              <!-- Button trigger modal -->
-                                              <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#bijlage-verwijder-{{ attachment.id }}">
-                                                Verwijderen
-                                              </button>
-                                            {% endif %}
-                                          {% endif %}
-                                        </div>
-                                      </div>
-                                    {% endfor %}
+                                  {% if project_owner or user_in_subproject %}
+                                  {% if attachment.id in edit_attachment_forms %}
+                                  <form method="post">
+                                    {{ edit_attachment_forms[attachment.id]['csrf_token'] }}
+                                    {{ edit_attachment_forms[attachment.id]['id'] }}
+                                    {{ wtf.form_field(edit_attachment_forms[attachment.id]['mediatype'],
+                                    class="form-control") }}
+                                    {{ edit_attachment_forms[attachment.id]['submit'] }}
+                                  </form>
+                                  <br>
+                                  <!-- Button trigger modal -->
+                                  <button type="button" class="btn btn-danger" data-toggle="modal"
+                                    data-target="#bijlage-verwijder-{{ attachment.id }}">
+                                    Verwijderen
+                                  </button>
+                                  {% endif %}
                                   {% endif %}
                                 </div>
+                              </div>
+                              {% endfor %}
                               {% endif %}
+
+                              {% if media %}
+                              <div class="col-12">
+                                <b>Media</b>
                               </div>
-                              <div class="col-7">
-                                {% if payment_forms %}
-                                  <form method="POST">
-                                  {{ payment_forms[payment.id].csrf_token }}
-                                  {{ payment_forms[payment.id].id }}
-                                {% endif %}
-
-                                {% if 'booking_date' in payment_forms[payment.id] %}
-                                {{ wtf.form_field(payment_forms[payment.id]['booking_date'], class="form-control table-datepicker") }}
-                                {% endif %}
-
-                                {% if 'transaction_amount' in payment_forms[payment.id] and payment.type == "MANUAL" %}
-                                {{ wtf.form_field(payment_forms[payment.id]['transaction_amount'], class="form-control") }}
-                                {% endif %}
-
-                                {% if payment_forms %}
-                                  {{ wtf.form_field(payment_forms[payment.id]['category_id'], class="form-control") }}
-                                {% else %}
-                                  <b>Categorie</b>
-                                  <br>
-                                  {% if payment.category %}
-                                    {{ payment.category.name }}
+                              {% for attachment in media %}
+                              <div class="col-6 col-sm-4">
+                                <div class="attachment-div">
+                                  {% if attachment.mimetype in ['image/jpeg', 'image/jpg', 'image/png'] %}
+                                  <a class="embed-responsive embed-responsive-1by1"
+                                    href="{{ url_for('upload', filename='transaction-attachment/' + attachment.filename) }}"
+                                    data-toggle="lightbox" data-gallery="transaction-gallery-{{ payment.id }}">
+                                    <img class="img-fluid embed-responsive-item attachment"
+                                      src="{{ url_for('upload', filename='transaction-attachment/' + attachment.filename) }}">
+                                  </a>
                                   {% else %}
-                                    <i>Niet ingevuld.</i>
-                                  {% endif %}
-                                  <br>
-                                  <br>
-                                {% endif %}
-
-                                {% if payment.id in payment_forms %}
-                                  {{ wtf.form_field(payment_forms[payment.id]['subproject_id'], class="form-control") }}
-                                {% endif %}
-
-                                {# Show either the short or long description to not logged in visitors, otherwise allow a logger in user with access to this payment to edit the short and long descriptions #}
-                                {% if payment.id in payment_forms %}
-                                  {{ wtf.form_field(payment_forms[payment.id]['short_user_description'], class="form-control") }}
-                                  {{ wtf.form_field(payment_forms[payment.id]['long_user_description'], class="form-control") }}
-                                {% else %}
-                                  <b>Omschrijving</b>
-                                  <br>
-                                  {% if payment.long_user_description %}
-                                    {{ payment.long_user_description }}
-                                  {% elif payment.short_user_description %}
-                                    {{ payment.short_user_description }}
-                                  {% else %}
-                                    <i>Er is door de activiteitnemer nog geen beschrijving van deze transactie toegevoegd.</i>
-                                  {% endif %}
-                                  <br>
-                                  <br>
-                                {% endif %}
-
-                                {% if payment_forms %}
-                                  {% if project_owner %}
-                                  {{ wtf.form_field(payment_forms[payment.id]['hidden'], class="form-control") }}
+                                  <a class="embed-responsive embed-responsive-1by1" data-toggle="modal"
+                                    data-target="#pdf{{attachment.id}}">
+                                    <div class="embed-responsive-item bg-grey attachment d-flex"
+                                      style="word-wrap: break-word">
+                                      <i class="fas fa-file w-75 h-75 mx-auto my-auto text-blue-light"></i>
+                                      <span class="w-100 fa-layers-text text-color-main">{{
+                                        attachment.mimetype.split('/')[1] }}</span>
+                                    </div>
+                                  </a>
                                   {% endif %}
 
-                                  {{ payment_forms[payment.id].submit }}
-
-                                  {% if payment_forms[payment.id].remove %}
-                                    <!-- Button trigger modal -->
-                                    <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#transactie-verwijder-{{ payment.id }}">
-                                      Verwijderen
-                                    </button>
-                                  {% endif %}
+                                  {% if project_owner or user_in_subproject %}
+                                  {% if attachment.id in edit_attachment_forms %}
+                                  <form method="post">
+                                    {{ edit_attachment_forms[attachment.id]['csrf_token'] }}
+                                    {{ edit_attachment_forms[attachment.id]['id'] }}
+                                    {{ wtf.form_field(edit_attachment_forms[attachment.id]['mediatype'],
+                                    class="form-control") }}
+                                    {{ edit_attachment_forms[attachment.id]['submit'] }}
                                   </form>
-                                {% endif %}
-                                {% if transaction_attachment_form %}
-                                  <hr>
-                                  <b>Nieuwe media toevoegen</b>
-                                  <form method="POST" enctype="multipart/form-data">
-                                    {{ transaction_attachment_form.csrf_token }}
-                                    {% for f in transaction_attachment_form %}
-                                      {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' %}
-                                        <div>
-                                          {{ wtf.form_field(f, class="form-control") }}
-                                        </div>
-                                      {% endif %}
-                                    {% endfor %}
-                                    {{ transaction_attachment_form.payment_id(**{'value': payment.id}) }}
-                                    {{ transaction_attachment_form.submit() }}
-                                  </form>
-                                {% endif %}
+                                  <br>
+                                  <!-- Button trigger modal -->
+                                  <button type="button" class="btn btn-danger" data-toggle="modal"
+                                    data-target="#bijlage-verwijder-{{ attachment.id }}">
+                                    Verwijderen
+                                  </button>
+                                  {% endif %}
+                                  {% endif %}
+                                </div>
                               </div>
+                              {% endfor %}
+                              {% endif %}
                             </div>
+                            {% endif %}
+                          </div>
+                          <div class="col-7">
+                            {% if payment_forms %}
+                            <form method="POST">
+                              {{ payment_forms[payment.id].csrf_token }}
+                              {{ payment_forms[payment.id].id }}
+                              {% endif %}
+
+                              {% if 'booking_date' in payment_forms[payment.id] %}
+                              {{ wtf.form_field(payment_forms[payment.id]['booking_date'], class="form-control
+                              table-datepicker") }}
+                              {% endif %}
+
+                              {% if 'transaction_amount' in payment_forms[payment.id] and payment.type == "MANUAL" %}
+                              {{ wtf.form_field(payment_forms[payment.id]['transaction_amount'], class="form-control")
+                              }}
+                              {% endif %}
+
+                              {% if payment_forms %}
+                              {{ wtf.form_field(payment_forms[payment.id]['category_id'], class="form-control") }}
+                              {% else %}
+                              <b>Categorie</b>
+                              <br>
+                              {% if payment.category %}
+                              {{ payment.category.name }}
+                              {% else %}
+                              <i>Niet ingevuld.</i>
+                              {% endif %}
+                              <br>
+                              <br>
+                              {% endif %}
+
+                              {% if payment.id in payment_forms %}
+                              {{ wtf.form_field(payment_forms[payment.id]['subproject_id'], class="form-control") }}
+                              {% endif %}
+
+                              {# Show either the short or long description to not logged in visitors, otherwise allow a
+                              logger in user with access to this payment to edit the short and long descriptions #}
+                              {% if payment.id in payment_forms %}
+                              {{ wtf.form_field(payment_forms[payment.id]['short_user_description'],
+                              class="form-control") }}
+                              {{ wtf.form_field(payment_forms[payment.id]['long_user_description'],
+                              class="form-control") }}
+                              {% else %}
+                              <b>Omschrijving</b>
+                              <br>
+                              {% if payment.long_user_description %}
+                              {{ payment.long_user_description }}
+                              {% elif payment.short_user_description %}
+                              {{ payment.short_user_description }}
+                              {% else %}
+                              <i>Er is door de activiteitnemer nog geen beschrijving van deze transactie toegevoegd.</i>
+                              {% endif %}
+                              <br>
+                              <br>
+                              {% endif %}
+
+                              {% if payment_forms %}
+                              {% if project_owner %}
+                              {{ wtf.form_field(payment_forms[payment.id]['hidden'], class="form-control") }}
+                              {% endif %}
+
+                              {{ payment_forms[payment.id].submit }}
+
+                              {% if payment_forms[payment.id].remove %}
+                              <!-- Button trigger modal -->
+                              <button type="button" class="btn btn-danger" data-toggle="modal"
+                                data-target="#transactie-verwijder-{{ payment.id }}">
+                                Verwijderen
+                              </button>
+                              {% endif %}
+                            </form>
+                            {% endif %}
+                            {% if transaction_attachment_form %}
+                            <hr>
+                            <b>Nieuwe media toevoegen</b>
+                            <form method="POST" enctype="multipart/form-data">
+                              {{ transaction_attachment_form.csrf_token }}
+                              {% for f in transaction_attachment_form %}
+                              {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' %}
+                              <div>
+                                {{ wtf.form_field(f, class="form-control") }}
+                              </div>
+                              {% endif %}
+                              {% endfor %}
+                              {{ transaction_attachment_form.payment_id(**{'value': payment.id}) }}
+                              {{ transaction_attachment_form.submit() }}
+                            </form>
+                            {% endif %}
                           </div>
                         </div>
-                      </td>
-                    </tr>
+                      </div>
+                    </div>
+                  </td>
+                  </tr>
                   {% endif %}
-                {% endfor %}
+                  {% endfor %}
               </tbody>
             </table>
           </div>
@@ -749,150 +817,158 @@
   </div>
 
   {% if project_owner %}
-    <!-- Modal for 'Categorie toevoegen' -->
-    <div class="modal fade" id="categorie-toevoegen" tabindex="-1" role="dialog" aria-labelledby="categorieToevoegenLabel" aria-hidden="true">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content">
-          <form method="POST">
-            <div class="modal-header">
-              <h5 class="modal-title" id="categorieToevoegenLabel">Categorie Toevoegen</h5>
-              <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
-                <span aria-hidden="true">&times;</span>
-              </button>
-            </div>
-            <div class="modal-body">
-              {{ category_form.subproject_id }}
-              {{ category_form.project_id }}
-              <div>
-                {{ category_form.csrf_token }}
+  <!-- Modal for 'Categorie toevoegen' -->
+  <div class="modal fade" id="categorie-toevoegen" tabindex="-1" role="dialog" aria-labelledby="categorieToevoegenLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <form method="POST">
+          <div class="modal-header">
+            <h5 class="modal-title" id="categorieToevoegenLabel">Categorie Toevoegen</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            {{ category_form.subproject_id }}
+            {{ category_form.project_id }}
+            <div>
+              {{ category_form.csrf_token }}
 
-                {{ wtf.form_field(category_form.name, class="form-control") }}
-              </div>
+              {{ wtf.form_field(category_form.name, class="form-control") }}
             </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
-              {{ category_form.submit }}
-            </div>
-          </form>
-        </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
+            {{ category_form.submit }}
+          </div>
+        </form>
       </div>
     </div>
+  </div>
 
-    {% for category_form in category_forms %}
-      <!-- Modal for categorie beheren -->
-      <div class="modal fade" id="categorie-beheren-{{ category_form.id.data }}" tabindex="-1" role="dialog" aria-labelledby="categoriebeherenLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-          <div class="modal-content">
-            <form method="POST">
-              <div class="modal-header">
-                <h5 class="modal-title" id="categoriebeherenLabel">Categorie beheren</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
-                  <span aria-hidden="true">&times;</span>
-                </button>
-              </div>
-              <div class="modal-body">
-                <div>
-                  {{ category_form.csrf_token }}
-
-                  {% for f in category_form %}
-                    {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' %}
-                      {{ wtf.form_field(f, class="form-control") }}
-                    {% endif %}
-                  {% endfor %}
-                </div>
-              </div>
-              <div class="modal-footer">
-                {{ category_form.id }}
-                {{ category_form.subproject_id }}
-                {{ category_form.project_id }}
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
-                <!-- Button trigger modal -->
-                <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#categorie-verwijder-{{ category_form.id.data }}">
-                  Verwijderen
-                </button>
-
-                {{ category_form.submit }}
-
-                <!-- Modal -->
-                <div class="modal fade" id="categorie-verwijder-{{ category_form.id.data }}" tabindex="-1" role="dialog" aria-labelledby="categorieVerwijderLabel" aria-hidden="true">
-                  <div class="modal-dialog" role="document">
-                    <div class="modal-content">
-                      <form method="POST">
-                        <div class="modal-header">
-                          <h5 class="modal-title" id="categorieVerwijderLabel">Categorie Verwijderen</h5>
-                          <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
-                            <span aria-hidden="true">&times;</span>
-                          </button>
-                        </div>
-                        <div class="modal-body">
-                          <div>
-                            <p>Weet u zeker dat u categorie "<b>{{ category_form.name.data }}</b>" wilt verwijderen? Hiermee wordt deze categorie ook weggehaald bij alle transacties waar de categorie aan toegevoegd is!</p>
-                          </div>
-                        </div>
-                        <div class="modal-footer">
-                          <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
-                          {{ category_form.remove }}
-                        </div>
-                      </form>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </form>
+  {% for category_form in category_forms %}
+  <!-- Modal for categorie beheren -->
+  <div class="modal fade" id="categorie-beheren-{{ category_form.id.data }}" tabindex="-1" role="dialog"
+    aria-labelledby="categoriebeherenLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <form method="POST">
+          <div class="modal-header">
+            <h5 class="modal-title" id="categoriebeherenLabel">Categorie beheren</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
+              <span aria-hidden="true">&times;</span>
+            </button>
           </div>
-        </div>
+          <div class="modal-body">
+            <div>
+              {{ category_form.csrf_token }}
+
+              {% for f in category_form %}
+              {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' %}
+              {{ wtf.form_field(f, class="form-control") }}
+              {% endif %}
+              {% endfor %}
+            </div>
+          </div>
+          <div class="modal-footer">
+            {{ category_form.id }}
+            {{ category_form.subproject_id }}
+            {{ category_form.project_id }}
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
+            <!-- Button trigger modal -->
+            <button type="button" class="btn btn-danger" data-toggle="modal"
+              data-target="#categorie-verwijder-{{ category_form.id.data }}">
+              Verwijderen
+            </button>
+
+            {{ category_form.submit }}
+
+            <!-- Modal -->
+            <div class="modal fade" id="categorie-verwijder-{{ category_form.id.data }}" tabindex="-1" role="dialog"
+              aria-labelledby="categorieVerwijderLabel" aria-hidden="true">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <form method="POST">
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="categorieVerwijderLabel">Categorie Verwijderen</h5>
+                      <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </div>
+                    <div class="modal-body">
+                      <div>
+                        <p>Weet u zeker dat u categorie "<b>{{ category_form.name.data }}</b>" wilt verwijderen? Hiermee
+                          wordt deze categorie ook weggehaald bij alle transacties waar de categorie aan toegevoegd is!
+                        </p>
+                      </div>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
+                      {{ category_form.remove }}
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
       </div>
-    {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
   {% endif %}
 
-  {# We can't put the modal code next to the button code, because it doesn't seem to work in combination with Bootstrap Table's detail view #}
+  {# We can't put the modal code next to the button code, because it doesn't seem to work in combination with Bootstrap
+  Table's detail view #}
   {% if edit_attachment_forms %}
-    {% for payment in subproject.payments %}
-      {% for attachment in payment.attachments %}
-        {% include 'partials/remove_attachment_form.html' %}
-      {% endfor %}
-    {% endfor %}
+  {% for payment in subproject.payments %}
+  {% for attachment in payment.attachments %}
+  {% include 'partials/remove_attachment_form.html' %}
+  {% endfor %}
+  {% endfor %}
   {% endif %}
 
   {% if project_owner %}
-    {% for payment in subproject.payments %}
-      {% if payment_forms[payment.id].remove %}
-        <!-- Modal -->
-        <div class="modal fade" id="transactie-verwijder-{{ payment.id }}" tabindex="-1" role="dialog" aria-labelledby="transactieVerwijderLabel" aria-hidden="true">
-          <div class="modal-dialog" role="document">
-            <div class="modal-content">
-              <form method="POST">
-                <div class="modal-header">
-                  <h5 class="modal-title" id="transactieVerwijderLabel">Transactie Verwijderen</h5>
-                  <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
-                    <span aria-hidden="true">&times;</span>
-                  </button>
-                </div>
-                <div class="modal-body">
-                  <div>
-                    <p>Weet u zeker dat u deze transactie wilt verwijderen?</p>
-                  </div>
-                </div>
-                <div class="modal-footer">
-                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
-                  {{ payment_forms[payment.id].csrf_token }}
-                  {{ payment_forms[payment.id].id }}
-                  {{ payment_forms[payment.id].remove }}
-                </div>
-              </form>
+  {% for payment in subproject.payments %}
+  {% if payment_forms[payment.id].remove %}
+  <!-- Modal -->
+  <div class="modal fade" id="transactie-verwijder-{{ payment.id }}" tabindex="-1" role="dialog"
+    aria-labelledby="transactieVerwijderLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <form method="POST">
+          <div class="modal-header">
+            <h5 class="modal-title" id="transactieVerwijderLabel">Transactie Verwijderen</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div>
+              <p>Weet u zeker dat u deze transactie wilt verwijderen?</p>
             </div>
           </div>
-        </div>
-      {% endif %}
-    {% endfor %}
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
+            {{ payment_forms[payment.id].csrf_token }}
+            {{ payment_forms[payment.id].id }}
+            {{ payment_forms[payment.id].remove }}
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+  {% endfor %}
   {% endif %}
 
-{% endblock %}
+  {% endblock %}
 
-{% block scripts %}
-<script>
-  window.modal_id = {{ modal_id|safe }};
-  window.paymentId = {{ payment_id|safe }};
-</script>
+  {% block scripts %}
+  <script>
+    window.modal_id = {{ modal_id | safe }};
+    window.paymentId = {{ payment_id | safe }};
+  </script>
   {{ super() }}
-{% endblock %}
+  {% endblock %}

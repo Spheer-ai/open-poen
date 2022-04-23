@@ -681,86 +681,14 @@ def subproject(project_id, subproject_id):
     # SUBPROJECT OWNER
     # TODO: This really should be refactored to use process_form.
     # --------------------------------------------------------------------------------
-    edit_user_form = EditUserForm(prefix="edit_user_form")
-
-    if edit_user_form.validate_on_submit():
-        users = User.query.filter_by(id=edit_user_form.id.data)
-        new_user_data = {}
-        remove_from_subproject = False
-        remove_from_subproject_id = 0
-        for f in edit_user_form:
-            if f.type != "SubmitField" and f.type != "CSRFTokenField":
-                if f.short_name == "remove_from_subproject":
-                    remove_from_subproject = f.data
-                elif f.short_name == "subproject_id":
-                    remove_from_subproject_id = f.data
-                else:
-                    new_user_data[f.short_name] = f.data
-
-        if len(users.all()):
-            users.update(new_user_data)
-            if remove_from_subproject:
-                # We need to get the user using '.first()' otherwise we
-                # can't remove the project because of garbage collection
-                initiatiefnemer = users.first()
-                initiatiefnemer.subprojects.remove(
-                    Subproject.query.get(remove_from_subproject_id)
-                )
-
-            db.session.commit()
-            flash('<span class="text-default-green">gebruiker is bijgewerkt</span>')
-
-        # redirect back to clear form data
-        return redirect(
-            url_for(
-                "subproject",
-                project_id=subproject.project.id,
-                subproject_id=subproject.id,
-            )
-        )
-    else:
-        util.flash_form_errors(edit_user_form, request)
-
-    edit_user_forms = {}
-    for user in subproject.users:
-        edit_user_forms[user.email] = EditUserForm(
-            prefix="edit_user_form",
-            **{
-                "hidden": user.hidden,
-                "active": user.active,
-                "id": user.id,
-                "subproject_id": subproject.id,
-            },
-        )
-
-    add_user_form = AddUserForm(prefix="add_user_form")
-
-    if util.validate_on_submit(add_user_form, request):
-        new_user_data = {}
-        for f in add_user_form:
-            if f.type != "SubmitField" and f.type != "CSRFTokenField":
-                new_user_data[f.short_name] = f.data
-
-        try:
-            util.add_user(**new_user_data)
-            flash(
-                '<span class="text-default-green">"%s" is uitgenodigd als activiteitnemer '
-                "(of toegevoegd als activiteitnemer als de gebruiker al "
-                "bestond)" % (new_user_data["email"])
-            )
-        except ValueError as e:
-            flash(str(e))
-
-        # redirect back to clear form data
-        return redirect(
-            url_for(
-                "subproject",
-                project_id=subproject.project.id,
-                subproject_id=subproject.id,
-            )
-        )
-    else:
-        util.flash_form_errors(add_user_form, request)
+    subproject_owner_controller = subpc.SubprojectOwner(subproject)
+    controller_redirect = subproject_owner_controller.process_forms()
+    if controller_redirect:
+        return controller_redirect
+    subproject_owner_forms = subproject_owner_controller.get_forms()
+    subproject_owner_emails = subproject_owner_controller.emails
+    subproject_owners = list(zip(subproject_owner_forms, subproject_owner_emails))
+    modal_id = subproject_owner_controller.get_modal_ids(modal_id)
 
     amounts = util.calculate_amounts(
         Subproject,
@@ -786,8 +714,8 @@ def subproject(project_id, subproject_id):
         payment_forms=payment_forms,
         transaction_attachment_form=transaction_attachment_form,
         edit_attachment_forms=edit_attachment_forms,
-        edit_user_forms=edit_user_forms,
-        add_user_form=AddUserForm(prefix="add_user_form"),
+        subproject_owners=subproject_owners,
+        add_user_form=subproject_owner_controller.add_form,
         project_owner=project_owner,
         user_in_subproject=user_in_subproject,
         timestamp=util.get_export_timestamp(),
