@@ -1,11 +1,10 @@
-from app.controllers.util import Controller, create_redirects
-from app.forms import AddUserForm, EditProjectOwnerForm
-from app.models import Project, User
-from app.form_processing import filter_fields, process_form, Status
 from typing import List
 
-from app.util import formatted_flash, validate_on_submit, add_user
-from flask import request
+from app.controllers.util import Controller, create_redirects
+from app.form_processing import Status, process_form
+from app.forms import AddUserForm, EditProjectOwnerForm
+from app.models import Project, User
+from app.util import formatted_flash
 
 
 class ProjectOwnerController(Controller):
@@ -31,7 +30,7 @@ class ProjectOwnerController(Controller):
         return self.redirects[status]
 
     def get_forms(self):
-        forms = []
+        forms: List[EditProjectOwnerForm] = []
         for project_owner in self.project.users:
             data = {**project_owner.__dict__, **{"project_id": self.project.id}}
             forms.append(EditProjectOwnerForm(prefix="edit_project_owner_form", **data))

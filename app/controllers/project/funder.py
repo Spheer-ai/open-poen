@@ -1,8 +1,9 @@
+from typing import Dict
+
 from app.controllers.util import Controller, create_redirects
+from app.form_processing import process_form
 from app.forms import FunderForm
-from app.models import Project, Funder
-from app.form_processing import process_form, Status
-from app.util import formatted_flash
+from app.models import Funder, Project
 
 
 class FunderController(Controller):
@@ -23,7 +24,7 @@ class FunderController(Controller):
         return self.redirects[status]
 
     def get_forms(self):
-        forms = {}
+        forms: Dict[int, FunderForm] = {}
         for funder in self.project.funders:
             data = funder.__dict__
             id = data["id"]

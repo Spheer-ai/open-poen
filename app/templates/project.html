@@ -331,7 +331,7 @@
                           <br>
                           <br>
 
-                          {% for card_number, edit_debit_card_form in edit_debit_card_forms.items() %}
+                          {% for edit_debit_card_form, card_number in edit_debit_card_forms %}
                           <div>
                             <!-- Button trigger modal -->
                             <button type="button" class="btn button-poen-small bg-grey-blue" data-toggle="modal"
@@ -1270,7 +1270,7 @@
     </div>
   </div>
 
-  {% for card_number, edit_debit_card_form in edit_debit_card_forms.items() %}
+  {% for edit_debit_card_form, card_number in edit_debit_card_forms %}
   <div class="modal fade" id="betaalpas-beheren-{{ edit_debit_card_form.id.data }}" tabindex="-1" role="dialog"
     aria-labelledby="debitCardbeherenLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">

@@ -1,7 +1,7 @@
 from app.controllers.util import Controller, create_redirects
+from app.form_processing import process_form
 from app.forms import SubprojectForm
 from app.models import Project, Subproject
-from app.form_processing import process_form
 
 
 class SubprojectController(Controller):

@@ -417,48 +417,15 @@ def project(project_id):
     modal_id = project_controller.get_modal_ids(modal_id)
 
     # DEBIT CARD
-    # --------------------------------------------------------------------------------
-    add_debit_card_form = DebitCardForm(prefix="add_debit_card_form")
-    form_redirect = process_form(add_debit_card_form, DebitCard)
-    if form_redirect:
-        return form_redirect
-    if len(add_debit_card_form.errors) > 0:
-        modal_id = ["#project-beheren", "#betaalpas-toevoegen"]
-    add_debit_card_form.project_id.data = project.id
-
-    edit_debit_card_form = EditDebitCardForm(prefix="edit_debit_card_form")
-    form_redirect = process_form(edit_debit_card_form, DebitCard)
-    if form_redirect:
-        return form_redirect
-
-    edit_debit_card_forms = {}
-    for debit_card in DebitCard.query.filter_by(project_id=project.id):
-        edit_debit_card_forms[debit_card.card_number] = EditDebitCardForm(
-            prefix="edit_debit_card_form",
-            **{
-                "id": debit_card.id,
-                "card_number": debit_card.card_number,
-                "project_id": debit_card.project_id,
-            },
-        )
-
-    debit_cards = (
-        db.session.query(DebitCard).join(Project).filter(Project.id == project.id).all()
-    )
-    debit_card_donuts = [
-        {
-            **util.calculate_amounts(
-                DebitCard,
-                x.id,
-                db.session.query(Payment)
-                .join(DebitCard)
-                .filter(DebitCard.id == x.id)
-                .all(),
-            ),
-            "card_number": x.card_number,
-        }
-        for x in debit_cards
-    ]
+    debit_card_controller = pc.DebitCard(project)
+    controller_redirect = debit_card_controller.process_forms()
+    if controller_redirect:
+        return controller_redirect
+    edit_debit_card_forms = debit_card_controller.get_forms()
+    edit_debit_card_numbers = debit_card_controller.debit_card_numbers
+    debit_cards = list(zip(edit_debit_card_forms, edit_debit_card_numbers))
+    modal_id = debit_card_controller.get_modal_ids(modal_id)
+    debit_card_donuts = debit_card_controller.get_donuts()
 
     # CATEGORY
     # --------------------------------------------------------------------------------
@@ -527,7 +494,7 @@ def project(project_id):
         project_form=project_form,
         project_owners=project_owners,
         add_user_form=project_owner_controller.add_form,
-        add_debit_card_form=add_debit_card_form,
+        add_debit_card_form=debit_card_controller.add_form,
         subproject_form=subproject_form,
         new_payment_form=new_payment_form,
         categories_dict=categories_dict,
@@ -543,7 +510,7 @@ def project(project_id):
         modal_id=json.dumps(modal_id),
         payment_id=json.dumps(payment_id),
         bng_info=bng_info,
-        edit_debit_card_forms=edit_debit_card_forms,
+        edit_debit_card_forms=debit_cards,
         debit_card_donuts=debit_card_donuts,
     )
 
@@ -679,8 +646,6 @@ def subproject(project_id, subproject_id):
         )
 
     # SUBPROJECT OWNER
-    # TODO: This really should be refactored to use process_form.
-    # --------------------------------------------------------------------------------
     subproject_owner_controller = subpc.SubprojectOwner(subproject)
     controller_redirect = subproject_owner_controller.process_forms()
     if controller_redirect:

@@ -1,11 +1,10 @@
-from app.controllers.util import Controller, create_redirects
-from app.forms import AddUserForm, EditProjectOwnerForm, EditUserForm
-from app.models import Project, Subproject, User
-from app.form_processing import filter_fields, process_form, Status, return_redirect
 from typing import List
 
-from app.util import formatted_flash, validate_on_submit, add_user
-from flask import request
+from app.controllers.util import Controller, create_redirects
+from app.form_processing import Status, process_form
+from app.forms import AddUserForm, EditUserForm
+from app.models import Subproject, User
+from app.util import formatted_flash
 
 
 class SubprojectOwnerController(Controller):
@@ -35,7 +34,7 @@ class SubprojectOwnerController(Controller):
         return self.redirects[status]
 
     def get_forms(self):
-        forms = []
+        forms: List[EditUserForm] = []
         for subproject_owner in self.subproject.users:
             data = {
                 **subproject_owner.__dict__,

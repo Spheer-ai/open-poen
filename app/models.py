@@ -408,8 +408,8 @@ class DebitCard(db.Model, DefaultCRUD):
         else:
             return super(DebitCard, cls).create(data)
 
-    def update(self, data):
-        if data.get("remove_from_project"):
+    def remove_from_project(self, remove_from_project, **kwargs):
+        if remove_from_project:
             payments = (
                 db.session.query(Payment)
                 .join(DebitCard)
@@ -420,11 +420,9 @@ class DebitCard(db.Model, DefaultCRUD):
                 raise ValueError(
                     "Payments have already been done with this debit card."
                 )
-            self.last_used_project_id = self.project.id
+            self.last_used_project_id = self.project_id
             del self.project
             db.session.commit()
-        else:
-            return super(DebitCard, self).update(data)
 
     def message_after_edit_error(self, error, data):
         if type(error) == ValueError:
