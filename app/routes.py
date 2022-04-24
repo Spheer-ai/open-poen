@@ -290,10 +290,17 @@ def project(project_id):
             if subproject.has_user(current_user.id):
                 user_subproject_ids.append(subproject.id)
 
+    payment_controller = pc.Payment(project)
+    controller_redirect = payment_controller.process_forms()
+    if controller_redirect:
+        return controller_redirect
+    payment_forms = payment_controller.get_forms()
+    modal_id = payment_controller.get_modal_ids(modal_id)
+
     # PAYMENT AND ATTACHMENT
     # TODO: Refactor this.
     # --------------------------------------------------------------------------------
-    new_payment_form = ""
+    # new_payment_form = ""
     # Filled with all categories for each subproject; used by some JavaScript
     # to update the categories in the select field when the user selects
     # another subproject to add the new payment to.
@@ -303,25 +310,25 @@ def project(project_id):
             x.id: x.make_category_select_options() for x in project.subprojects
         }
 
-        new_payment_form = NewPaymentForm(prefix="new_payment_form")
-        form_redirect = process_new_payment_form(
-            new_payment_form, project, subproject=None
-        )
-        if form_redirect:
-            return form_redirect
-        if len(new_payment_form.errors) > 0:
-            modal_id = ["#modal-topup-toevoegen"]
+        # new_payment_form = NewPaymentForm(prefix="new_payment_form")
+        # form_redirect = process_new_payment_form(
+        #     new_payment_form, project, subproject=None
+        # )
+        # if form_redirect:
+        #     return form_redirect
+        # if len(new_payment_form.errors) > 0:
+        #     modal_id = ["#modal-topup-toevoegen"]
 
-    payment_forms = {}
+    # payment_forms = {}
     transaction_attachment_form = ""
     edit_attachment_forms = {}
     edit_attachment_form = ""
     if is_project_owner or user_subproject_ids:
-        payment_form_return = process_payment_form(
-            request, project, is_project_owner, user_subproject_ids, is_subproject=False
-        )
-        if payment_form_return and type(payment_form_return) != PaymentForm:
-            return payment_form_return
+        # payment_form_return = process_payment_form(
+        #     request, project, is_project_owner, user_subproject_ids, is_subproject=False
+        # )
+        # if payment_form_return and type(payment_form_return) != PaymentForm:
+        #     return payment_form_return
 
         if is_project_owner:
             editable_payments = (
@@ -348,16 +355,16 @@ def project(project_id):
             .all()
         )
 
-        if type(payment_form_return) == PaymentForm:
-            payment_id = payment_form_return.id.data
-            editable_payments = [
-                x for x in editable_payments if x.id != payment_form_return.id.data
-            ]
+        # if type(payment_form_return) == PaymentForm:
+        #     payment_id = payment_form_return.id.data
+        #     editable_payments = [
+        #         x for x in editable_payments if x.id != payment_form_return.id.data
+        #     ]
 
-        payment_forms = create_payment_forms(editable_payments)
+        # payment_forms = create_payment_forms(editable_payments)
 
-        if type(payment_form_return) == PaymentForm:
-            payment_forms[payment_form_return.id.data] = payment_form_return
+        # if type(payment_form_return) == PaymentForm:
+        #     payment_forms[payment_form_return.id.data] = payment_form_return
 
         transaction_attachment_form = TransactionAttachmentForm(
             prefix="transaction_attachment_form"
@@ -383,14 +390,7 @@ def project(project_id):
 
         edit_attachment_forms = create_edit_attachment_forms(editable_attachments)
 
-    # TODO: Add manual payments that are not linked to a debit card.
-    payments = (
-        db.session.query(Payment)
-        .join(DebitCard)
-        .join(Project)
-        .filter(Project.id == project.id)
-        .all()
-    )
+    payments = project.get_all_payments()
 
     # PROJECT OWNER
     project_owner_controller = pc.ProjectOwner(project)
@@ -474,7 +474,7 @@ def project(project_id):
         add_user_form=project_owner_controller.add_form,
         add_debit_card_form=debit_card_controller.add_form,
         subproject_form=subproject_form,
-        new_payment_form=new_payment_form,
+        new_payment_form=payment_controller.add_form,
         categories_dict=categories_dict,
         payment_forms=payment_forms,
         transaction_attachment_form=transaction_attachment_form,

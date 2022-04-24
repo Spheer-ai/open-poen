@@ -1,15 +1,16 @@
-from flask.helpers import url_for
-from werkzeug.utils import redirect
-from app import app, db, login_manager
-from flask_login import UserMixin
-from werkzeug.security import generate_password_hash, check_password_hash
-from time import time
-import jwt
 import locale
-from sqlalchemy.exc import IntegrityError
-from app.email import send_invite
+from datetime import datetime
 from os import urandom
+from time import time
 
+import jwt
+from flask_login import UserMixin
+from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
+from werkzeug.security import check_password_hash, generate_password_hash
+
+from app import app, db, login_manager
+from app.email import send_invite
 
 # Association table between Project and User
 project_user = db.Table(
@@ -270,6 +271,25 @@ class Project(db.Model, DefaultCRUD):
             select_options.append((str(subproject.id), subproject.name))
         return select_options
 
+    def get_all_payments(self):
+        debit_card_payments = (
+            db.session.query(Payment)
+            .join(DebitCard)
+            .join(Project)
+            .filter(Project.id == self.id)
+            .all()
+        )
+        subproject_payments = (
+            db.session.query(Payment)
+            .join(Subproject)
+            .join(Project)
+            .filter(Project.id == self.id)
+            .all()
+        )
+        return list(
+            set(debit_card_payments + self.payments.all() + subproject_payments)
+        )
+
     @property
     def message_after_edit(self):
         return f"Initiatief {self.name} is aangepast."
@@ -445,7 +465,7 @@ class DebitCard(db.Model, DefaultCRUD):
 
 
 # TODO: Make this compatible with BNG payments if necessary.
-class Payment(db.Model):
+class Payment(db.Model, DefaultCRUD):
     subproject_id = db.Column(
         db.Integer, db.ForeignKey("subproject.id", ondelete="SET NULL")
     )
@@ -473,8 +493,8 @@ class Payment(db.Model):
     entry_reference = db.Column(db.String(32))
     end_to_end_id = db.Column(db.String(32))
     booking_date = db.Column(db.DateTime(timezone=True))
-    created = db.Column(db.DateTime(timezone=True))
-    updated = db.Column(db.DateTime(timezone=True))
+    created = db.Column(db.DateTime(timezone=True), default=datetime.now())
+    updated = db.Column(db.DateTime(timezone=True), onupdate=datetime.now())
     transaction_amount = db.Column(db.Float())
     creditor_name = db.Column(db.String(128))
     creditor_account = db.Column(db.String(22))
@@ -518,6 +538,34 @@ class Payment(db.Model):
 
     def get_export_balance(self):
         return self.get_formatted_balance().replace("\u202f", "")
+
+    @classmethod
+    def add_manual_payment(cls, transaction_amount, **kwargs):
+        if transaction_amount > 0:
+            kwargs["route"] = "inkomsten"
+        elif transaction_amount <= 0:
+            kwargs["route"] = "uitgaven"
+        kwargs["transaction_amount"] = transaction_amount
+        return super(Payment, cls).create(kwargs)
+
+    @property
+    def message_after_edit(self):
+        return f"Betaling op {self.booking_date.strftime('%Y-%m-%d')} van {self.get_formatted_currency()} euro is aangepast."
+
+    @property
+    def message_after_create(self):
+        return f"Betaling op {self.booking_date.strftime('%Y-%m-%d')} van {self.get_formatted_currency()} euro is aangemaakt."
+
+    @property
+    def message_after_delete(self):
+        return f"Betaling op {self.booking_date.strftime('%Y-%m-%d')} van {self.get_formatted_currency()} euro is verwijderd."
+
+    def message_after_edit_error(self, error, data):
+        return "Aanpassen mislukt vanwege een onbekende fout. De beheerder van Open Poen is op de hoogte gesteld."
+
+    @classmethod
+    def message_after_create_error(cls, error, data):
+        return "Aanmaken mislukt vanwege een onbekende fout. De beheerder van Open Poen is op de hoogte gesteld."
 
 
 class Funder(db.Model, DefaultCRUD):

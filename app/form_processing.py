@@ -31,11 +31,15 @@ from app.util import flash_form_errors, form_in_request, formatted_flash
 
 
 def filter_fields(form: FlaskForm) -> Dict:
-    return {
+    # Filter out these field names, because they are never saved in the DB.
+    fields = {
         x.short_name: x.data
         for x in form
         if x.type not in ["SubmitField", "CSRFTokenField"]
     }
+    # Set empty strings to None to keep everything consistent. Also, values like
+    # foreign keys can't handle empty strings.
+    return {key: (value if value != "" else None) for key, value in fields.items()}
 
 
 def return_redirect(project_id: int, subproject_id: Union[None, int]):
