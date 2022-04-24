@@ -92,14 +92,14 @@
                         <br>
                         <br>
 
-                        {% for category_form in category_forms %}
+                        {% for category_form, category_name in category_forms %}
                         <!-- Button trigger modal -->
                         <div>
                           <button type="button" class="btn button-poen-small bg-grey-blue" data-toggle="modal"
                             data-target="#categorie-beheren-{{ category_form.id.data }}">
                             categorie beheren
                           </button>
-                          {{ category_form.name.data }}
+                          {{ category_name }}
                         </div>
                         <br>
                         {% endfor %}
@@ -845,7 +845,7 @@
     </div>
   </div>
 
-  {% for category_form in category_forms %}
+  {% for category_form, category_name in category_forms %}
   <!-- Modal for categorie beheren -->
   <div class="modal fade" id="categorie-beheren-{{ category_form.id.data }}" tabindex="-1" role="dialog"
     aria-labelledby="categoriebeherenLabel" aria-hidden="true">
@@ -872,7 +872,6 @@
           <div class="modal-footer">
             {{ category_form.id }}
             {{ category_form.subproject_id }}
-            {{ category_form.project_id }}
             <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
             <!-- Button trigger modal -->
             <button type="button" class="btn btn-danger" data-toggle="modal"
@@ -896,7 +895,7 @@
                     </div>
                     <div class="modal-body">
                       <div>
-                        <p>Weet u zeker dat u categorie "<b>{{ category_form.name.data }}</b>" wilt verwijderen? Hiermee
+                        <p>Weet u zeker dat u categorie "<b>{{ category_name }}</b>" wilt verwijderen? Hiermee
                           wordt deze categorie ook weggehaald bij alle transacties waar de categorie aan toegevoegd is!
                         </p>
                       </div>

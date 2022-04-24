@@ -432,8 +432,8 @@ def project(project_id):
     controller_redirect = category_controller.process_forms()
     if controller_redirect:
         return controller_redirect
-    unnamed_category_forms = category_controller.get_forms()
-    edit_category_forms = list(zip(unnamed_category_forms, category_controller.names))
+    category_forms = category_controller.get_forms()
+    category_forms = list(zip(category_forms, category_controller.names))
     modal_id = category_controller.get_modal_ids(modal_id)
 
     # PROJECT DATA
@@ -455,7 +455,7 @@ def project(project_id):
         "hidden_sponsors": project.hidden_sponsors,
         "amounts": amounts,
         "contains_subprojects": project.contains_subprojects,
-        "category_forms": edit_category_forms,
+        "category_forms": category_forms,
         "category_form": category_controller.add_form,
     }
 
@@ -608,26 +608,13 @@ def subproject(project_id, subproject_id):
         edit_attachment_forms = create_edit_attachment_forms(attachments)
 
     # CATEGORY
-    # --------------------------------------------------------------------------------
-    category_form_return = process_category_form(request)
-    if category_form_return:
-        return category_form_return
-
-    category_forms = []
-    for category in Category.query.filter_by(subproject_id=subproject.id).order_by(
-        "name"
-    ):
-        category_forms.append(
-            CategoryForm(
-                prefix="category_form",
-                **{
-                    "id": category.id,
-                    "name": category.name,
-                    "subproject_id": subproject.id,
-                    "project_id": subproject.project.id,
-                },
-            )
-        )
+    category_controller = subpc.Category(subproject)
+    controller_redirect = category_controller.process_forms()
+    if controller_redirect:
+        return controller_redirect
+    category_forms = category_controller.get_forms()
+    category_forms = list(zip(category_forms, category_controller.names))
+    modal_id = category_controller.get_modal_ids(modal_id)
 
     # SUBPROJECT OWNER
     subproject_owner_controller = subpc.SubprojectOwner(subproject)
@@ -669,10 +656,7 @@ def subproject(project_id, subproject_id):
         user_in_subproject=user_in_subproject,
         timestamp=util.get_export_timestamp(),
         category_forms=category_forms,
-        category_form=CategoryForm(
-            prefix="category_form",
-            **{"subproject_id": subproject.id, "project_id": subproject.project.id},
-        ),
+        category_form=category_controller.add_form,
         modal_id=json.dumps(modal_id),
         payment_id=json.dumps(payment_id),
     )
