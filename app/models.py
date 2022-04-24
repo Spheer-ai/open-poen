@@ -599,6 +599,7 @@ class Category(db.Model, DefaultCRUD):
 
     @classmethod
     def message_after_create_error(cls, error, data):
+        # TODO: Add error for duplicate name. Integrity error.
         return "Aanmaken mislukt vanwege een onbekende fout. De beheerder van Open Poen is op de hoogte gesteld."
 
 
