@@ -1,36 +1,33 @@
-from datetime import datetime
-from flask import flash, redirect, url_for, request
-from flask.templating import render_template
-from sqlalchemy.exc import IntegrityError
-from werkzeug.utils import secure_filename
 import os
-
-from wtforms.validators import ValidationError
-
-from app import app, db
-from app.forms import CategoryForm, NewPaymentForm, PaymentForm, EditAttachmentForm
-from app.models import (
-    Category,
-    DebitCard,
-    Funder,
-    Payment,
-    File,
-    Project,
-    User,
-    Subproject,
-    BNGAccount,
-)
-from app.util import flash_form_errors, form_in_request, formatted_flash
-from app import util
-from app import bng as bng
+from datetime import datetime
+from enum import Enum
+from time import time
+from typing import Callable, Dict, Optional, Union
 
 import jwt
+from flask import flash, redirect, request, url_for
 from flask_login import current_user
-from time import time
-from requests import ConnectionError
-from enum import Enum
-from typing import Callable, Union, Dict, Optional
 from flask_wtf import FlaskForm
+from requests import ConnectionError
+from sqlalchemy.exc import IntegrityError
+from werkzeug.utils import secure_filename
+
+from app import app
+from app import bng as bng
+from app import db, util
+from app.forms import EditAttachmentForm, PaymentForm
+from app.models import (
+    BNGAccount,
+    Category,
+    DebitCard,
+    File,
+    Funder,
+    Payment,
+    Project,
+    Subproject,
+    User,
+)
+from app.util import flash_form_errors, form_in_request, formatted_flash
 
 
 def filter_fields(form: FlaskForm) -> Dict:

@@ -10,16 +10,15 @@ from flask import (
 )
 from flask_login import current_user, login_required, login_user, logout_user
 
-from app import app, db, util
-from app.bng import get_bng_info, get_bng_payments, process_bng_callback
 import app.controllers.project as pc
 import app.controllers.subproject as subpc
+from app import app, db, util
+from app.bng import get_bng_info, process_bng_callback
 from app.email import send_password_reset_email
 from app.form_processing import (
     create_edit_attachment_forms,
     create_payment_forms,
     process_bng_link_form,
-    process_category_form,
     process_edit_attachment_form,
     process_form,
     process_new_payment_form,
@@ -31,13 +30,9 @@ from app.form_processing import (
 from app.forms import (
     AddUserForm,
     BNGLinkForm,
-    CategoryForm,
-    DebitCardForm,
     EditAdminForm,
     EditAttachmentForm,
-    EditDebitCardForm,
     EditProfileForm,
-    EditUserForm,
     LoginForm,
     NewPaymentForm,
     NewProjectForm,
@@ -48,7 +43,6 @@ from app.forms import (
 )
 from app.models import (
     BNGAccount,
-    Category,
     DebitCard,
     File,
     Payment,
