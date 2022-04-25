@@ -1,0 +1,59 @@
+{% macro info_unit_i(title, content, missing_content) %}
+<b>{{ title }}</b>
+<br>
+<i>{% if content %} {{ content }} {% else %} Niet ingevuld. {% endif %}</i>
+<br>
+<br>
+{% endmacro %}
+
+{% macro info_unit(title, content, missing_content) %}
+<b>{{ title }}</b>
+<br>
+{% if content %} {{ content }} {% else %} Niet ingevuld. {% endif %}
+<br>
+<br>
+{% endmacro %}
+
+{% macro format_currency(payment) %}
+{% if payment.transaction_amount >= 0 %}
+<h6 class="text-blue">+{{ payment.get_formatted_currency() }}</h6>
+{% else %}
+<h6 class="text-red">{{ payment.get_formatted_currency() }}</h6>
+{% endif %}
+{% endmacro %}
+
+{% macro manual_topup_info(payment, payment_forms) %}
+{{ info_unit("Type", "(Handmatige) topup naar betaalpas.") }}
+{{ info_unit("Betaalpas", payment.debit_card.card_number) }}
+{{ info_unit("Ontvanger", "Betaalpas") }}
+{{ info_unit("Route", payment.route) }}
+{{ info_unit("Bedrag €", format_currency(payment)) }}
+{% endmacro %}
+
+{% macro automatic_topup_info(payment, payment_forms) %}
+{{ info_unit("Type", "(Automatische) topup naar betaalpas.") }}
+{{ info_unit("Betaalpas", payment.debit_card.card_number) }}
+{{ info_unit("Ontvanger", "Betaalpas") }}
+{{ info_unit("Transactiedatum", payment.booking_data.strftime('%d-%m-\'%y')) }}
+{{ info_unit("Route", payment.route) }}
+{{ info_unit("Bedrag €", format_currency(payment)) }}
+{% endmacro %}
+
+{% macro debit_card_payment_info(payment, payment_forms) %}
+{{ info_unit("Type", "Betaling met betaalpas.") }}
+{{ info_unit("Betaalpas", payment.debit_card.card_number) }}
+{{ info_unit("Ontvanger", payment.creditor_name) }}
+{{ info_unit("Betaalomschrijving", payment.remittance_information_structured) }}
+{{ info_unit("Transactiedatum", payment.booking_data.strftime('%d-%m-\'%y')) }}
+{{ info_unit("Route", payment.route) }}
+{{ info_unit("Bedrag €", format_currency(payment)) }}
+{% endmacro %}
+
+{% macro manual_payment_info(payment, payment_forms) %}
+{{ info_unit("Type", "Handmatig toegevoegde betaling.") }}
+{{ info_unit("Verzender", payment.debtor_name) }}
+{{ info_unit("Verzender IBAN", payment.debtor_account) }}
+{{ info_unit("Ontvanger", payment.creditor_name) }}
+{{ info_unit("Ontvanger IBAN", payment.creditor_account) }}
+{{ info_unit("Bedrag €", format_currency(payment)) }}
+{% endmacro %}

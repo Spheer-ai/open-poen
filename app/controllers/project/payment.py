@@ -79,7 +79,7 @@ class PaymentController(Controller):
             data = payment.__dict__
             id = data["id"]
             form = PaymentForm(prefix=f"edit_payment_form_{id}", **data)
-            if payment.type != "MANUAL":
+            if payment.type not in ("MANUAL_PAYMENT", "MANUAL_TOPUP"):
                 del form["booking_date"]
                 del form["remove"]
             form.category_id.choices = payment.make_category_select_options()

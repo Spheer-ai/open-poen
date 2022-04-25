@@ -97,6 +97,8 @@ def validate_iban(form, field):
 
 
 def validate_topup_amount(form, field):
+    if field.data is None:
+        return
     if field.data <= 0:
         raise ValidationError(
             f"{field.data} is niet een positief bedrag. Topups moeten meer dan 0 € zijn."

@@ -1,90 +1,95 @@
 {% extends "base.html" %}
 {% set active_page = "Profiel" %}
 {% block head %}
-  <title>Open Poen - Profiel</title>
-  <meta property="og:title" content="Open Poen - Profiel" />
-  {{ super() }}
+<title>Open Poen - Profiel</title>
+<meta property="og:title" content="Open Poen - Profiel" />
+{{ super() }}
 {% endblock %}
 
 {% block content %}
-  <div class="container">
-    <br>
-    <h1>Profiel</h1>
+<div class="container">
+  <br>
+  <h1>Profiel</h1>
 
-    <br>
-    <br>
+  <br>
+  <br>
 
-    {% if not user %}
-      Deze gebruiker bestaat niet.
-    {% else %}
-      <div class="row">
-        <div class="col-12 col-sm-9">
-          <b>Naam:</b> {{ user.first_name }} {{ user.last_name }}
-          <br>
-          <br>
-          <b>Beschrijving:</b> {{ user.biography }}
-          {% if current_user.id == user.id or current_user.admin %}
-            <br>
-            <br>
-            <b>E-mailadres:</b> {{ user.email }} <i>(enkel zichtbaar jezelf en admins)</i>
-          {% endif %}
+  {% if not user %}
+  Deze gebruiker bestaat niet.
+  {% else %}
+  <div class="row">
+    <div class="col-12 col-sm-9">
+      <b>Naam:</b> {{ user.first_name }} {{ user.last_name }}
+      <br>
+      <br>
+      <b>Beschrijving:</b> {{ user.biography }}
+      {% if current_user.id == user.id or current_user.admin %}
+      <br>
+      <br>
+      <b>E-mailadres:</b> {{ user.email }} <i>(enkel zichtbaar jezelf en admins)</i>
+      {% endif %}
 
-          <br>
-          <br>
+      <br>
+      <br>
 
-          {% if current_user.is_authenticated and current_user.id == user.id %}
-            <div>
-              <p><a href="{{ url_for('profile_edit') }}">Profiel bewerken</a></p>
-              <p><a href="{{ url_for('reset_wachtwoord_verzoek') }}">Wachtwoord veranderen</a></p>
-            </div>
-          {% endif %}
-
-          <br>
-          <br>
-
-          <h2>Betrokken bij</h2>
-          {% if user.admin %}
-             Deze gebruiker is een admin
-            <br>
-            <br>
-          {% endif %}
-
-          {% if user.projects %}
-            <b>Initiatieven</b>
-            <ul>
-            {% for project in user.projects %}
-              {% if not project.hidden or current_user.admin or current_user == user.id %}
-                <li><a href="{{ url_for('project', project_id=project.id) }}">{{ project.name }}</a></li>
-              {% endif %}
-            {% endfor %}
-            </ul>
-            <br>
-          {% endif %}
-
-          {% if user.subprojects %}
-            <b>Activiteiten</b>
-            <ul>
-            {% for subproject in user.subprojects %}
-              {% if (not subproject.project.hidden and not subproject.hidden) or current_user.admin or current_user == user.id %}
-                <li><a href="{{ url_for('subproject', project_id=subproject.project.id, subproject_id=subproject.id) }}">{{ subproject.project.name }} > {{ subproject.name }}</a></li>
-              {% endif %}
-            {% endfor %}
-            </ul>
-          {% endif %}
-        </div>
-        <div class="col-12 col-sm-3">
-          <div class="attachment-div">
-            {% if image.mimetype in ['image/jpeg', 'image/jpg', 'image/png'] %}
-              <a class="embed-responsive embed-responsive-1by1" href="{{ url_for('upload', filename='user-image/' + image.filename) }}" data-toggle="lightbox" data-gallery="image-gallery-{{ user.id }}">
-                <img class="img-fluid embed-responsive-item attachment" src="{{ url_for('upload', filename='user-image/' + image.filename) }}">
-              </a>
-            {% endif %}
-          </div>
-        </div>
+      {% if current_user.is_authenticated and current_user.id == user.id %}
+      <div>
+        <p><a href="{{ url_for('profile_edit') }}">Profiel bewerken</a></p>
+        <p><a href="{{ url_for('reset_wachtwoord_verzoek') }}">Wachtwoord veranderen</a></p>
       </div>
-    {% endif %}
+      {% endif %}
 
-    <br>
-    <br>
-    <br>
-{% endblock %}
+      <br>
+      <br>
+
+      <h2>Betrokken bij</h2>
+      {% if user.admin %}
+      Deze gebruiker is een admin
+      <br>
+      <br>
+      {% endif %}
+
+      {% if user.projects %}
+      <b>Initiatieven</b>
+      <ul>
+        {% for project in user.projects %}
+        {% if not project.hidden or current_user.admin or current_user == user.id %}
+        <li><a href="{{ url_for('project', project_id=project.id) }}">{{ project.name }}</a></li>
+        {% endif %}
+        {% endfor %}
+      </ul>
+      <br>
+      {% endif %}
+
+      {% if user.subprojects %}
+      <b>Activiteiten</b>
+      <ul>
+        {% for subproject in user.subprojects %}
+        {% if (not subproject.project.hidden and not subproject.hidden) or current_user.admin or current_user == user.id
+        %}
+        <li><a href="{{ url_for('subproject', project_id=subproject.project.id, subproject_id=subproject.id) }}">{{
+            subproject.project.name }} > {{ subproject.name }}</a></li>
+        {% endif %}
+        {% endfor %}
+      </ul>
+      {% endif %}
+    </div>
+    <div class="col-12 col-sm-3">
+      <div class="attachment-div">
+        {% if image.mimetype in ['image/jpeg', 'image/jpg', 'image/png'] %}
+        <a class="embed-responsive embed-responsive-1by1"
+          href="{{ url_for('upload', filename='user-image/' + image.filename) }}" data-toggle="lightbox"
+          data-gallery="image-gallery-{{ user.id }}">
+          <img class="img-fluid embed-responsive-item attachment"
+            src="{{ url_for('upload', filename='user-image/' + image.filename) }}">
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <br>
+  <br>
+  <br>
+  {% endblock %}

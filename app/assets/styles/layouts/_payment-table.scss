@@ -25,6 +25,10 @@
     background-color: #A4BCEF4D;
   }
 
+  .manual-topup td {
+    background-color: #11A2B84D;
+  }
+
   td {
     border: solid 1px #F5F5F5;
     border-style: solid none;
@@ -44,7 +48,7 @@
   }
 
   .detail-view td,
-  td:first-child + td:not([style*='display: none']) {
+  td:first-child+td:not([style*='display: none']) {
     border-left-style: solid;
     border-top-left-radius: 35px;
     border-bottom-left-radius: 35px;
