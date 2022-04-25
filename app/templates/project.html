@@ -564,21 +564,22 @@
                         </button>
                       </div>
                       <div class="modal-body">
-                        <!-- {{ new_payment_form.csrf_token }}
+                        {{ new_topup_form.csrf_token }}
 
-                        {% for f in new_payment_form %}
+                        {% for f in new_topup_form %}
                         {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' and f.name !=
-                        "new_payment_form-booking_date" %}
+                        "new_topup_form-booking_date" %}
                         {{ wtf.form_field(f, class="form-control") }}
                         {% endif %}
-                        {% if f.name == "new_payment_form-booking_date" %}
-                        {{ wtf.form_field(f, class="form-control datepicker") }}
+                        {% if f.name == "new_topup_form-booking_date" %}
+                        {{ wtf.form_field(f, class="form-control datepicker add-topup-datepicker") }}
                         {% endif %}
-                        {% endfor %} -->
+                        {% endfor %}
+                        {{ new_topup_form.project_id }}
                       </div>
                       <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
-                        <!-- {{ new_payment_form.submit() }} -->
+                        {{ new_topup_form.submit() }}
                       </div>
                     </form>
                   </div>
@@ -610,7 +611,7 @@
                         {{ wtf.form_field(f, class="form-control") }}
                         {% endif %}
                         {% if f.name == "new_payment_form-booking_date" %}
-                        {{ wtf.form_field(f, class="form-control datepicker") }}
+                        {{ wtf.form_field(f, class="form-control datepicker add-payment-datepicker") }}
                         {% endif %}
                         {% endfor %}
                         {{ new_payment_form.project_id }}

@@ -611,9 +611,6 @@ def process_form(
 ) -> Union[None, Status]:
     # TODO: Ensure that the form is not validated if an instance is removed.
     # TODO: Type hint for object argument.
-    if not util.validate_on_submit(form, request):
-        return None
-
     if hasattr(form, "remove") and form.remove.data:
         instance = object.query.get(form.id.data)
         if instance is None:
@@ -622,6 +619,9 @@ def process_form(
         db.session.commit()
         util.formatted_flash(instance.message_after_delete, color="green")
         return Status.succesful_delete
+
+    if not util.validate_on_submit(form, request):
+        return None
 
     data = filter_fields(form)
 

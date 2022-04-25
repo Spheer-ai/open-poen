@@ -272,6 +272,12 @@ class Project(db.Model, DefaultCRUD):
             select_options.append((str(subproject.id), subproject.name))
         return select_options
 
+    def make_debit_card_select_options(self):
+        select_options = []
+        for debit_card in self.debit_cards.all():
+            select_options.append((debit_card.card_number, debit_card.card_number))
+        return select_options
+
     def get_all_payments(self):
         debit_card_payments = (
             db.session.query(Payment)
@@ -563,7 +569,7 @@ class Payment(db.Model, DefaultCRUD):
             raise AssertionError("Edge case: can't find this payment's project.")
 
     @classmethod
-    def add_manual_payment(cls, transaction_amount, **kwargs):
+    def add_manual_topup_or_payment(cls, transaction_amount, **kwargs):
         if transaction_amount > 0:
             kwargs["route"] = "inkomsten"
         elif transaction_amount <= 0:

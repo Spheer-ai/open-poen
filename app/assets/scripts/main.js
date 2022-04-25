@@ -22,13 +22,15 @@ import transaction from './routes/transaction';
 // Import the needed Font Awesome functionality
 import { config, library, dom } from '@fortawesome/fontawesome-svg-core';
 // Import required icons
-import { faBars, faChevronDown, faFile, faCamera, faDownload, faReceipt, faWindowRestore,
-         faLink, faWifi, faCheckCircle, faSyncAlt, faPlus} from '@fortawesome/free-solid-svg-icons';
+import {
+  faBars, faChevronDown, faFile, faCamera, faDownload, faReceipt, faWindowRestore,
+  faLink, faWifi, faCheckCircle, faSyncAlt, faPlus
+} from '@fortawesome/free-solid-svg-icons';
 import moment from 'moment';
 
 // Add the imported icons to the library
 library.add(faBars, faChevronDown, faFile, faCamera, faDownload, faReceipt, faLink, faWifi,
-            faCheckCircle, faSyncAlt, faPlus);
+  faCheckCircle, faSyncAlt, faPlus);
 
 // Tell FontAwesome to watch the DOM and add the SVGs when it detects icon markup
 dom.watch();
@@ -47,14 +49,14 @@ const routes = new Router({
 $(document).ready(() => routes.loadEvents());
 
 // Used for sorting amounts in the payment tables. It filters the amounts from the HTML, replaces the comma with a dot and removes white space (thousand separators).
-window.customSort = function(a, b) {
+window.customSort = function (a, b) {
   var aa = a.match('[^>]*>(.*)</h1>')[1].replace(',', '.').replace(/\s/g, '');
   var bb = b.match('[^>]*>(.*)</h1>')[1].replace(',', '.').replace(/\s/g, '');
   return naturalSort(aa, bb);
 };
 
 // Needed to sort dates in payment tables
-window.sortByDate = function(a, b) {
+window.sortByDate = function (a, b) {
   var aValue = moment(a, "DD-MM-'YY").format('YYYYMMDD');
   if (a === '' || a === null) { aValue = 0; }
 
@@ -65,13 +67,13 @@ window.sortByDate = function(a, b) {
 }
 
 // Format detail view of payment table row
-window.detailFormatter = function(index, row) {
+window.detailFormatter = function (index, row) {
   var id = row[0].match(/>\s+(\d+)\s+<\/div>/)[1]
   return $('#detail-' + id).html()
 }
 
 // Create a donut with of the spent percentage
-window.donut = function(thisObj, col1, col2) {
+window.donut = function (thisObj, col1, col2) {
   // Clear HTML, otherwise you generate more donuts when resizing the window
   $(thisObj).html('');
 
@@ -95,8 +97,8 @@ window.donut = function(thisObj, col1, col2) {
 
   var pie = d3.layout.pie()
     .value(function (d) {
-    return d.value;
-  }).sort(null);
+      return d.value;
+    }).sort(null);
 
   chart = chart
     .append('svg')
@@ -115,8 +117,8 @@ window.donut = function(thisObj, col1, col2) {
     pie_uses = 100;
   }
   var pie_data = [
-    {status: 'active', value: pie_uses},
-    {status: 'inactive', value: (100 - pie_uses)},
+    { status: 'active', value: pie_uses },
+    { status: 'inactive', value: (100 - pie_uses) },
   ]
 
   var g = chart.selectAll(".arc")
@@ -125,19 +127,19 @@ window.donut = function(thisObj, col1, col2) {
     .attr("class", "arc");
 
   g.append("path")
-    .style("fill", function(d) {
-    return color(d.data.status);
-  })
-    .transition().delay(function(d, i) {
-    return i *400;
-  }).duration(400)
-    .attrTween('d', function(d) {
-    var i = d3.interpolate(d.startAngle+ 0.1, d.endAngle);
-    return function(t) {
-      d.endAngle = i(t);
-      return arc(d);
-    }
-  });
+    .style("fill", function (d) {
+      return color(d.data.status);
+    })
+    .transition().delay(function (d, i) {
+      return i * 400;
+    }).duration(400)
+    .attrTween('d', function (d) {
+      var i = d3.interpolate(d.startAngle + 0.1, d.endAngle);
+      return function (t) {
+        d.endAngle = i(t);
+        return arc(d);
+      }
+    });
 
   // Add text inside the donut
   g.append("text")
@@ -146,9 +148,9 @@ window.donut = function(thisObj, col1, col2) {
     .attr("class", "total-type")
     .attr("dy", "-0.2em")
     .attr("fill", "#000059")
-    .text(function(d){
+    .text(function (d) {
       return "besteed";
-  });
+    });
 
   // Add percentage inside the donut
   g.append("text")
@@ -158,17 +160,17 @@ window.donut = function(thisObj, col1, col2) {
     .attr("class", "total-value")
     .attr("dy", "1.0em")
     .attr("fill", "#000059")
-    .text(function(d){
+    .text(function (d) {
       return "" + uses + "%";
-  });
+    });
 }
 
-window.createDonuts = function() {
-  $('.donut').each(function() {window.donut(this, "#b82466", "#265ed4")});
+window.createDonuts = function () {
+  $('.donut').each(function () { window.donut(this, "#b82466", "#265ed4") });
 }
 
 $('#betaalpas-saldo').on('shown.bs.modal', function () {
-  $('.betaalpas-donut').each(function() {window.donut(this, "#004699", "#009de6")})
+  $('.betaalpas-donut').each(function () { window.donut(this, "#004699", "#009de6") })
 })
 
 createDonuts();
@@ -176,7 +178,7 @@ createDonuts();
 // We render a template with a modal_id if if we want the modal to
 // pop up at the loading of the page, such as when we load a page
 // with a form with validation errors.
-$(window).on('load', function() {
+$(window).on('load', function () {
   if (window.modal_id !== undefined) {
     if (window.modal_id !== null) {
       for (var i = 0; i < window.modal_id.length; i++) {
@@ -187,8 +189,8 @@ $(window).on('load', function() {
 });
 
 // Prevents sending the form again when reloading the page.
-if ( window.history.replaceState ) {
-  window.history.replaceState( null, null, window.location.href );
+if (window.history.replaceState) {
+  window.history.replaceState(null, null, window.location.href);
 }
 
 var datepickerConfig = {
@@ -205,8 +207,11 @@ var datepickerConfig = {
 
 // Simpelest case of setting a datepicker.
 if ($(".datepicker").length > 0) {
-  var picker = datepicker(".datepicker", datepickerConfig);
+  var picker = datepicker(".add-payment-datepicker", datepickerConfig);
+  var picker2 = datepicker(".add-topup-datepicker", datepickerConfig)
 }
+// addPaymentPicker = datepicker(".add-payment-datepicker", datepickerConfig)
+// addTopupPicker = datepicker(".add-topup-datepicker", datepickerConfig)
 
 // Setting datepickers for the detail views of the bootstrap tables.
 // The ordinary way is impossible, because of the way the page loads.
@@ -243,7 +248,7 @@ $('.payment-table').bootstrapTable({
   }
 });
 
-$(window).on('load', function() {
+$(window).on('load', function () {
   if (window.paymentId !== undefined) {
     if (window.paymentId !== null) {
       var row = $("#payment_row_" + window.paymentId);
@@ -341,15 +346,15 @@ $("#add-funder").on("click", function () {
   addFunder();
 });
 
-var cloneForm = function(formDiv, idx) {
+var cloneForm = function (formDiv, idx) {
   var $newDiv = $(formDiv).clone(true);
-  $newDiv.find('input, textarea').each(function() {
-      var $this = $(this);
-      $this.attr('id', $this.attr('id').replace(idx - 1, idx));
-      $this.attr('name', $this.attr('name').replace(idx - 1, idx));
-      $this.val('');
+  $newDiv.find('input, textarea').each(function () {
+    var $this = $(this);
+    $this.attr('id', $this.attr('id').replace(idx - 1, idx));
+    $this.attr('name', $this.attr('name').replace(idx - 1, idx));
+    $this.val('');
   });
-  $newDiv.find('label').each(function() {
+  $newDiv.find('label').each(function () {
     var $this = $(this);
     if ($this.attr('for') !== undefined) {
       $this.attr('for', $this.attr('for').replace(idx - 1, idx));

@@ -1,3 +1,4 @@
+from wsgiref.validate import validator
 from wtforms.fields.core import FieldList, FormField
 from app import app
 from flask_wtf import FlaskForm
@@ -80,7 +81,7 @@ def validate_card_number_to_project(form, field):
         return
     else:
         raise ValidationError(
-            f"De betaalpas {field.data} is al gekoppeld aan een ander project."
+            f"De betaalpas {field.data} is al gekoppeld aan een project."
         )
 
 
@@ -368,6 +369,47 @@ class NewPaymentForm(FlaskForm):
     submit = SubmitField("Opslaan", render_kw={"class": "btn btn-info"})
 
 
+class NewTopupForm(FlaskForm):
+    transaction_amount = FlexibleDecimalField(
+        "Bedrag (Topups moeten meer dan 0,00 euro bedragen.)",
+        validators=[validate_topup_amount],
+    )
+    booking_date = DateField("Datum (notatie: dd-mm-jjjj)", format="%d-%m-%Y")
+    card_number = SelectField("Betaalpas", choices=[])
+    short_user_description = StringField(
+        "Korte beschrijving", validators=[Length(max=50)]
+    )
+    long_user_description = TextAreaField(
+        "Lange beschrijving", validators=[Length(max=2000)]
+    )
+    hidden = BooleanField("Transactie verbergen")
+    data_file = FileField(
+        "Bestand",
+        validators=[
+            FileAllowed(
+                allowed_extensions,
+                (
+                    "bestandstype niet toegstaan. Enkel de volgende "
+                    "bestandstypen worden geaccepteerd: %s"
+                    % ", ".join(allowed_extensions)
+                ),
+            ),
+            Optional(),
+        ],
+    )
+    mediatype = RadioField(
+        "Media type",
+        choices=[("media", "media"), ("bon", "bon")],
+        default="bon",
+        validators=[Optional()],
+    )
+    project_id = IntegerField(widget=HiddenInput())
+    subproject_id = IntegerField(widget=HiddenInput())
+    type = StringField(widget=HiddenInput())
+
+    submit = SubmitField("Opslaan", render_kw={"class": "btn btn-info"})
+
+
 # Edit a payment
 class PaymentForm(FlaskForm):
     short_user_description = StringField(
@@ -384,6 +426,7 @@ class PaymentForm(FlaskForm):
     category_id = SelectField("Categorie", validators=[Optional()], choices=[])
     route = SelectField(
         "Route",
+        validators=[Optional()],
         choices=[
             ("inkomsten", "inkomsten"),
             ("uitgaven", "uitgaven"),
