@@ -5,6 +5,9 @@ from app.form_processing import process_form
 from app.forms import PaymentForm, NewPaymentForm
 from app.models import Payment, Project
 from datetime import date
+from app.controllers.util import Status
+from app.util import form_in_request
+from flask import request
 
 
 class PaymentController(Controller):
@@ -32,7 +35,18 @@ class PaymentController(Controller):
         return self.redirects[status]
 
     def edit(self):
-        # TODO: Find a way to make category and subproject select options.
+        payment = Payment.query.get(self.edit_form.id.data)
+
+        # This is necessary because a Selectfield's choices have to be set. Otherwise
+        # the form will be invalid.
+        if payment is None and form_in_request(self.edit_form, request):
+            return self.redirects[Status.not_found]
+        elif payment and form_in_request(self.edit_form, request):
+            self.edit_form.category_id.choices = payment.make_category_select_options()
+            self.edit_form.subproject_id.choices = (
+                payment.make_subproject_select_options()
+            )
+
         status = process_form(self.edit_form, Payment)
         return self.redirects[status]
 
@@ -47,7 +61,8 @@ class PaymentController(Controller):
             if payment.type != "MANUAL":
                 del form["booking_date"]
                 del form["remove"]
-            # TODO: Find a way to make category and subproject select options.
+            form.category_id.choices = payment.make_category_select_options()
+            form.subproject_id.choices = payment.make_subproject_select_options()
             forms[id] = form
 
         # If a payment has previously been edited with an error, we have to insert it.

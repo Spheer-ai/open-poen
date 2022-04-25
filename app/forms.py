@@ -385,9 +385,9 @@ class PaymentForm(FlaskForm):
     route = SelectField(
         "Route",
         choices=[
-            ("subsidie", "subsidie"),
+            ("inkomsten", "inkomsten"),
+            ("uitgaven", "uitgaven"),
             ("inbesteding", "inbesteding"),
-            ("aanbesteding", "aanbesteding"),
         ],
     )
     subproject_id = SelectField("Activiteit", validators=[Optional()], choices=[])

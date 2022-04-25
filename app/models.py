@@ -1,3 +1,4 @@
+from ast import Assert
 import locale
 from datetime import datetime
 from os import urandom
@@ -260,7 +261,7 @@ class Project(db.Model, DefaultCRUD):
 
     # Create category select options to be shown in a dropdown menu
     def make_category_select_options(self):
-        select_options = [("", "")]
+        select_options = [("", "Geen")]
         for category in Category.query.filter_by(project_id=self.id):
             select_options.append((str(category.id), category.name))
         return select_options
@@ -348,7 +349,7 @@ class Subproject(db.Model, DefaultCRUD):
 
     # Create select options to be shown in a dropdown menu
     def make_category_select_options(self):
-        select_options = [("", "")]
+        select_options = [("", "Geen")]
         for category in Category.query.filter_by(subproject_id=self.id):
             select_options.append((str(category.id), category.name))
         return select_options
@@ -539,6 +540,28 @@ class Payment(db.Model, DefaultCRUD):
     def get_export_balance(self):
         return self.get_formatted_balance().replace("\u202f", "")
 
+    def make_category_select_options(self):
+        # TODO: Refactor.
+        if self.subproject:
+            return self.subproject.make_category_select_options()
+        elif self.project:
+            return self.project.make_category_select_options()
+        elif self.debit_card:
+            return self.debit_card.project.make_category_select_options()
+        else:
+            raise AssertionError("Edge case: can't find this payment's project.")
+
+    def make_subproject_select_options(self):
+        # TODO: Refactor.
+        if self.subproject:
+            return self.subproject.project.make_subproject_select_options()
+        elif self.project and self.project.contains_subprojects:
+            return self.project.make_subproject_select_options()
+        elif self.debit_card and self.debit_card.project.contains_subprojects:
+            return self.debit_card.project.make_subproject_select_options()
+        else:
+            raise AssertionError("Edge case: can't find this payment's project.")
+
     @classmethod
     def add_manual_payment(cls, transaction_amount, **kwargs):
         if transaction_amount > 0:
@@ -550,15 +573,15 @@ class Payment(db.Model, DefaultCRUD):
 
     @property
     def message_after_edit(self):
-        return f"Betaling op {self.booking_date.strftime('%Y-%m-%d')} van {self.get_formatted_currency()} euro is aangepast."
+        return "Betaling is aangepast."
 
     @property
     def message_after_create(self):
-        return f"Betaling op {self.booking_date.strftime('%Y-%m-%d')} van {self.get_formatted_currency()} euro is aangemaakt."
+        return "Betaling is aangemaakt."
 
     @property
     def message_after_delete(self):
-        return f"Betaling op {self.booking_date.strftime('%Y-%m-%d')} van {self.get_formatted_currency()} euro is verwijderd."
+        return "Betaling is verwijderd."
 
     def message_after_edit_error(self, error, data):
         return "Aanpassen mislukt vanwege een onbekende fout. De beheerder van Open Poen is op de hoogte gesteld."

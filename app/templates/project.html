@@ -1091,6 +1091,10 @@
                               <br>
                               {% endif %}
 
+                              {% if payment.id in payment_forms %}
+                              {{ wtf.form_field(payment_forms[payment.id]['route'], class="form-control") }}
+                              {% endif %}
+
                               {# Show either the short or long description to not logged in visitors, otherwise allow a
                               logger in user with access to this payment to edit the short and long descriptions #}
                               {% if payment.id in payment_forms %}
