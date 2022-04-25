@@ -1,11 +1,3 @@
-{% macro info_unit_i(title, content, missing_content) %}
-<b>{{ title }}</b>
-<br>
-<i>{% if content %} {{ content }} {% else %} Niet ingevuld. {% endif %}</i>
-<br>
-<br>
-{% endmacro %}
-
 {% macro info_unit(title, content, missing_content) %}
 <b>{{ title }}</b>
 <br>

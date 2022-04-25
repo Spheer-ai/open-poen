@@ -788,15 +788,23 @@
                   </td>
                   <td>
                     <div class="cell">
+                      {% if payment.debit_card.card_number %}
                       {{ payment.debit_card.card_number }}
+                      {% else %}
+                      <i>handmatige betaling</i>
+                      {% endif %}
                     </div>
                   </td>
                   <td>
                     <div class="cell">
-                      {% if payment.creditor_name and payment.route == "uitgaven" %}
-                      {{ payment.creditor_name }}
-                      {% elif payment.route == "inkomsten" %}
+                      {% if payment.type == "MANUAL_TOPUP" or (payment.type == "BNG" and payment.route == "inkomsten")
+                      %}
                       Betaalpas
+                      {% elif (payment.type == "MANUAL_PAYMENT" or (payment.type == "BNG" and payment.route ==
+                      "uitgaven")) and payment.creditor_name %}
+                      {{ payment.creditor_name }}
+                      {% else %}
+                      <i>niet ingevuld</i>
                       {% endif %}
                     </div>
                   </td>
@@ -805,7 +813,7 @@
                       {% if payment.short_user_description %}
                       {{ payment.short_user_description }}
                       {% else %}
-                      <i>nog niet toegevoegd</i>
+                      <i>niet ingevuld</i>
                       {% endif %}
                     </div>
                   </td>
