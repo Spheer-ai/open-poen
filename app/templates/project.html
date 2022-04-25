@@ -573,7 +573,7 @@
                         {{ wtf.form_field(f, class="form-control") }}
                         {% endif %}
                         {% if f.name == "new_topup_form-booking_date" %}
-                        {{ wtf.form_field(f, class="form-control datepicker add-topup-datepicker") }}
+                        {{ wtf.form_field(f, class="form-control add-topup-datepicker") }}
                         {% endif %}
                         {% endfor %}
                         {{ new_topup_form.project_id }}
@@ -612,7 +612,7 @@
                         {{ wtf.form_field(f, class="form-control") }}
                         {% endif %}
                         {% if f.name == "new_payment_form-booking_date" %}
-                        {{ wtf.form_field(f, class="form-control datepicker add-payment-datepicker") }}
+                        {{ wtf.form_field(f, class="form-control add-payment-datepicker") }}
                         {% endif %}
                         {% endfor %}
                         {{ new_payment_form.project_id }}

@@ -206,10 +206,13 @@ var datepickerConfig = {
 }
 
 // Simpelest case of setting a datepicker.
-if ($(".datepicker").length > 0) {
-  var picker = datepicker(".add-payment-datepicker", datepickerConfig);
-  var picker2 = datepicker(".add-topup-datepicker", datepickerConfig)
+if ($(".add-payment-datepicker").length > 0) {
+  datepicker(".add-payment-datepicker", datepickerConfig);
 }
+if ($(".add-topup-datepicker").length > 0) {
+  datepicker(".add-topup-datepicker", datepickerConfig)
+}
+
 // addPaymentPicker = datepicker(".add-payment-datepicker", datepickerConfig)
 // addTopupPicker = datepicker(".add-topup-datepicker", datepickerConfig)
 

@@ -290,6 +290,7 @@ def project(project_id):
             if subproject.has_user(current_user.id):
                 user_subproject_ids.append(subproject.id)
 
+    # PAYMENT
     payment_controller = pc.Payment(project)
     controller_redirect = payment_controller.process_forms()
     if controller_redirect:
@@ -404,15 +405,7 @@ def project(project_id):
     modal_id = category_controller.get_modal_ids(modal_id)
 
     # PROJECT DATA
-    amounts = util.calculate_amounts(
-        Project,
-        project.id,
-        db.session.query(Payment)
-        .join(DebitCard)
-        .join(Project)
-        .filter(Project.id == project.id)
-        .all(),
-    )
+    amounts = util.calculate_amounts(Project, project.id, payments)
 
     project_data = {
         "id": project.id,
@@ -516,32 +509,18 @@ def subproject(project_id, subproject_id):
         if subproject.has_user(current_user.id):
             user_subproject_ids.append(subproject.id)
 
+    # PAYMENT
+    payment_controller = subpc.Payment(subproject)
+    controller_redirect = payment_controller.process_forms()
+    if controller_redirect:
+        return controller_redirect
+    payment_forms = payment_controller.get_forms()
+    modal_id = payment_controller.get_modal_ids(modal_id)
+    payment_id = payment_controller.get_payment_id()
+
     # PAYMENT AND ATTACHMENT
     # TODO: Refactor.
     # --------------------------------------------------------------------------------
-    payment_form_return = process_payment_form(
-        request, subproject, project_owner, user_subproject_ids, is_subproject=True
-    )
-    if payment_form_return and type(payment_form_return) != PaymentForm:
-        return payment_form_return
-
-    editable_payments = subproject.payments
-
-    if type(payment_form_return) == PaymentForm:
-        payment_id = payment_form_return.id.data
-        editable_payments = [
-            x for x in editable_payments if x.id != payment_form_return.id.data
-        ]
-
-    payment_forms = {}
-    if project_owner or user_in_subproject:
-        payment_forms = create_payment_forms(
-            subproject.payments
-        )  # TODO: Should this not use editable_payments?
-
-    if type(payment_form_return) == PaymentForm:
-        payment_forms[payment_form_return.id.data] = payment_form_return
-
     transaction_attachment_form = ""
     edit_attachment_forms = {}
     edit_attachment_form = ""
@@ -616,6 +595,7 @@ def subproject(project_id, subproject_id):
         budget=budget,
         subproject_form=subproject_form,
         payment_forms=payment_forms,
+        new_payment_form=payment_controller.add_payment_form,
         transaction_attachment_form=transaction_attachment_form,
         edit_attachment_forms=edit_attachment_forms,
         subproject_owners=subproject_owners,

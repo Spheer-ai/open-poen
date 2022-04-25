@@ -287,15 +287,9 @@ class Project(db.Model, DefaultCRUD):
             .all()
         )
         subproject_payments = (
-            db.session.query(Payment)
-            .join(Subproject)
-            .join(Project)
-            .filter(Project.id == self.id)
-            .all()
+            db.session.query(Payment).join(Project).filter(Project.id == self.id).all()
         )
-        return list(
-            set(debit_card_payments + self.payments.all() + subproject_payments)
-        )
+        return list(set(debit_card_payments + subproject_payments))
 
     @property
     def message_after_edit(self):
@@ -526,25 +520,8 @@ class Payment(db.Model, DefaultCRUD):
             "%.2f", self.transaction_amount, grouping=True, monetary=True
         )
 
-    def get_formatted_balance(self):
-        # TODO: How do I implement this for BNG?
-        return_value = ""
-        # Manually added payments don't have the balance_after_mutation_value
-        # field
-        # if not self.balance_after_mutation_value == None:
-        #     return_value = locale.format(
-        #         "%.2f",
-        #         self.balance_after_mutation_value,
-        #         grouping=True,
-        #         monetary=True
-        #     )
-        return return_value
-
     def get_export_currency(self):
         return self.get_formatted_currency().replace("\u202f", "")
-
-    def get_export_balance(self):
-        return self.get_formatted_balance().replace("\u202f", "")
 
     def make_category_select_options(self):
         # TODO: Refactor.

@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
+{% import 'macros.html' as macros %}
 {% block head %}
 <title>Open Poen - {{ subproject.name }}</title>
 <meta property="og:title" content="Open Poen - {{ subproject.name }}" />
@@ -308,6 +309,47 @@
         <div class="row">
           <div class="col-12">
             <div id="toolbar">
+              {% if project_owner %}
+              <button type="button" class="btn button-poen-small button-toolbar bg-grey-blue mx-auto"
+                data-toggle="modal" data-target="#modal-betaling-toevoegen">
+                + betaling
+              </button>
+
+              <div class="modal fade" id="modal-betaling-toevoegen" tabindex="-1" role="dialog"
+                aria-labelledby="betalingToevoegenLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                  <div class="modal-content">
+                    <form method="POST" enctype="multipart/form-data">
+                      <div class="modal-header">
+                        <h5 class="modal-title" id="betalingToevoegenLabel">Betaling Toevoegen</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
+                          <span aria-hidden="true">&times;</span>
+                        </button>
+                      </div>
+                      <div class="modal-body">
+                        {{ new_payment_form.csrf_token }}
+
+                        {% for f in new_payment_form %}
+                        {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' and f.name !=
+                        "new_payment_form-booking_date" %}
+                        {{ wtf.form_field(f, class="form-control") }}
+                        {% endif %}
+                        {% if f.name == "new_payment_form-booking_date" %}
+                        {{ wtf.form_field(f, class="form-control add-payment-datepicker") }}
+                        {% endif %}
+                        {% endfor %}
+                        {{ new_payment_form.project_id }}
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
+                        {{ new_payment_form.submit() }}
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+              {% endif %}
+
               <!-- Button trigger modal -->
               <button type="button" class="btn button-poen-small button-toolbar bg-grey-blue mx-auto"
                 data-toggle="modal" data-target="#alle-media">
@@ -436,7 +478,8 @@
                 {% endfor %}
 
                 {% if not payment.hidden or (project_owner or user_in_subproject) %}
-                <tr{% if payment.type=='MANUAL' %} class="manual-payment" {% endif %} id="payment_row_{{ payment.id }}">
+                <tr{% if payment.type=='MANUAL_PAYMENT' %} class="manual-payment" {% elif payment.type=="MANUAL_TOPUP"
+                  %} class="manual-topup" {% endif %} id="payment_row_{{ payment.id }}">
                   <td>
                     <div class="cell">
                       {{ payment.id }}
@@ -453,15 +496,23 @@
                   </td>
                   <td>
                     <div class="cell">
+                      {% if payment.debit_card.card_number %}
                       {{ payment.debit_card.card_number }}
+                      {% else %}
+                      <i>handmatige betaling</i>
+                      {% endif %}
                     </div>
                   </td>
                   <td>
                     <div class="cell">
-                      {% if payment.creditor_name and payment.route == "uitgaven" %}
-                      {{ payment.creditor_name }}
-                      {% elif payment.route == "inkomsten" %}
+                      {% if payment.type == "MANUAL_TOPUP" or (payment.type == "BNG" and payment.route == "inkomsten")
+                      %}
                       Betaalpas
+                      {% elif (payment.type == "MANUAL_PAYMENT" or (payment.type == "BNG" and payment.route ==
+                      "uitgaven")) and payment.creditor_name %}
+                      {{ payment.creditor_name }}
+                      {% else %}
+                      <i>niet ingevuld</i>
                       {% endif %}
                     </div>
                   </td>
@@ -470,7 +521,7 @@
                       {% if payment.short_user_description %}
                       {{ payment.short_user_description }}
                       {% else %}
-                      <i>nog niet toegevoegd</i>
+                      <i>niet ingevuld</i>
                       {% endif %}
                     </div>
                   </td>
@@ -533,8 +584,10 @@
                   </td>
                   <td>
                     <div class="cell">
-                      {% if payment.type == "MANUAL" %}
-                      handmatig
+                      {% if payment.type == "MANUAL_PAYMENT" %}
+                      handmatige betaling
+                      {% elif payment.type == "MANUAL_TOPUP" %}
+                      handmatige topup
                       {% else %}
                       BNG
                       {% endif %}
@@ -554,62 +607,17 @@
                       <div class="detail-row">
                         <div class="row">
                           <div class="col-5">
-                            <b>Type</b>
-                            <br>
-                            {% if payment.type == "BNG" and payment.route == "uitgaven" %}
-                            <i>Betaling met betaalpas.</i>
+
+                            {% if payment.type == "MANUAL_TOPUP" %}
+                            {{ macros.manual_topup_info(payment, payment_forms) }}
+                            {% elif payment.type == "MANUAL_PAYMENT" %}
+                            {{ macros.manual_payment_info(payment, payment_forms) }}
                             {% elif payment.type == "BNG" and payment.route == "inkomsten" %}
-                            <i>Topup naar betaalpas.</i>
-                            {% elif payment.type == "MANUAL" %}
-                            <i>Handmatige topup naar betaalpas.</i>
+                            {{ macros.automatic_topup_info(payment, payment_forms) }}
+                            {% elif payment.type == "BNG" and payment.route == "uitgaven" %}
+                            {{ macros.debit_card_payment_info(payment, payment_forms) }}
                             {% endif %}
-                            <br>
-                            <br>
-                            <b>Betaalpas</b>
-                            <br>
-                            {{ payment.debit_card.card_number }}
-                            <br>
-                            <br>
-                            <b>Ontvanger</b>
-                            <br>
-                            {% if payment.creditor_name and payment.route == "uitgaven" %}
-                            {{ payment.creditor_name }}
-                            {% elif not payment.creditor_name and payment.route == "uitgaven" %}
-                            <i>Niet ingevuld.</i>
-                            {% elif payment.route == "inkomsten" %}
-                            Betaalpas
-                            {% endif %}
-                            <br>
-                            <br>
-                            {% if payment.type != 'MANUAL' %}
-                            <b>Betaal&shy;omschrijving</b>
-                            <br>
-                            {% if payment.remittance_information_structured %}
-                            {{ payment.remittance_information_structured }}
-                            {% else %}
-                            <i>geen beschrijving</i>
-                            {% endif %}
-                            <br>
-                            <br>
-                            {% endif %}
-                            {% if not (payment.id in payment_forms and 'booking_date' in payment_forms[payment.id]) %}
-                            <b>Transactiedatum</b>
-                            <br>
-                            {{ payment.booking_date.strftime('%d-%m-\'%y') }}
-                            <br>
-                            <br>
-                            {% endif %}
-                            <b>Route</b>
-                            <br>
-                            {{ payment.route }}
-                            <br>
-                            <br>
-                            <b>bedrag €</b>
-                            {% if payment.transaction_amount >= 0 %}
-                            <h6 class="text-blue">+{{ payment.get_formatted_currency() }}</h6>
-                            {% else %}
-                            <h6 class="text-red">{{ payment.get_formatted_currency() }}</h6>
-                            {% endif %}
+
                             {% if payment.attachments.all() %}
                             <br>
                             <hr>
@@ -724,7 +732,8 @@
                               table-datepicker") }}
                               {% endif %}
 
-                              {% if 'transaction_amount' in payment_forms[payment.id] and payment.type == "MANUAL" %}
+                              {% if 'transaction_amount' in payment_forms[payment.id] and payment.type in
+                              ("MANUAL_PAYMENT", "MANUAL_TOPUP") %}
                               {{ wtf.form_field(payment_forms[payment.id]['transaction_amount'], class="form-control")
                               }}
                               {% endif %}
@@ -745,6 +754,10 @@
 
                               {% if payment.id in payment_forms %}
                               {{ wtf.form_field(payment_forms[payment.id]['subproject_id'], class="form-control") }}
+                              {% endif %}
+
+                              {% if payment.id in payment_forms %}
+                              {{ wtf.form_field(payment_forms[payment.id]['route'], class="form-control") }}
                               {% endif %}
 
                               {# Show either the short or long description to not logged in visitors, otherwise allow a
