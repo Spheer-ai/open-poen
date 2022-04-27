@@ -622,20 +622,16 @@ def profile(user_id):
 @app.route("/profiel-bewerken", methods=["GET", "POST"])
 @login_required
 def profile_edit():
-    # Process filled in edit profile form
     edit_profile_form = EditProfileForm(prefix="edit_profile_form")
 
-    # Process image edit form (only used to remove an image)
     edit_attachment_form = EditAttachmentForm(prefix="edit_attachment_form")
     if edit_attachment_form.remove.data:
         File.query.filter_by(id=edit_attachment_form.id.data).delete()
         db.session.commit()
         flash('<span class="text-default-green">Media is verwijderd</span>')
 
-        # redirect back to clear form data
         return redirect(url_for("profile", user_id=current_user.id))
 
-    # Fill in attachment form data which allows a user to edit it
     edit_attachment_forms = {}
     attachment = File.query.filter_by(id=current_user.image).first()
     if attachment:
@@ -643,7 +639,6 @@ def profile_edit():
             **attachment.__dict__, prefix="edit_attachment_form"
         )
 
-    # Update profile
     if edit_profile_form.validate_on_submit():
         users = User.query.filter_by(id=current_user.id)
         new_profile_data = {}
@@ -655,7 +650,6 @@ def profile_edit():
             ):
                 new_profile_data[f.short_name] = f.data
 
-        # Update if the user exists
         if len(users.all()):
             users.update(new_profile_data)
             db.session.commit()
@@ -667,12 +661,10 @@ def profile_edit():
 
             flash('<span class="text-default-green">gebruiker is bijgewerkt</span>')
 
-        # redirect back to clear form data
         return redirect(url_for("profile", user_id=current_user.id))
     else:
         util.flash_form_errors(edit_profile_form, request)
 
-    # Populate the edit profile form which allows the user to edit it
     edit_profile_form = EditProfileForm(
         prefix="edit_profile_form",
         **{
