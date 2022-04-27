@@ -452,7 +452,7 @@ class PaymentForm(FlaskForm):
         if p is None:
             return False
 
-        if p.type == "MANUAL" and self.transaction_amount.data < 0:
+        if p.type == "MANUAL_TOPUP" and self.transaction_amount.data < 0:
             self.transaction_amount.errors.append(
                 f"{self.transaction_amount.data} is niet een positief bedrag. Topups moeten meer dan 0 € zijn."
             )

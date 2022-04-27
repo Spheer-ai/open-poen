@@ -2,7 +2,7 @@ from typing import Dict
 
 from app.controllers.util import Controller, create_redirects
 from app.form_processing import process_form
-from app.forms import NewTopupForm, PaymentForm, NewPaymentForm
+from app.forms import PaymentForm, NewPaymentForm
 from app.models import Payment, Subproject
 from datetime import date
 from app.controllers.util import Status

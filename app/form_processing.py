@@ -15,10 +15,9 @@ from werkzeug.utils import secure_filename
 from app import app
 from app import bng as bng
 from app import db, util
-from app.forms import EditAttachmentForm, PaymentForm
+from app.forms import EditAttachmentForm
 from app.models import (
     BNGAccount,
-    Category,
     DebitCard,
     File,
     Funder,
@@ -50,198 +49,6 @@ def return_redirect(project_id: int, subproject_id: Union[None, int]):
         )
 
     return redirect(url_for("project", project_id=project_id))
-
-
-# Process filled in payment form
-def process_payment_form(
-    request, project_or_subproject, project_owner, user_subproject_ids, is_subproject
-):
-    form_keys = list(request.form.keys())
-    if len(form_keys) > 0 and form_keys[0].startswith("payment_form_"):
-        id_key = [x for x in list(request.form.keys()) if "-id" in x][0]
-        id_key = id_key.split("-")[0]
-    else:
-        return
-
-    payment_form = PaymentForm(prefix=id_key)
-    # Somehow we need to repopulate the category_id.choices with the same
-    # values as used when the form was generated. Probably to validate
-    # if the selected value is valid. We don't know the subproject in the
-    # case of an edited payment on a project page which contains subprojects,
-    # so we need to retrieve this before running validate_on_submit
-    temppayment = Payment.query.filter_by(id=payment_form.id.data).first()
-    if temppayment:
-        if temppayment.subproject:
-            payment_form.category_id.choices = (
-                temppayment.subproject.make_category_select_options()
-            )
-        else:
-            #     # If a payment is not manually assigned to a subproject, we have to go by the debit
-            #     # card that is associated with the payment, unless it has been manually added. This,
-            #     # still have to implement. # TODO
-            payment_form.category_id.choices = (
-                temppayment.debit_card.project.make_category_select_options()
-            )
-
-        if temppayment.debit_card.project.contains_subprojects:
-            payment_form.subproject_id.choices = (
-                temppayment.debit_card.project.make_subproject_select_options()
-            )
-
-        # Make sure the user is allowed to edit this payment
-        # (especially needed when a normal users edits a subproject
-        # payment on a project page)
-        if not project_owner and not temppayment.subproject.id in user_subproject_ids:
-            return
-        # Make sure the transaction amount can't be changed if the transaction is not manual.
-        if temppayment.type != "MANUAL":
-            payment_form.transaction_amount.data = temppayment.transaction_amount
-    else:
-        return
-
-    if payment_form.remove.data:
-        Payment.query.filter_by(id=payment_form.id.data).delete()
-        db.session.commit()
-        flash('<span class="text-default-green">Topup/betaling is verwijderd</span>')
-        if is_subproject:
-            # Redirect back to clear form data
-            return redirect(
-                url_for(
-                    "subproject",
-                    project_id=project_or_subproject.project_id,
-                    subproject_id=project_or_subproject.id,
-                )
-            )
-        # Redirect back to clear form data
-        return redirect(
-            url_for(
-                "project",
-                project_id=project_or_subproject.id,
-            )
-        )
-
-    if payment_form.validate_on_submit():
-        # TODO: We don't want this hardcoded.
-        new_payment_fields = [
-            "short_user_description",
-            "long_user_description",
-            "transaction_amount",
-            "booking_date",
-            "hidden",
-            "category_id",
-            "subproject_id",
-            "route",
-            "id",
-        ]
-        new_payment_data = {
-            x.short_name: x.data
-            for x in payment_form
-            if x.short_name in new_payment_fields
-        }
-        new_payment_data["category_id"] = (
-            None
-            if new_payment_data["category_id"] == ""
-            else new_payment_data["category_id"]
-        )
-        new_payment_data["subproject_id"] = (
-            None
-            if new_payment_data["subproject_id"] == ""
-            else new_payment_data["subproject_id"]
-        )
-
-        try:
-            # Update if the payment already exists
-            payments = Payment.query.filter_by(id=payment_form.id.data)
-
-            # In case of a manual payment we update the updated field with
-            # the current timestamp
-            if payments.first().type == "MANUAL":
-                new_payment_data["updated"] = datetime.now()
-
-            # In case of non-manual payments we don't allow the modification
-            # of the 'created' field, so we need to fill in the form with
-            # created timestamp that already exists
-            if payments.first().type != "MANUAL":
-                new_payment_data["booking_date"] = payments.first().booking_date
-
-            if len(payments.all()):
-                payments.update(new_payment_data)
-                db.session.commit()
-                flash(
-                    '<span class="text-default-green">Topup/betaling is bijgewerkt</span>'
-                )
-        except IntegrityError as e:
-            db.session().rollback()
-            app.logger.error(repr(e))
-            flash(
-                '<span class="text-default-red">Topup/betaling bijwerken mislukt<span>'
-            )
-
-        if is_subproject:
-            # Redirect back to clear form data
-            return redirect(
-                url_for(
-                    "subproject",
-                    project_id=project_or_subproject.project_id,
-                    subproject_id=project_or_subproject.id,
-                )
-            )
-
-        # Redirect back to clear form data
-        return redirect(
-            url_for(
-                "project",
-                project_id=project_or_subproject.id,
-            )
-        )
-    else:
-        return payment_form
-
-
-# Populate the payment forms which allows the user to edit it
-def create_payment_forms(payments):
-    payment_forms = {}
-    for payment in payments:
-        payment_form = PaymentForm(
-            prefix=f"payment_form_{payment.id}",
-            **{
-                "short_user_description": payment.short_user_description,
-                "long_user_description": payment.long_user_description,
-                "booking_date": payment.booking_date,
-                "transaction_amount": payment.transaction_amount,
-                "id": payment.id,
-                "hidden": payment.hidden,
-                "category_id": "" if payment.category is None else payment.category.id,
-                "subproject_id": ""
-                if payment.subproject is None
-                else payment.subproject.id,
-                "route": payment.route,
-            },
-        )
-
-        if payment.type != "MANUAL":
-            del payment_form["booking_date"]
-            del payment_form["remove"]
-
-        if payment.subproject:
-            payment_form.category_id.choices = (
-                payment.subproject.make_category_select_options()
-            )
-        else:
-            # If a payment is not manually assigned to a subproject, we have to go by the debit
-            # card that is associated with the payment, unless it has been manually added. This,
-            # still have to implement. # TODO
-            payment_form.category_id.choices = (
-                payment.debit_card.project.make_category_select_options()
-            )
-
-        if payment.debit_card.project.contains_subprojects:
-            payment_form.subproject_id.choices = (
-                payment.debit_card.project.make_subproject_select_options()
-            )
-
-        payment_forms[payment.id] = payment_form
-    return payment_forms
 
 
 # Save attachment to disk
@@ -377,48 +184,6 @@ def process_edit_attachment_form(
         )
     else:
         flash_form_errors(edit_attachment_form, request)
-
-
-def process_new_payment_form(form, project, subproject):
-    if not util.validate_on_submit(form, request):
-        return None
-
-    new_payment = {}
-    for f in form:
-        if f.type != "SubmitField" and f.type != "CSRFTokenField":
-            new_payment[f.short_name] = f.data
-    media_type = new_payment.pop("mediatype")
-    data_file = new_payment.pop("data_file")
-
-    new_payment = Payment(**new_payment)
-    new_payment.amount_currency = "EUR"
-    new_payment.type = "MANUAL"
-    new_payment.updated = datetime.now()
-    new_payment.created = datetime.now()
-    new_payment.route = "inkomsten"
-
-    if form.card_number.data not in [x.card_number for x in project.debit_cards.all()]:
-        formatted_flash(
-            (
-                f"Topup toevoegen mislukt. Betaalpas {form.card_number.data} "
-                "is niet gekoppeld aan dit project."
-            ),
-            "red",
-        )
-        return redirect(url_for("project", project_id=project.id))
-
-    try:
-        db.session.add(new_payment)
-        db.session.commit()
-        formatted_flash("Topup is toegevoegd", "green")
-    except (ValueError, IntegrityError) as e:
-        db.session.rollback()
-        app.logger.error(repr(e))
-        formatted_flash("Topup toevoegen mislukt.", "red")
-        return redirect(url_for("project", project_id=project.id))
-    if data_file is not None:
-        save_attachment(data_file, media_type, new_payment, "transaction-attachment")
-    return redirect(url_for("project", project_id=project.id))
 
 
 def process_new_project_form(form):
@@ -609,7 +374,6 @@ def process_form(
     alt_update: Optional[Callable] = None,
     alt_create: Optional[Callable] = None,
 ) -> Union[None, Status]:
-    # TODO: Ensure that the form is not validated if an instance is removed.
     # TODO: Type hint for object argument.
     if hasattr(form, "remove") and form.remove.data:
         instance = object.query.get(form.id.data)
