@@ -1,14 +1,14 @@
-from ast import Assert
 import locale
+import os
 from datetime import datetime
 from os import urandom
 from time import time
 
 import jwt
 from flask_login import UserMixin
-from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.utils import secure_filename
 
 from app import app, db, login_manager
 from app.email import send_invite
@@ -252,14 +252,9 @@ class Project(db.Model, DefaultCRUD):
     categories = db.relationship("Category", backref="project", lazy="dynamic")
     debit_cards = db.relationship("DebitCard", backref="project", lazy="dynamic")
 
-    def set_bank_name(self, bank_name):
-        self.bank_name = bank_name
-
-    # Returns true if the project is linked to the given user_id
     def has_user(self, user_id):
         return self.users.filter(project_user.c.user_id == user_id).count() > 0
 
-    # Create category select options to be shown in a dropdown menu
     def make_category_select_options(self):
         select_options = [("", "Geen")]
         for category in Category.query.filter_by(project_id=self.id):
@@ -290,6 +285,17 @@ class Project(db.Model, DefaultCRUD):
             db.session.query(Payment).join(Project).filter(Project.id == self.id).all()
         )
         return list(set(debit_card_payments + subproject_payments))
+
+    def get_all_attachments(self):
+        all_payments = self.get_all_payments()
+
+        return (
+            db.session.query(File)
+            .join(payment_attachment)
+            .join(Payment)
+            .filter(Payment.id.in_([x.id for x in all_payments]))
+            .all()
+        )
 
     @property
     def message_after_edit(self):
@@ -353,6 +359,16 @@ class Subproject(db.Model, DefaultCRUD):
         for category in Category.query.filter_by(subproject_id=self.id):
             select_options.append((str(category.id), category.name))
         return select_options
+
+    def get_all_attachments(self):
+        return (
+            db.session.query(File)
+            .join(payment_attachment)
+            .join(Payment)
+            .join(Subproject)
+            .filter(Subproject.id == self.id)
+            .all()
+        )
 
     @property
     def message_after_edit(self):
@@ -617,11 +633,67 @@ class UserStory(db.Model):
     images = db.relationship("File", secondary=user_story_image, lazy="dynamic")
 
 
-class File(db.Model):
+def save_attachment(f, mediatype, db_object, folder):
+    filename = secure_filename(f.filename)
+    filename = "%s_%s" % (datetime.now(app.config["TZ"]).isoformat()[:19], filename)
+    filepath = os.path.join(
+        os.path.abspath(
+            os.path.join(
+                app.instance_path, "../%s/%s" % (app.config["UPLOAD_FOLDER"], folder)
+            )
+        ),
+        filename,
+    )
+    f.save(filepath)
+    new_file = File(filename=filename, mimetype=f.headers[1][1], mediatype=mediatype)
+    db.session.add(new_file)
+    db.session.commit()
+
+    # Link attachment to payment in the database
+    # If the db object is a User, then save as FK and store the id
+    if isinstance(db_object, User):
+        db_object.image = new_file.id
+        db.session.commit()
+    # Elif this is a Payment, then save as many-to-many and we need to append
+    elif isinstance(db_object, Payment):
+        db_object.attachments.append(new_file)
+        db.session.commit()
+
+    return new_file
+
+
+class File(db.Model, DefaultCRUD):
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(255), index=True)
     mimetype = db.Column(db.String(255))
     mediatype = db.Column(db.String(32))
+
+    @classmethod
+    def add_attachment(self, data_file, mediatype, payment_id):
+        payment = Payment.query.get(payment_id)
+        attachment = save_attachment(
+            data_file, mediatype, payment, "transaction-attachment"
+        )
+        return attachment
+
+    @property
+    def message_after_edit(self):
+        return "Media/bestand is aangepast."
+
+    @property
+    def message_after_create(self):
+        return "Media/bestand is aangemaakt."
+
+    @property
+    def message_after_delete(self):
+        return "Media/bestand is verwijderd."
+
+    def message_after_edit_error(self, error, data):
+        return "Aanpassen mislukt vanwege een onbekende fout. De beheerder van Open Poen is op de hoogte gesteld."
+
+    @classmethod
+    def message_after_create_error(cls, error, data):
+        return "Aanmaken mislukt vanwege een onbekende fout. De beheerder van Open Poen is op de hoogte gesteld."
 
 
 class Category(db.Model, DefaultCRUD):

@@ -1,60 +1,63 @@
 {% extends "base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
 {% block head %}
-  <title>Open Poen - Profiel bewerken</title>
-  <meta property="og:title" content="Open Poen - Profiel bewerken" />
-  {{ super() }}
+<title>Open Poen - Profiel bewerken</title>
+<meta property="og:title" content="Open Poen - Profiel bewerken" />
+{{ super() }}
 {% endblock %}
 
 {% block content %}
-  <div class="container">
-    <br>
-    <h1>Profiel bewerken</h1>
+<div class="container">
+  <br>
+  <h1>Profiel bewerken</h1>
 
-    <br>
-    <br>
+  <br>
+  <br>
 
-    <form method="POST" enctype="multipart/form-data">
-      {{ edit_profile_form.csrf_token }}
+  <form method="POST" enctype="multipart/form-data">
+    {{ edit_profile_form.csrf_token }}
 
-      {% for f in edit_profile_form %}
-        {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' %}
-          {{ wtf.form_field(f, class="form-control") }}
-        {% endif %}
-      {% endfor %}
-
-      {{ edit_profile_form.submit }}
-    </form>
-
-    <br>
-    <br>
-    <br>
-
-    <div class="col-12 col-sm-3">
-      <div class="attachment-div">
-        {% if attachment.mimetype in ['image/jpeg', 'image/jpg', 'image/png'] %}
-          <a class="embed-responsive embed-responsive-1by1" href="{{ url_for('upload', filename='user-image/' + attachment.filename) }}" data-toggle="lightbox" data-gallery="image-gallery-{{ current_user.id }}">
-            <img class="img-fluid embed-responsive-item attachment" src="{{ url_for('upload', filename='user-image/' + attachment.filename) }}">
-          </a>
-        {% endif %}
-      </div>
-    </div>
-
-    {% for edit_attachment_form in edit_attachment_forms %}
-      {% if attachment.id in edit_attachment_forms %}
-        <!-- Button trigger modal -->
-        <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#bijlage-verwijder-{{ attachment.id }}">
-          Verwijderen
-        </button>
-        {% include 'partials/remove_attachment_form.html' %}
-      {% endif %}
+    {% for f in edit_profile_form %}
+    {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' %}
+    {{ wtf.form_field(f, class="form-control") }}
+    {% endif %}
     {% endfor %}
 
-    <br>
-    <br>
-    <br>
+    {{ edit_profile_form.submit }}
+  </form>
 
-    <div>
-      <p><a href="{{ url_for('reset_wachtwoord_verzoek') }}">Wachtwoord veranderen</a></p>
+  <br>
+  <br>
+  <br>
+
+  <div class="col-12 col-sm-3">
+    <div class="attachment-div">
+      {% if attachment.mimetype in ['image/jpeg', 'image/jpg', 'image/png'] %}
+      <a class="embed-responsive embed-responsive-1by1"
+        href="{{ url_for('upload', filename='user-image/' + attachment.filename) }}" data-toggle="lightbox"
+        data-gallery="image-gallery-{{ current_user.id }}">
+        <img class="img-fluid embed-responsive-item attachment"
+          src="{{ url_for('upload', filename='user-image/' + attachment.filename) }}">
+      </a>
+      {% endif %}
     </div>
-{% endblock %}
+  </div>
+
+  {% for edit_attachment_form in edit_attachment_forms %}
+  {% if attachment.id in edit_attachment_forms %}
+  <!-- Button trigger modal -->
+  <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#bijlage-verwijder-{{ attachment.id }}">
+    Verwijderen
+  </button>
+  {% include 'partials/remove_attachment_form.html' %}
+  {% endif %}
+  {% endfor %}
+
+  <br>
+  <br>
+  <br>
+
+  <div>
+    <p><a href="{{ url_for('reset_wachtwoord_verzoek') }}">Wachtwoord veranderen</a></p>
+  </div>
+  {% endblock %}

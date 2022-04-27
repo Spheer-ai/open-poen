@@ -16,13 +16,9 @@ from app import app, db, util
 from app.bng import get_bng_info, process_bng_callback
 from app.email import send_password_reset_email
 from app.form_processing import (
-    create_edit_attachment_forms,
     process_bng_link_form,
-    process_edit_attachment_form,
     process_form,
     process_new_project_form,
-    process_transaction_attachment_form,
-    save_attachment,
 )
 from app.forms import (
     AddUserForm,
@@ -34,7 +30,6 @@ from app.forms import (
     NewProjectForm,
     ResetPasswordForm,
     ResetPasswordRequestForm,
-    TransactionAttachmentForm,
 )
 from app.models import (
     BNGAccount,
@@ -45,7 +40,7 @@ from app.models import (
     Subproject,
     User,
     UserStory,
-    payment_attachment,
+    save_attachment,
 )
 
 
@@ -221,10 +216,8 @@ def index():
 
 @app.route("/project/<project_id>", methods=["GET", "POST"])
 def project(project_id):
-    modal_id = []  # This is used to pop open a modal on page load in case of
-    # form errors.
-    payment_id = None  # This is used to pop open the right detail view of a
-    # payment in the bootstrap table of payments in case of form errors.
+    modal_id = []
+    payment_id = None
     bng_info = {}
 
     if current_user.is_authenticated:
@@ -239,8 +232,6 @@ def project(project_id):
             footer=app.config["FOOTER"],
         )
 
-    # A project owner is either an admin or a user that is part of this
-    # project
     is_project_owner = False
     if current_user.is_authenticated and (
         current_user.admin or project.has_user(current_user.id)
@@ -294,72 +285,12 @@ def project(project_id):
     modal_id = payment_controller.get_modal_ids(modal_id)
     payment_id = payment_controller.get_payment_id()
 
-    # PAYMENT AND ATTACHMENT
-    # TODO: Refactor this.
-    # Filled with all categories for each subproject; used by some JavaScript
-    # to update the categories in the select field when the user selects
-    # another subproject to add the new payment to.
-    categories_dict = {}
-    if is_project_owner:
-        categories_dict = {
-            x.id: x.make_category_select_options() for x in project.subprojects
-        }
-
-    transaction_attachment_form = ""
-    edit_attachment_forms = {}
-    edit_attachment_form = ""
-    if is_project_owner or user_subproject_ids:
-        if is_project_owner:
-            editable_payments = (
-                db.session.query(Payment)
-                .join(DebitCard)
-                .join(Project)
-                .filter(Project.id == project.id)
-                .all()
-            )
-        elif user_subproject_ids:
-            # A user that is not project owner or admin is only allowed to
-            # edit payments from its subprojects.
-            editable_payments = (
-                db.session.query(Payment)
-                .join(Subproject)
-                .filter(Subproject.id.in_(user_subproject_ids))
-                .all()
-            )
-
-        editable_attachments = (
-            db.session.query(File)
-            .join(payment_attachment)
-            .join(Payment)
-            .filter(Payment.id.in_([x.id for x in editable_payments]))
-            .all()
-        )
-
-        transaction_attachment_form = TransactionAttachmentForm(
-            prefix="transaction_attachment_form"
-        )
-        transaction_attachment_form_return = process_transaction_attachment_form(
-            request,
-            transaction_attachment_form,
-            is_project_owner,
-            user_subproject_ids,
-            project.id,
-        )
-        if transaction_attachment_form_return:
-            return transaction_attachment_form_return
-
-        edit_attachment_form = EditAttachmentForm(prefix="edit_attachment_form")
-        edit_attachment_form_return = process_edit_attachment_form(
-            request,
-            edit_attachment_form,
-            project.id,
-        )
-        if edit_attachment_form_return:
-            return edit_attachment_form_return
-
-        edit_attachment_forms = create_edit_attachment_forms(editable_attachments)
-
-    payments = project.get_all_payments()
+    # ATTACHMENT
+    attachment_controller = pc.Attachment(project)
+    controller_redirect = attachment_controller.process_forms()
+    if controller_redirect:
+        return controller_redirect
+    edit_attachment_forms = attachment_controller.get_forms()
 
     # PROJECT OWNER
     project_owner_controller = pc.ProjectOwner(project)
@@ -398,6 +329,17 @@ def project(project_id):
     category_forms = category_controller.get_forms()
     category_forms = list(zip(category_forms, category_controller.names))
     modal_id = category_controller.get_modal_ids(modal_id)
+
+    # Filled with all categories for each subproject; used by some JavaScript
+    # to update the categories in the select field when the user selects
+    # another subproject to add the new payment to.
+    categories_dict = {}
+    if is_project_owner:
+        categories_dict = {
+            x.id: x.make_category_select_options() for x in project.subprojects
+        }
+
+    payments = project.get_all_payments()
 
     # PROJECT DATA
     amounts = util.calculate_amounts(Project, project.id, payments)
@@ -439,11 +381,11 @@ def project(project_id):
         new_topup_form=payment_controller.add_topup_form,
         categories_dict=categories_dict,
         payment_forms=payment_forms,
-        transaction_attachment_form=transaction_attachment_form,
+        transaction_attachment_form=attachment_controller.add_form,
         edit_attachment_forms=edit_attachment_forms,
         funder_forms=funder_forms,
         new_funder_form=funder_controller.add_form,
-        project_owner=is_project_owner,  # TODO: Always use "is_project_owner" instead of "project_owner"
+        project_owner=is_project_owner,
         admin=is_admin,
         user_subproject_ids=user_subproject_ids,
         timestamp=util.get_export_timestamp(),
@@ -457,10 +399,8 @@ def project(project_id):
 
 @app.route("/project/<project_id>/subproject/<subproject_id>", methods=["GET", "POST"])
 def subproject(project_id, subproject_id):
-    modal_id = []  # This is used to pop open a modal on page load in case of
-    # form errors.
-    payment_id = None  # This is used to pop open the right detail view of a
-    # payment in the bootstrap table of payments in case of form errors.
+    modal_id = []
+    payment_id = None
 
     subproject = Subproject.query.get(subproject_id)
 
@@ -475,8 +415,6 @@ def subproject(project_id, subproject_id):
     if current_user.is_authenticated and subproject.has_user(current_user.id):
         user_in_subproject = True
 
-    # A project owner is either an admin or a user that is part of the
-    # project where this subproject belongs to
     project_owner = False
     if current_user.is_authenticated and (
         current_user.admin or subproject.project.has_user(current_user.id)
@@ -513,41 +451,12 @@ def subproject(project_id, subproject_id):
     modal_id = payment_controller.get_modal_ids(modal_id)
     payment_id = payment_controller.get_payment_id()
 
-    # PAYMENT AND ATTACHMENT
-    # TODO: Refactor.
-    # --------------------------------------------------------------------------------
-    transaction_attachment_form = ""
-    edit_attachment_forms = {}
-    edit_attachment_form = ""
-    if project_owner or user_in_subproject:
-        # Process new transaction attachment form
-        transaction_attachment_form = TransactionAttachmentForm(
-            prefix="transaction_attachment_form"
-        )
-        transaction_attachment_form_return = process_transaction_attachment_form(
-            request,
-            transaction_attachment_form,
-            project_owner,
-            user_subproject_ids,
-            subproject.project.id,
-            subproject.id,
-        )
-        if transaction_attachment_form_return:
-            return transaction_attachment_form_return
-
-        # Process transaction attachment edit form
-        edit_attachment_form = EditAttachmentForm(prefix="edit_attachment_form")
-        edit_attachment_form_return = process_edit_attachment_form(
-            request, edit_attachment_form, subproject.project.id, subproject.id
-        )
-        if edit_attachment_form_return:
-            return edit_attachment_form_return
-
-        # Fill in attachment form data which allow a user to edit it
-        attachments = []
-        for payment in subproject.payments:
-            attachments += payment.attachments
-        edit_attachment_forms = create_edit_attachment_forms(attachments)
+    # ATTACHMENT
+    attachment_controller = subpc.Attachment(subproject)
+    controller_redirect = attachment_controller.process_forms()
+    if controller_redirect:
+        return controller_redirect
+    edit_attachment_forms = attachment_controller.get_forms()
 
     # CATEGORY
     category_controller = subpc.Category(subproject)
@@ -591,7 +500,7 @@ def subproject(project_id, subproject_id):
         subproject_form=subproject_form,
         payment_forms=payment_forms,
         new_payment_form=payment_controller.add_payment_form,
-        transaction_attachment_form=transaction_attachment_form,
+        transaction_attachment_form=attachment_controller.add_form,
         edit_attachment_forms=edit_attachment_forms,
         subproject_owners=subproject_owners,
         add_user_form=subproject_owner_controller.add_form,
@@ -730,7 +639,9 @@ def profile_edit():
     edit_attachment_forms = {}
     attachment = File.query.filter_by(id=current_user.image).first()
     if attachment:
-        edit_attachment_forms = create_edit_attachment_forms([attachment])
+        edit_attachment_forms[attachment.id] = EditAttachmentForm(
+            **attachment.__dict__, prefix="edit_attachment_form"
+        )
 
     # Update profile
     if edit_profile_form.validate_on_submit():

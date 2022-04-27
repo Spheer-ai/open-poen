@@ -1,32 +1,19 @@
-import os
-from datetime import datetime
 from enum import Enum
 from time import time
 from typing import Callable, Dict, Optional, Union
 
 import jwt
-from flask import flash, redirect, request, url_for
+from flask import redirect, request, url_for
 from flask_login import current_user
 from flask_wtf import FlaskForm
 from requests import ConnectionError
 from sqlalchemy.exc import IntegrityError
-from werkzeug.utils import secure_filename
 
 from app import app
 from app import bng as bng
 from app import db, util
-from app.forms import EditAttachmentForm
-from app.models import (
-    BNGAccount,
-    DebitCard,
-    File,
-    Funder,
-    Payment,
-    Project,
-    Subproject,
-    User,
-)
-from app.util import flash_form_errors, form_in_request, formatted_flash
+from app.models import BNGAccount, DebitCard, Funder, Project, Subproject
+from app.util import formatted_flash
 
 
 def filter_fields(form: FlaskForm) -> Dict:
@@ -49,141 +36,6 @@ def return_redirect(project_id: int, subproject_id: Union[None, int]):
         )
 
     return redirect(url_for("project", project_id=project_id))
-
-
-# Save attachment to disk
-def save_attachment(f, mediatype, db_object, folder):
-    filename = secure_filename(f.filename)
-    filename = "%s_%s" % (datetime.now(app.config["TZ"]).isoformat()[:19], filename)
-    filepath = os.path.join(
-        os.path.abspath(
-            os.path.join(
-                app.instance_path, "../%s/%s" % (app.config["UPLOAD_FOLDER"], folder)
-            )
-        ),
-        filename,
-    )
-    f.save(filepath)
-    new_file = File(filename=filename, mimetype=f.headers[1][1], mediatype=mediatype)
-    db.session.add(new_file)
-    db.session.commit()
-
-    # Link attachment to payment in the database
-    # If the db object is a User, then save as FK and store the id
-    if isinstance(db_object, User):
-        db_object.image = new_file.id
-        db.session.commit()
-    # Elif this is a Payment, then save as many-to-many and we need to append
-    elif isinstance(db_object, Payment):
-        db_object.attachments.append(new_file)
-        db.session.commit()
-
-
-# Process filled in transaction attachment form
-def process_transaction_attachment_form(
-    request,
-    transaction_attachment_form,
-    project_owner,
-    user_subproject_ids,
-    project_id=0,
-    subproject_id=0,
-):
-    if form_in_request(transaction_attachment_form, request):
-        if transaction_attachment_form.validate_on_submit():
-            payment = Payment.query.get(transaction_attachment_form.payment_id.data)
-            # Make sure the user is allowed to edit this payment
-            # (especially needed when a normal users edits a subproject
-            # payment on a project page)
-            if not project_owner and not payment.subproject.id in user_subproject_ids:
-                return
-
-            save_attachment(
-                transaction_attachment_form.data_file.data,
-                transaction_attachment_form.mediatype.data,
-                payment,
-                "transaction-attachment",
-            )
-
-            # Redirect back to clear form data
-            if subproject_id:
-                # Redirect back to clear form data
-                return redirect(
-                    url_for(
-                        "subproject", project_id=project_id, subproject_id=subproject_id
-                    )
-                )
-
-            return redirect(
-                url_for(
-                    "project",
-                    project_id=project_id,
-                )
-            )
-        else:
-            flash_form_errors(transaction_attachment_form, request)
-
-
-# Populate the edit attachment forms which allows the user to edit it
-def create_edit_attachment_forms(attachments):
-    edit_attachment_forms = {}
-    for attachment in attachments:
-        edit_attachment_form = EditAttachmentForm(
-            prefix="edit_attachment_form",
-            **{"id": attachment.id, "mediatype": attachment.mediatype},
-        )
-
-        edit_attachment_forms[attachment.id] = edit_attachment_form
-
-    return edit_attachment_forms
-
-
-def process_edit_attachment_form(
-    request, edit_attachment_form, project_id=0, subproject_id=0
-):
-    edit_attachment_form = EditAttachmentForm(prefix="edit_attachment_form")
-
-    if edit_attachment_form.validate_on_submit():
-        # Remove attachment
-        if edit_attachment_form.remove.data:
-            File.query.filter_by(id=edit_attachment_form.id.data).delete()
-            db.session.commit()
-            flash('<span class="text-default-green">Media is verwijderd</span>')
-        else:
-            new_data = {}
-            for f in edit_attachment_form:
-                if f.type != "SubmitField" and f.type != "CSRFTokenField":
-                    new_data[f.short_name] = f.data
-
-            try:
-                # Update if the attachment already exists
-                attachments = File.query.filter_by(id=edit_attachment_form.id.data)
-
-                if len(attachments.all()):
-                    attachments.update(new_data)
-                    db.session.commit()
-                    flash('<span class="text-default-green">Media is bijgewerkt</span>')
-            except IntegrityError as e:
-                db.session().rollback()
-                app.logger.error(repr(e))
-                flash('<span class="text-default-red">Media bijwerken mislukt<span>')
-
-        # Redirect back to clear form data
-        if subproject_id:
-            # Redirect back to clear form data
-            return redirect(
-                url_for(
-                    "subproject", project_id=project_id, subproject_id=subproject_id
-                )
-            )
-
-        return redirect(
-            url_for(
-                "project",
-                project_id=project_id,
-            )
-        )
-    else:
-        flash_form_errors(edit_attachment_form, request)
 
 
 def process_new_project_form(form):

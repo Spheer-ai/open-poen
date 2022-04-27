@@ -1,3 +1,5 @@
+{% import "bootstrap/wtf.html" as wtf %}
+
 {% macro info_unit(title, content, missing_content) %}
 <b>{{ title }}</b>
 <br>
@@ -48,4 +50,45 @@
 {{ info_unit("Ontvanger", payment.creditor_name) }}
 {{ info_unit("Ontvanger IBAN", payment.creditor_account) }}
 {{ info_unit("Bedrag €", format_currency(payment)) }}
+{% endmacro %}
+
+{% macro edit_attachment_form(attachment, edit_attachment_forms, payment, project_owner, user_subproject_ids) %}
+<div class="col-6 col-sm-4">
+    <div class="attachment-div">
+        {% if attachment.mimetype in ['image/jpeg', 'image/jpg', 'image/png'] %}
+        <a class="embed-responsive embed-responsive-1by1"
+            href="{{ url_for('upload', filename='transaction-attachment/' + attachment.filename) }}"
+            data-toggle="lightbox" data-gallery="transaction-gallery-{{ payment.id }}">
+            <img class="img-fluid embed-responsive-item attachment"
+                src="{{ url_for('upload', filename='transaction-attachment/' + attachment.filename) }}">
+        </a>
+        {% else %}
+        <a class="embed-responsive embed-responsive-1by1" data-toggle="modal" data-target="#pdf{{attachment.id}}">
+            <div class="embed-responsive-item bg-grey attachment d-flex" style="word-wrap: break-word">
+                <i class="fas fa-file w-75 h-75 mx-auto my-auto text-blue-light"></i>
+                <span class="w-100 fa-layers-text text-color-main">{{
+                    attachment.mimetype.split('/')[1] }}</span>
+            </div>
+        </a>
+        {% endif %}
+
+        {% if project_owner or payment.subproject.id in user_subproject_ids %}
+        {% if attachment.id in edit_attachment_forms %}
+        <form method="post">
+            {{ edit_attachment_forms[attachment.id]['csrf_token'] }}
+            {{ edit_attachment_forms[attachment.id]['id'] }}
+            {{ wtf.form_field(edit_attachment_forms[attachment.id]["mediatype"],
+            class="form-control") }}
+            {{ edit_attachment_forms[attachment.id]['submit'] }}
+        </form>
+        <br>
+        <!-- Button trigger modal -->
+        <button type="button" class="btn btn-danger" data-toggle="modal"
+            data-target="#bijlage-verwijder-{{ attachment.id }}">
+            Verwijderen
+        </button>
+        {% endif %}
+        {% endif %}
+    </div>
+</div>
 {% endmacro %}

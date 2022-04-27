@@ -898,8 +898,8 @@
                     <div id="detail-{{ payment.id }}" class="d-none">
                       <div class="detail-row">
                         <div class="row">
-                          <div class="col-5">
 
+                          <div class="col-5">
                             {% if payment.type == "MANUAL_TOPUP" %}
                             {{ macros.manual_topup_info(payment, payment_forms) }}
                             {% elif payment.type == "MANUAL_PAYMENT" %}
@@ -919,46 +919,8 @@
                                 <b>Bonnen</b>
                               </div>
                               {% for attachment in bonnen %}
-                              <div class="col-6 col-sm-4">
-                                <div class="attachment-div">
-                                  {% if attachment.mimetype in ['image/jpeg', 'image/jpg', 'image/png'] %}
-                                  <a class="embed-responsive embed-responsive-1by1"
-                                    href="{{ url_for('upload', filename='transaction-attachment/' + attachment.filename) }}"
-                                    data-toggle="lightbox" data-gallery="transaction-gallery-{{ payment.id }}">
-                                    <img class="img-fluid embed-responsive-item attachment"
-                                      src="{{ url_for('upload', filename='transaction-attachment/' + attachment.filename) }}">
-                                  </a>
-                                  {% else %}
-                                  <a class="embed-responsive embed-responsive-1by1" data-toggle="modal"
-                                    data-target="#pdf{{attachment.id}}">
-                                    <div class="embed-responsive-item bg-grey attachment d-flex"
-                                      style="word-wrap: break-word">
-                                      <i class="fas fa-file w-75 h-75 mx-auto my-auto text-blue-light"></i>
-                                      <span class="w-100 fa-layers-text text-color-main">{{
-                                        attachment.mimetype.split('/')[1] }}</span>
-                                    </div>
-                                  </a>
-                                  {% endif %}
-
-                                  {% if project_owner or payment.subproject.id in user_subproject_ids %}
-                                  {% if attachment.id in edit_attachment_forms %}
-                                  <form method="post">
-                                    {{ edit_attachment_forms[attachment.id]['csrf_token'] }}
-                                    {{ edit_attachment_forms[attachment.id]['id'] }}
-                                    {{ wtf.form_field(edit_attachment_forms[attachment.id]["mediatype"],
-                                    class="form-control") }}
-                                    {{ edit_attachment_forms[attachment.id]['submit'] }}
-                                  </form>
-                                  <br>
-                                  <!-- Button trigger modal -->
-                                  <button type="button" class="btn btn-danger" data-toggle="modal"
-                                    data-target="#bijlage-verwijder-{{ attachment.id }}">
-                                    Verwijderen
-                                  </button>
-                                  {% endif %}
-                                  {% endif %}
-                                </div>
-                              </div>
+                              {{ macros.edit_attachment_form(attachment, edit_attachment_forms, payment, project_owner,
+                              user_subproject_ids) }}
                               {% endfor %}
                               {% endif %}
 
@@ -967,51 +929,14 @@
                                 <b>Media</b>
                               </div>
                               {% for attachment in media %}
-                              <div class="col-6 col-sm-4">
-                                <div class="attachment-div">
-                                  {% if attachment.mimetype in ['image/jpeg', 'image/jpg', 'image/png'] %}
-                                  <a class="embed-responsive embed-responsive-1by1"
-                                    href="{{ url_for('upload', filename='transaction-attachment/' + attachment.filename) }}"
-                                    data-toggle="lightbox" data-gallery="transaction-gallery-{{ payment.id }}">
-                                    <img class="img-fluid embed-responsive-item attachment"
-                                      src="{{ url_for('upload', filename='transaction-attachment/' + attachment.filename) }}">
-                                  </a>
-                                  {% else %}
-                                  <a class="embed-responsive embed-responsive-1by1" data-toggle="modal"
-                                    data-target="#pdf{{attachment.id}}">
-                                    <div class="embed-responsive-item bg-grey attachment d-flex"
-                                      style="word-wrap: break-word">
-                                      <i class="fas fa-file w-75 h-75 mx-auto my-auto text-blue-light"></i>
-                                      <span class="w-100 fa-layers-text text-color-main">{{
-                                        attachment.mimetype.split('/')[1] }}</span>
-                                    </div>
-                                  </a>
-                                  {% endif %}
-
-                                  {% if project_owner or payment.subproject.id in user_subproject_ids %}
-                                  {% if attachment.id in edit_attachment_forms %}
-                                  <form method="post">
-                                    {{ edit_attachment_forms[attachment.id]['csrf_token'] }}
-                                    {{ edit_attachment_forms[attachment.id]['id'] }}
-                                    {{ wtf.form_field(edit_attachment_forms[attachment.id]["mediatype"],
-                                    class="form-control") }}
-                                    {{ edit_attachment_forms[attachment.id]['submit'] }}
-                                  </form>
-                                  <br>
-                                  <!-- Button trigger modal -->
-                                  <button type="button" class="btn btn-danger" data-toggle="modal"
-                                    data-target="#bijlage-verwijder-{{ attachment.id }}">
-                                    Verwijderen
-                                  </button>
-                                  {% endif %}
-                                  {% endif %}
-                                </div>
-                              </div>
+                              {{ macros.edit_attachment_form(attachment, edit_attachment_forms, payment, project_owner,
+                              user_subproject_ids) }}
                               {% endfor %}
                               {% endif %}
                             </div>
                             {% endif %}
                           </div>
+
                           <div class="col-7">
                             {% if payment.id in payment_forms %}
                             <form method="POST">
