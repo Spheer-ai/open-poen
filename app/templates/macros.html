@@ -28,7 +28,7 @@
 {{ info_unit("Type", "(Automatische) topup naar betaalpas.") }}
 {{ info_unit("Betaalpas", payment.debit_card.card_number) }}
 {{ info_unit("Ontvanger", "Betaalpas") }}
-{{ info_unit("Transactiedatum", payment.booking_data.strftime('%d-%m-\'%y')) }}
+{{ info_unit("Transactiedatum", payment.booking_date.strftime('%d-%m-\'%y')) }}
 {{ info_unit("Route", payment.route) }}
 {{ info_unit("Bedrag €", format_currency(payment)) }}
 {% endmacro %}
@@ -38,7 +38,7 @@
 {{ info_unit("Betaalpas", payment.debit_card.card_number) }}
 {{ info_unit("Ontvanger", payment.creditor_name) }}
 {{ info_unit("Betaalomschrijving", payment.remittance_information_structured) }}
-{{ info_unit("Transactiedatum", payment.booking_data.strftime('%d-%m-\'%y')) }}
+{{ info_unit("Transactiedatum", payment.booking_date.strftime('%d-%m-\'%y')) }}
 {{ info_unit("Route", payment.route) }}
 {{ info_unit("Bedrag €", format_currency(payment)) }}
 {% endmacro %}
