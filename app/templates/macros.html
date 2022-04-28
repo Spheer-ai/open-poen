@@ -16,6 +16,14 @@
 {% endif %}
 {% endmacro %}
 
+{% macro render_form_or_info(title, content, form, field) %}
+{% if field in form %}
+{{ wtf.form_field(form[field]) }}
+{% else %}
+{{ info_unit(title, content) }}
+{% endif %}
+{% endmacro %}
+
 {% macro payment_info_left_manual_topup(form, payment) %}
 {{ info_unit("Type", "(Handmatige) topup naar betaalpas.") }}
 {{ info_unit("Betaalpas", payment.debit_card.card_number) }}
@@ -38,14 +46,6 @@
 {{ info_unit("Betaalomschrijving", payment.remittance_information_structured) }}
 {{ info_unit("Transactiedatum", payment.booking_date.strftime('%d-%m-\'%y')) }}
 {{ info_unit("Bedrag €", format_currency(payment)) }}
-{% endmacro %}
-
-{% macro render_form_or_info(title, content, form, field) %}
-{% if field in form %}
-{{ wtf.form_field(form[field]) }}
-{% else %}
-{{ info_unit(title, content) }}
-{% endif %}
 {% endmacro %}
 
 {% macro payment_info_left_manual_payment(form, payment) %}

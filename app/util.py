@@ -1,15 +1,16 @@
-from babel.numbers import format_percent
-from flask import flash, redirect, url_for
-from os import urandom
-from os.path import abspath, dirname, exists, join
-from datetime import datetime
-from time import sleep
 import locale
+from datetime import datetime
+from os import urandom
+import enum
+
+from babel.numbers import format_percent
+from flask import flash
+from flask_login import current_user
+
 from app import app, db
 from app.email import send_invite
-from app.models import Payment, Project, Subproject, IBAN, User, DebitCard
-from sqlalchemy import or_
-from sqlalchemy.exc import IntegrityError
+from app.models import Project, Subproject, User
+from typing import Union
 
 
 def formatted_flash(text, color):
@@ -165,3 +166,39 @@ def get_export_timestamp():
         .replace("T", "-")
         .replace(":", "_")
     )
+
+
+class Clearance(enum.IntEnum):
+    ANONYMOUS = 1
+    SUBPROJECT_OWNER = 2
+    PROJECT_OWNER = 3
+    FINANCIAL = 4
+    ADMIN = 5
+
+
+def get_permissions(clearance: Clearance):
+    # TODO: construct this directly from Clearance.
+    permissions = {
+        "ANONYMOUS": 1,
+        "SUBPROJECT_OWNER": 2,
+        "PROJECT_OWNER": 3,
+        "FINANCIAL": 4,
+        "ADMIN": 5,
+    }
+    return {k: v <= clearance.value for k, v in permissions.items()}
+
+
+def get_clearance(project: Project, subproject: Subproject) -> Clearance:
+    if not current_user.is_authenticated:
+        return Clearance.ANONYMOUS
+    if current_user.admin:
+        return Clearance.ADMIN
+    if current_user.financial:
+        return Clearance.FINANCIAL
+    if project.has_user(current_user.id):
+        return Clearance.PROJECT_OWNER
+    # TODO: Does subproject owner work as intended?
+    if subproject is not None and subproject.has_user(current_user.id):
+        return Clearance.SUBPROJECT_OWNER
+    if current_user.is_authenticated:
+        return Clearance.ANONYMOUS

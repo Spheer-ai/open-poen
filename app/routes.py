@@ -220,29 +220,16 @@ def project(project_id):
     payment_id = None
     bng_info = {}
 
-    if current_user.is_authenticated:
-        bng_info = get_bng_info(BNGAccount.query.all())
-
     project = Project.query.get(project_id)
 
-    if not project:
-        return render_template(
-            "404.html",
-            use_square_borders=app.config["USE_SQUARE_BORDERS"],
-            footer=app.config["FOOTER"],
-        )
+    clearance = util.get_clearance(project, None)
 
-    is_project_owner = False
-    if current_user.is_authenticated and (
-        current_user.admin or project.has_user(current_user.id)
+    if clearance > util.Clearance.ANONYMOUS:
+        bng_info = get_bng_info(BNGAccount.query.all())
+
+    if (not project) or (
+        project.hidden and clearance < util.Clearance.SUBPROJECT_OWNER
     ):
-        is_project_owner = True
-
-    is_admin = False
-    if current_user.is_authenticated and current_user.admin:
-        is_admin = True
-
-    if project.hidden and not is_project_owner:
         return render_template(
             "404.html",
             use_square_borders=app.config["USE_SQUARE_BORDERS"],
@@ -267,14 +254,9 @@ def project(project_id):
 
     # Retrieve any subprojects a normal logged in user is part of
     user_subproject_ids = []
-    if (
-        project.contains_subprojects
-        and current_user.is_authenticated
-        and not is_project_owner
-    ):
-        for subproject in project.subprojects:
-            if subproject.has_user(current_user.id):
-                user_subproject_ids.append(subproject.id)
+    for subproject in project.subprojects:
+        if subproject.has_user(current_user.id):
+            user_subproject_ids.append(subproject.id)
 
     # PAYMENT
     payment_controller = pc.Payment(project)
@@ -334,7 +316,7 @@ def project(project_id):
     # to update the categories in the select field when the user selects
     # another subproject to add the new payment to.
     categories_dict = {}
-    if is_project_owner:
+    if clearance > util.Clearance.ANONYMOUS:
         categories_dict = {
             x.id: x.make_category_select_options() for x in project.subprojects
         }
@@ -390,9 +372,7 @@ def project(project_id):
         edit_attachment_forms=edit_attachment_forms,
         funder_forms=funder_forms,
         new_funder_form=funder_controller.add_form,
-        project_owner=is_project_owner,
-        admin=is_admin,
-        user_subproject_ids=user_subproject_ids,
+        permissions=util.get_permissions(clearance),
         timestamp=util.get_export_timestamp(),
         modal_id=json.dumps(modal_id),
         payment_id=json.dumps(payment_id),

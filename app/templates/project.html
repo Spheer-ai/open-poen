@@ -36,7 +36,7 @@
               </ul>
             </div>
 
-            {% if project_owner %}
+            {% if permissions.PROJECT_OWNER %}
             <!-- Button trigger modal -->
             <button type="button" class="btn button-poen-small bg-grey-blue mx-auto" data-toggle="modal"
               data-target="#sponsoren-beheren">
@@ -185,7 +185,7 @@
               {% endif %}
             </div>
 
-            {% if project_owner or user_subproject_ids %}
+            {% if permissions.SUBPROJECT_OWNER %}
             <div class="project-modals-card bg-white">
 
               <div class="text-center">
@@ -273,7 +273,7 @@
                   </div>
                 </div>
 
-                {% if project_owner %}
+                {% if permissions.PROJECT_OWNER %}
 
                 <!-- Button trigger modal -->
                 <button type="button" class="btn btn-primary project-modal-btn" data-toggle="modal"
@@ -320,6 +320,7 @@
 
                           <hr>
 
+                          {% if permissions.ADMIN %}
                           <b>Betaalpassen</b>
                           <br>
                           <br>
@@ -343,6 +344,7 @@
                           </div>
                           <br>
                           {% endfor %}
+                          {% endif %}
 
                           <hr>
 
@@ -391,7 +393,7 @@
                         <div class="modal-footer">
                           <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
 
-                          {% if current_user.admin %}
+                          {% if permissions.ADMIN %}
                           <!-- Button trigger modal -->
                           <button type="button" class="btn btn-danger" data-toggle="modal"
                             data-target="#project-verwijder-{{ project_data['id'] }}">
@@ -405,6 +407,7 @@
                           {{ project_form.submit }}
 
                           <!-- Modal -->
+                          {% if permissions.ADMIN %}
                           <div class="modal fade" id="project-verwijder-{{ project_data['id'] }}" tabindex="-1"
                             role="dialog" aria-labelledby="projectVerwijderLabel" aria-hidden="true">
                             <div class="modal-dialog" role="document">
@@ -439,6 +442,7 @@
                               </div>
                             </div>
                           </div>
+                          {% endif %}
                         </div>
                       </form>
                     </div>
@@ -482,7 +486,7 @@
             <div class="card-small bg-white mx-auto d-flex">
               <ul class="card-small-list mx-auto my-auto">
                 {% for subproject in project.subprojects %}
-                {% if not subproject.hidden or (project_owner or subproject.id in user_subproject_ids) %}
+                {% if not subproject.hidden or (permissions.PROJECT_OWNER or subproject.id in user_subproject_ids) %}
                 <li><a href="{{ url_for('subproject', project_id=project.id, subproject_id=subproject.id) }}">{{
                     subproject.name }}</a></li>
                 {% endif %}
@@ -490,7 +494,7 @@
               </ul>
             </div>
 
-            {% if project_owner %}
+            {% if permissions.PROJECT_OWNER %}
             <!-- Button trigger modal -->
             <button type="button" class="btn button-poen-small bg-grey-blue mx-auto" data-toggle="modal"
               data-target="#subproject-toevoegen">
@@ -545,7 +549,7 @@
         <div class="row">
           <div class="col-12">
             <div id="toolbar">
-              {% if admin %}
+              {% if permissions.ADMIN %}
               <!-- Button trigger modal -->
               <button type="button" class="btn button-poen-small button-toolbar bg-grey-blue mx-auto"
                 data-toggle="modal" data-target="#modal-topup-toevoegen">
@@ -586,7 +590,9 @@
                   </div>
                 </div>
               </div>
+              {% endif %}
 
+              {% if permissions.FINANCIAL %}
               <button type="button" class="btn button-poen-small button-toolbar bg-grey-blue mx-auto"
                 data-toggle="modal" data-target="#modal-betaling-toevoegen">
                 + betaling
@@ -647,7 +653,8 @@
                     <div class="modal-body">
                       <div class="row">
                         {% for payment in payments|sort(attribute='booking_date', reverse=true) %}
-                        {% if not payment.hidden or (project_owner or payment.subproject.id in user_subproject_ids) %}
+                        {% if not payment.hidden or (permissions.PROJECT_OWNER or payment.subproject.id in
+                        user_subproject_ids) %}
                         {% for attachment in payment.attachments %}
                         <div class="col-6 col-sm-2">
                           <div class="attachment-div">
@@ -681,7 +688,7 @@
               </div>
 
               {% for payment in payments|sort(attribute='created', reverse=true) %}
-              {% if not payment.hidden or (project_owner or payment.subproject.id in user_subproject_ids) %}
+              {% if not payment.hidden or (permissions.PROJECT_OWNER or payment.subproject.id in user_subproject_ids) %}
               {% for attachment in payment.attachments %}
               {% if attachment.mimetype not in ['image/jpeg', 'image/jpg', 'image/png'] %}
               <div class="modal fade" id="pdf{{attachment.id}}" tabindex="-1" role="dialog"
@@ -761,7 +768,8 @@
                 {% set payment_form = payment_forms[payment.id] %}
                 {% endif %}
 
-                {% if not payment.hidden or (project_owner or payment.subproject.id in user_subproject_ids) %}
+                {% if not payment.hidden or (permissions.PROJECT_OWNER or payment.subproject.id in user_subproject_ids)
+                %}
                 <tr{% if payment.type=='MANUAL_PAYMENT' %} class="manual-payment" {% elif payment.type=="MANUAL_TOPUP"
                   %} class="manual-topup" {% endif %} id="payment_row_{{ payment.id }}">
                   <td>
@@ -935,7 +943,7 @@
                               </div>
                               {% for attachment in bonnen %}
                               {{ macros.edit_attachment_form_project(attachment, edit_attachment_forms, payment,
-                              project_owner,
+                              permissions.PROJECT_OWNER,
                               user_subproject_ids) }}
                               {% endfor %}
                               {% endif %}
@@ -946,7 +954,7 @@
                               </div>
                               {% for attachment in media %}
                               {{ macros.edit_attachment_form_project(attachment, edit_attachment_forms, payment,
-                              project_owner,
+                              permissions.PROJECT_OWNER,
                               user_subproject_ids) }}
                               {% endfor %}
                               {% endif %}
@@ -957,7 +965,7 @@
                             {# Make sure the user is allowed to edit this payment (especially needed when a normal
                             users
                             edits a subproject payment on a project page #}
-                            {% if project_owner or payment.subproject.id in user_subproject_ids %}
+                            {% if permissions.PROJECT_OWNER or payment.subproject.id in user_subproject_ids %}
                             {% if transaction_attachment_form %}
                             <hr>
                             <b>Nieuwe media toevoegen</b>
@@ -995,7 +1003,7 @@
   Table's detail view #}
   {% if edit_attachment_forms %}
   {% for payment in payments %}
-  {% if project_owner or payment.subproject.id in user_subproject_ids %}
+  {% if permissions.PROJECT_OWNER or payment.subproject.id in user_subproject_ids %}
   {% for attachment in payment.attachments %}
   {% include 'partials/remove_attachment_form.html' %}
   {% endfor %}
@@ -1003,7 +1011,7 @@
   {% endfor %}
   {% endif %}
 
-  {% if project_owner %}
+  {% if permissions.PROJECT_OWNER %}
   {% for payment in payments %}
   {% if payment_forms[payment.id].remove %}
   <!-- Modal -->
@@ -1037,7 +1045,7 @@
   {% endfor %}
   {% endif %}
 
-  {% if project_data and project_owner %}
+  {% if project_data and permissions.PROJECT_OWNER %}
   <!-- Modal for 'Project owner toevoegen' -->
   <div class="modal fade" id="project-owner-toevoegen" tabindex="-1" role="dialog"
     aria-labelledby="projectOwnerToevoegenLabel" aria-hidden="true">
@@ -1070,6 +1078,7 @@
     </div>
   </div>
 
+  {%if permissions.PROJECT_OWNER %}
   {% for edit_project_owner_form, project_owner_email in project_owners %}
   <!-- Modal for 'Project owner beheren' -->
   <div class="modal fade" id="project-owner-beheren-{{ edit_project_owner_form.id.data }}" tabindex="-1" role="dialog"
@@ -1105,7 +1114,9 @@
     </div>
   </div>
   {% endfor %}
+  {% endif %}
 
+  {% if permissions.ADMIN %}
   <div class="modal fade" id="betaalpas-toevoegen" tabindex="-1" role="dialog" aria-labelledby="betaalpasToevoegenLabel"
     aria-hidden="true">
     <div class="modal-dialog" role="document">
@@ -1134,7 +1145,9 @@
       </div>
     </div>
   </div>
+  {% endif %}
 
+  {% if permissions.ADMIN %}
   {% for edit_debit_card_form, card_number in edit_debit_card_forms %}
   <div class="modal fade" id="betaalpas-beheren-{{ edit_debit_card_form.id.data }}" tabindex="-1" role="dialog"
     aria-labelledby="debitCardbeherenLabel" aria-hidden="true">
@@ -1165,8 +1178,9 @@
     </div>
   </div>
   {% endfor %}
+  {% endif %}
 
-  {% if not project_data['contains_subprojects'] %}
+  {% if not project_data['contains_subprojects'] and permissions.PROJECT_OWNER %}
   <!-- Modal for 'Categorie toevoegen' -->
   <div class="modal fade" id="categorie-toevoegen" tabindex="-1" role="dialog" aria-labelledby="categorieToevoegenLabel"
     aria-hidden="true">
