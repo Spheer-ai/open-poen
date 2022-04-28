@@ -482,7 +482,7 @@ def subproject(project_id, subproject_id):
     subproject_owners = list(zip(subproject_owner_forms, subproject_owner_emails))
     modal_id = subproject_owner_controller.get_modal_ids(modal_id)
 
-    payments = subproject.payments
+    payments = subproject.payments.all()
     for payment in payments:
         if payment.id in payment_forms:
             payment.editable = True

@@ -63,7 +63,12 @@
 {{ form.id }}
 {% endif %}
 
-{{ render_form_or_info("Transactiedatum", payment.booking_date, form, "booking_date") }}
+{% if "booking_date" in form %}
+{{ wtf.form_field(form["booking_date"], class="form-control table-datepicker") }}
+{% else %}
+{{ info_unit("Transactiedatum", payment.booking_date) }}
+{% endif %}
+
 {{ render_form_or_info("Categorie", payment.category.name, form, "category_id") }}
 {{ render_form_or_info("Activiteit", payment.subproject.name, form, "subproject_id") }}
 {{ render_form_or_info("Route", payment.route, form, "route") }}
