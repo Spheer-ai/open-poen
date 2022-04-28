@@ -340,6 +340,11 @@ def project(project_id):
         }
 
     payments = project.get_all_payments()
+    for payment in payments:
+        if payment.id in payment_forms:
+            payment.editable = True
+        else:
+            payment.editable = False
 
     # PROJECT DATA
     amounts = util.calculate_amounts(Project, project.id, payments)
@@ -477,6 +482,13 @@ def subproject(project_id, subproject_id):
     subproject_owners = list(zip(subproject_owner_forms, subproject_owner_emails))
     modal_id = subproject_owner_controller.get_modal_ids(modal_id)
 
+    payments = subproject.payments
+    for payment in payments:
+        if payment.id in payment_forms:
+            payment.editable = True
+        else:
+            payment.editable = False
+
     amounts = util.calculate_amounts(
         Subproject,
         subproject_id,
@@ -496,6 +508,7 @@ def subproject(project_id, subproject_id):
         footer=app.config["FOOTER"],
         subproject=subproject,
         amounts=amounts,
+        payments=payments,
         budget=budget,
         subproject_form=subproject_form,
         payment_forms=payment_forms,
