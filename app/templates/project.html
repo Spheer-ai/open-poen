@@ -343,10 +343,11 @@
                             {{ card_number }}
                           </div>
                           <br>
+
                           {% endfor %}
-                          {% endif %}
 
                           <hr>
+                          {% endif %}
 
                           {% if not project_data['contains_subprojects'] %}
                           <b>Categoriën</b>
@@ -393,21 +394,19 @@
                         <div class="modal-footer">
                           <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
 
+                          {# Make sure this 'Opslaan' submit button is listed before the 'Verwijderen' submit button to
+                          make sure
+                          that hitting 'enter' defaults to the 'Opslaan' submit button #}
+                          {{ project_form.submit }}
+
                           {% if permissions.ADMIN %}
                           <!-- Button trigger modal -->
                           <button type="button" class="btn btn-danger" data-toggle="modal"
                             data-target="#project-verwijder-{{ project_data['id'] }}">
                             Verwijderen
                           </button>
-                          {% endif %}
-
-                          {# Make sure this 'Opslaan' submit button is listed before the 'Verwijderen' submit button to
-                          make sure
-                          that hitting 'enter' defaults to the 'Opslaan' submit button #}
-                          {{ project_form.submit }}
 
                           <!-- Modal -->
-                          {% if permissions.ADMIN %}
                           <div class="modal fade" id="project-verwijder-{{ project_data['id'] }}" tabindex="-1"
                             role="dialog" aria-labelledby="projectVerwijderLabel" aria-hidden="true">
                             <div class="modal-dialog" role="document">

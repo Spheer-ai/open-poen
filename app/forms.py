@@ -242,24 +242,6 @@ class NewProjectForm(FlaskForm):
     submit = SubmitField("Opslaan", render_kw={"class": "btn btn-info"})
 
 
-class EditProjectForm(FlaskForm):
-    name = StringField("Naam", validators=[DataRequired(), Length(max=120)])
-    description = TextAreaField("Beschrijving", validators=[DataRequired()])
-    contains_subprojects = BooleanField(
-        "Uitgaven van dit initiatief worden geregistreerd op activiteiten",
-        render_kw={"checked": "", "value": "y"},
-    )
-    hidden = BooleanField("Initiatief verbergen")
-    hidden_sponsors = BooleanField("Sponsoren verbergen")
-    budget = IntegerField(
-        "Budget voor dit initiatief", validators=[Optional(), validate_budget]
-    )
-    id = IntegerField(widget=HiddenInput())
-    project_id = IntegerField(widget=HiddenInput())
-    submit = SubmitField("Opslaan", render_kw={"class": "btn btn-info"})
-    remove = SubmitField("Verwijderen", render_kw={"class": "btn btn-danger"})
-
-
 class SubprojectForm(FlaskForm):
     name = StringField("Naam", validators=[DataRequired(), Length(max=120)])
     description = TextAreaField("Beschrijving", validators=[DataRequired()])

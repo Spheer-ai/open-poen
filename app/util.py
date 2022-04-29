@@ -188,7 +188,7 @@ def get_permissions(clearance: Clearance):
     return {k: v <= clearance.value for k, v in permissions.items()}
 
 
-def get_clearance(project: Project, subproject: Subproject) -> Clearance:
+def get_clearance(project: Project, subproject: Union[None, Subproject]) -> Clearance:
     if not current_user.is_authenticated:
         return Clearance.ANONYMOUS
     if current_user.admin:
@@ -200,5 +200,5 @@ def get_clearance(project: Project, subproject: Subproject) -> Clearance:
     # TODO: Does subproject owner work as intended?
     if subproject is not None and subproject.has_user(current_user.id):
         return Clearance.SUBPROJECT_OWNER
-    if current_user.is_authenticated:
-        return Clearance.ANONYMOUS
+    # Default to anonymous, because that's the lowest level of clearance.
+    return Clearance.ANONYMOUS
