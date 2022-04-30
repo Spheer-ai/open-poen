@@ -225,7 +225,6 @@ def parse_and_save_bng_payments(payments):
             Payment(
                 **payment,
                 route=route,
-                created=datetime.now(),
                 card_number=card_number,
                 type="BNG",
             )

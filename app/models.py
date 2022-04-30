@@ -163,7 +163,6 @@ class User(UserMixin, db.Model, DefaultCRUD):
             self.projects.remove(Project.query.get(kwargs["project_id"]))
             db.session.commit()
         else:
-            del kwargs["remove_from_project"]
             del kwargs["project_id"]
             return super(User, self).update(kwargs)
 
