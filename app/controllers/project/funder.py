@@ -1,34 +1,59 @@
-from typing import Dict
+from typing import Dict, Type
 
 from app.controllers.util import Controller, create_redirects
-from app.form_processing import process_form
-from app.forms import FunderForm
+from app.form_processing import process_form, return_redirect
 from app.models import Funder, Project
+from flask_wtf import FlaskForm
+
+from wtforms.validators import (
+    DataRequired,
+    Length,
+    URL,
+)
+from wtforms.widgets import HiddenInput
+from wtforms import (
+    StringField,
+    IntegerField,
+    SubmitField,
+)
+from app.util import Clearance, formatted_flash
+
+
+class BaseForm(FlaskForm):
+    name = StringField("Naam", validators=[DataRequired(), Length(max=120)])
+    url = StringField(
+        "URL (format: http(s)://voorbeeld.com)",
+        validators=[DataRequired(), URL(), Length(max=2000)],
+    )
+    id = IntegerField(widget=HiddenInput())
+    project_id = IntegerField(widget=HiddenInput())
+    submit = SubmitField("Opslaan", render_kw={"class": "btn btn-info"})
+    remove = SubmitField("Verwijderen", render_kw={"class": "btn btn-danger"})
+
+    clearance = Clearance.PROJECT_OWNER
 
 
 class FunderController(Controller):
-    def __init__(self, project: Project):
+    def __init__(self, project: Project, clearance: Clearance):
         self.project = project
-        self.add_form = FunderForm(prefix="add_funder_form", project_id=project.id)
-        self.edit_form = FunderForm(
+        self.clearance = clearance
+        self.form_class = self.form_permissions[clearance]
+        self.add_form = self.form_class(prefix="add_funder_form", project_id=project.id)
+        self.edit_form = self.form_class(
             prefix=f"edit_funder_form_{self.get_id_of_submitted_form}"
         )
         self.redirects = create_redirects(self.project.id, None)
 
-    def add(self):
-        status = process_form(self.add_form, Funder)
-        return self.redirects[status]
-
-    def edit(self):
-        status = process_form(self.edit_form, Funder)
+    def process(self, form):
+        status = process_form(form, Funder)
         return self.redirects[status]
 
     def get_forms(self):
-        forms: Dict[int, FunderForm] = {}
+        forms: Dict[int, self.form_class] = {}
         for funder in self.project.funders:
             data = funder.__dict__
             id = data["id"]
-            forms[id] = FunderForm(prefix=f"edit_funder_form_{id}", **data)
+            forms[id] = self.form_class(prefix=f"edit_funder_form_{id}", **data)
 
         # If a funder has previously been edited with an error, we have to insert it.
         if len(self.edit_form.errors) > 0:
@@ -37,10 +62,10 @@ class FunderController(Controller):
         return list(forms.values())
 
     def process_forms(self):
-        redirect = self.add()
+        redirect = self.process(self.add_form)
         if redirect:
             return redirect
-        redirect = self.edit()
+        redirect = self.process(self.edit_form)
         if redirect:
             return redirect
 
@@ -54,3 +79,11 @@ class FunderController(Controller):
                 ["#sponsoren-beheren", f"#sponsor-beheren-{self.edit_form.id.data}"]
             )
         return modals
+
+    form_permissions: Dict[Clearance, Type[BaseForm]] = {
+        Clearance.ANONYMOUS: BaseForm,
+        Clearance.SUBPROJECT_OWNER: BaseForm,
+        Clearance.PROJECT_OWNER: BaseForm,
+        Clearance.FINANCIAL: BaseForm,
+        Clearance.ADMIN: BaseForm,
+    }

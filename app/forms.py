@@ -1,4 +1,3 @@
-from wsgiref.validate import validator
 from wtforms.fields.core import FieldList, FormField
 from app import app
 from flask_wtf import FlaskForm
@@ -475,20 +474,6 @@ class EditAttachmentForm(FlaskForm):
         choices=[("media", "media"), ("bon", "bon")],
         validators=[DataRequired()],
     )
-
-    submit = SubmitField("Opslaan", render_kw={"class": "btn btn-info"})
-
-    remove = SubmitField("Verwijderen", render_kw={"class": "btn btn-danger"})
-
-
-class FunderForm(FlaskForm):
-    name = StringField("Naam", validators=[DataRequired(), Length(max=120)])
-    url = StringField(
-        "URL (format: http(s)://voorbeeld.com)",
-        validators=[DataRequired(), URL(), Length(max=2000)],
-    )
-    id = IntegerField(widget=HiddenInput())
-    project_id = IntegerField(widget=HiddenInput())
 
     submit = SubmitField("Opslaan", render_kw={"class": "btn btn-info"})
 

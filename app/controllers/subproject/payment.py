@@ -1,18 +1,25 @@
 from typing import Dict
 
+from flask_login import current_user
+
 from app.controllers.util import Controller, create_redirects
 from app.form_processing import process_form
 from app.forms import PaymentForm, NewPaymentForm
 from app.models import Payment, Subproject
 from datetime import date
 from app.controllers.util import Status
-from app.util import form_in_request
+from app.util import Clearance, form_in_request
 from flask import request
 
 
 class PaymentController(Controller):
-    def __init__(self, subproject: Subproject):
+    def __init__(self, subproject: Subproject, clearance: Clearance):
         self.subproject = subproject
+        self.clearance = clearance
+        if self.clearance == Clearance.SUBPROJECT_OWNER:
+            self.subproject_owner_id = current_user.id
+        else:
+            self.subproject_owner_id = None
         self.add_payment_form = NewPaymentForm(
             prefix="new_payment_form",
             project_id=self.subproject.project.id,
@@ -49,7 +56,7 @@ class PaymentController(Controller):
         elif payment and form_in_request(self.edit_form, request):
             self.edit_form.category_id.choices = payment.make_category_select_options()
             self.edit_form.subproject_id.choices = (
-                payment.make_subproject_select_options()
+                payment.make_subproject_select_options(self.subproject_owner_id)
             )
 
         status = process_form(self.edit_form, Payment)
@@ -65,9 +72,16 @@ class PaymentController(Controller):
             form = PaymentForm(prefix=f"edit_payment_form_{id}", **data)
             if payment.type not in ("MANUAL_PAYMENT", "MANUAL_TOPUP"):
                 del form["booking_date"]
+                del form["route"]
+            if self.clearance < Clearance.PROJECT_OWNER or payment.type not in (
+                "MANUAL_PAYMENT",
+                "MANUAL_TOPUP",
+            ):
                 del form["remove"]
             form.category_id.choices = payment.make_category_select_options()
-            form.subproject_id.choices = payment.make_subproject_select_options()
+            form.subproject_id.choices = payment.make_subproject_select_options(
+                self.subproject_owner_id
+            )
             forms[id] = form
 
         # If a payment has previously been edited with an error, we have to insert it.

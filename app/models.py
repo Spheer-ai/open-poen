@@ -172,7 +172,6 @@ class User(UserMixin, db.Model, DefaultCRUD):
             self.subprojects.remove(Subproject.query.get(kwargs["subproject_id"]))
             db.session.commit()
         else:
-            del kwargs["remove_from_subproject"]
             del kwargs["subproject_id"]
             return super(User, self).update(kwargs)
 
@@ -262,9 +261,11 @@ class Project(db.Model, DefaultCRUD):
             select_options.append((str(category.id), category.name))
         return select_options
 
-    def make_subproject_select_options(self):
+    def make_subproject_select_options(self, user_id=None):
         select_options = [("", "Hoofdactiviteit")]
         for subproject in self.subprojects.all():
+            if user_id is not None and not subproject.has_user(user_id):
+                continue
             select_options.append((str(subproject.id), subproject.name))
         return select_options
 
@@ -551,14 +552,14 @@ class Payment(db.Model, DefaultCRUD):
         else:
             raise AssertionError("Edge case: can't find this payment's project.")
 
-    def make_subproject_select_options(self):
+    def make_subproject_select_options(self, user_id=None):
         # TODO: Refactor.
         if self.subproject:
-            return self.subproject.project.make_subproject_select_options()
+            return self.subproject.project.make_subproject_select_options(user_id)
         elif self.project and self.project.contains_subprojects:
-            return self.project.make_subproject_select_options()
+            return self.project.make_subproject_select_options(user_id)
         elif self.debit_card and self.debit_card.project.contains_subprojects:
-            return self.debit_card.project.make_subproject_select_options()
+            return self.debit_card.project.make_subproject_select_options(user_id)
         else:
             raise AssertionError("Edge case: can't find this payment's project.")
 

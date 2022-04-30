@@ -222,7 +222,7 @@ def project(project_id):
 
     project = Project.query.get(project_id)
 
-    clearance = util.get_clearance(project, None)
+    clearance = util.get_project_clearance(project)
 
     if clearance > util.Clearance.ANONYMOUS:
         bng_info = get_bng_info(BNGAccount.query.all())
@@ -237,7 +237,7 @@ def project(project_id):
         )
 
     # FUNDER
-    funder_controller = pc.Funder(project)
+    funder_controller = pc.Funder(project, clearance)
     controller_redirect = funder_controller.process_forms()
     if controller_redirect:
         return controller_redirect
@@ -254,12 +254,13 @@ def project(project_id):
 
     # Retrieve any subprojects a normal logged in user is part of
     user_subproject_ids = []
-    for subproject in project.subprojects:
-        if subproject.has_user(current_user.id):
-            user_subproject_ids.append(subproject.id)
+    if clearance >= util.Clearance.SUBPROJECT_OWNER:
+        for subproject in project.subprojects:
+            if subproject.has_user(current_user.id):
+                user_subproject_ids.append(subproject.id)
 
     # PAYMENT
-    payment_controller = pc.Payment(project)
+    payment_controller = pc.Payment(project, clearance)
     controller_redirect = payment_controller.process_forms()
     if controller_redirect:
         return controller_redirect
@@ -285,7 +286,7 @@ def project(project_id):
     modal_id = project_owner_controller.get_modal_ids(modal_id)
 
     # PROJECT
-    project_controller = pc.Project(project)
+    project_controller = pc.Project(project, clearance)
     controller_redirect = project_controller.process_forms()
     if controller_redirect:
         return controller_redirect
@@ -316,14 +317,19 @@ def project(project_id):
     # to update the categories in the select field when the user selects
     # another subproject to add the new payment to.
     categories_dict = {}
-    if clearance > util.Clearance.ANONYMOUS:
+    if clearance >= util.Clearance.SUBPROJECT_OWNER:
         categories_dict = {
             x.id: x.make_category_select_options() for x in project.subprojects
         }
 
     payments = project.get_all_payments()
     for payment in payments:
-        if payment.id in payment_forms:
+        if clearance >= util.Clearance.PROJECT_OWNER:
+            payment.editable = True
+        elif clearance >= util.Clearance.SUBPROJECT_OWNER and (
+            (payment.subproject and payment.subproject.has_user(current_user.id))
+            or payment.subproject is None
+        ):
             payment.editable = True
         else:
             payment.editable = False
@@ -389,24 +395,11 @@ def subproject(project_id, subproject_id):
 
     subproject = Subproject.query.get(subproject_id)
 
-    if not subproject:
-        return render_template(
-            "404.html",
-            use_square_borders=app.config["USE_SQUARE_BORDERS"],
-            footer=app.config["FOOTER"],
-        )
+    clearance = util.get_subproject_clearance(subproject)
 
-    user_in_subproject = False
-    if current_user.is_authenticated and subproject.has_user(current_user.id):
-        user_in_subproject = True
-
-    project_owner = False
-    if current_user.is_authenticated and (
-        current_user.admin or subproject.project.has_user(current_user.id)
+    if (not subproject) or (
+        subproject.hidden and clearance < util.Clearance.SUBPROJECT_OWNER
     ):
-        project_owner = True
-
-    if subproject.hidden and not project_owner and not user_in_subproject:
         return render_template(
             "404.html",
             use_square_borders=app.config["USE_SQUARE_BORDERS"],
@@ -423,12 +416,11 @@ def subproject(project_id, subproject_id):
 
     # Retrieve the subproject id a normal logged in user is part of
     user_subproject_ids = []
-    if current_user.is_authenticated and not project_owner:
-        if subproject.has_user(current_user.id):
-            user_subproject_ids.append(subproject.id)
+    if clearance >= util.Clearance.SUBPROJECT_OWNER:
+        user_subproject_ids.append(subproject.id)
 
     # PAYMENT
-    payment_controller = subpc.Payment(subproject)
+    payment_controller = subpc.Payment(subproject, clearance)
     controller_redirect = payment_controller.process_forms()
     if controller_redirect:
         return controller_redirect
@@ -464,7 +456,9 @@ def subproject(project_id, subproject_id):
 
     payments = subproject.payments.all()
     for payment in payments:
-        if payment.id in payment_forms:
+        if clearance >= util.Clearance.PROJECT_OWNER:
+            payment.editable = True
+        elif clearance >= util.Clearance.SUBPROJECT_OWNER:
             payment.editable = True
         else:
             payment.editable = False
@@ -497,8 +491,7 @@ def subproject(project_id, subproject_id):
         edit_attachment_forms=edit_attachment_forms,
         subproject_owners=subproject_owners,
         add_user_form=subproject_owner_controller.add_form,
-        project_owner=project_owner,
-        user_in_subproject=user_in_subproject,
+        permissions=util.get_permissions(clearance),
         timestamp=util.get_export_timestamp(),
         category_forms=category_forms,
         category_form=category_controller.add_form,

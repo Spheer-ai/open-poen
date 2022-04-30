@@ -3,7 +3,7 @@
 {% macro info_unit(title, content) %}
 <b>{{ title }}</b>
 <br>
-{% if content %} {{ content }} {% else %} Niet ingevuld. {% endif %}
+{% if content %} {{ content }} {% else %} <i>Niet ingevuld.</i> {% endif %}
 <br>
 <br>
 {% endmacro %}
@@ -66,7 +66,7 @@
 {% if "booking_date" in form %}
 {{ wtf.form_field(form["booking_date"], class="form-control table-datepicker") }}
 {% else %}
-{{ info_unit("Transactiedatum", payment.booking_date) }}
+{{ info_unit("Transactiedatum", payment.booking_date.strftime('%d-%m-\'%y')) }}
 {% endif %}
 
 {{ render_form_or_info("Categorie", payment.category.name, form, "category_id") }}
@@ -74,9 +74,11 @@
 {{ render_form_or_info("Route", payment.route, form, "route") }}
 {{ render_form_or_info("Korte Omschrijving", payment.short_user_description, form, "short_user_description") }}
 {{ render_form_or_info("Lange Omschrijving", payment.long_user_description, form, "long_user_description") }}
-{{ render_form_or_info("Verborgen", payment.hidden, form, "hidden") }}
+{% if "hidden" in form %}
+{{ wtf.form_field(form["hidden"]) }}
+{% endif %}
 
-{% if form %}
+{% if "submit" in form %}
 {{ form.submit }}
 {% endif %}
 
@@ -87,7 +89,7 @@
 {% endif %}
 {% endmacro %}
 
-{% macro edit_attachment_form_project(attachment, edit_attachment_forms, payment, project_owner, user_subproject_ids) %}
+{% macro edit_attachment_form_project(attachment, edit_attachment_forms, payment) %}
 <div class="col-6 col-sm-4">
     <div class="attachment-div">
         {% if attachment.mimetype in ['image/jpeg', 'image/jpg', 'image/png'] %}
@@ -107,8 +109,7 @@
         </a>
         {% endif %}
 
-        {% if project_owner or payment.subproject.id in user_subproject_ids %}
-        {% if attachment.id in edit_attachment_forms %}
+        {% if payment.editable %}
         <form method="post">
             {{ edit_attachment_forms[attachment.id]['csrf_token'] }}
             {{ edit_attachment_forms[attachment.id]['id'] }}
@@ -122,14 +123,12 @@
             data-target="#bijlage-verwijder-{{ attachment.id }}">
             Verwijderen
         </button>
-        {% endif %}
         {% endif %}
     </div>
 </div>
 {% endmacro %}
 
-{% macro edit_attachment_form_subproject(attachment, edit_attachment_forms, payment, project_owner, user_in_subproject)
-%}
+{% macro edit_attachment_form_subproject(attachment, edit_attachment_forms, payment) %}
 <div class="col-6 col-sm-4">
     <div class="attachment-div">
         {% if attachment.mimetype in ['image/jpeg', 'image/jpg', 'image/png'] %}
@@ -149,8 +148,7 @@
         </a>
         {% endif %}
 
-        {% if project_owner or user_in_subproject %}
-        {% if attachment.id in edit_attachment_forms %}
+        {% if payment.editable %}
         <form method="post">
             {{ edit_attachment_forms[attachment.id]['csrf_token'] }}
             {{ edit_attachment_forms[attachment.id]['id'] }}
@@ -164,7 +162,6 @@
             data-target="#bijlage-verwijder-{{ attachment.id }}">
             Verwijderen
         </button>
-        {% endif %}
         {% endif %}
     </div>
 </div>

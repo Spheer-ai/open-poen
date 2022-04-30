@@ -1,9 +1,9 @@
 import re
 from abc import ABC, abstractmethod
-from typing import Dict, List, Union
-
+from typing import Dict, List, Union, Type
+from app.util import Clearance
 from app import app
-from app.form_processing import Status, return_redirect
+from app.form_processing import Status, process_form, return_redirect
 from flask import Response, request
 from flask.templating import render_template
 from flask_wtf import FlaskForm
@@ -33,6 +33,15 @@ class Controller(ABC):
     @abstractmethod
     def get_modal_ids(self, modals: List[str]) -> List[str]:
         pass
+
+    @staticmethod
+    def check_clearance(func):
+        # TODO: This messes up any redirect that func returns somehow.
+        def check(self, form):
+            if self.clearance >= form.clearance:
+                func(self, form)
+
+        return check
 
 
 def create_redirects(

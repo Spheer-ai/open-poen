@@ -60,7 +60,7 @@
               <h3 class="text-center totaal">ontvangen inkomsten {{ amounts.awarded_str }}</h3>
               {% endif %}
 
-              {% if project_owner %}
+              {% if permissions.PROJECT_OWNER %}
               <br>
               <!-- Button trigger modal -->
               <div class="text-center">
@@ -180,7 +180,7 @@
               </ul>
             </div>
 
-            {% if project_owner %}
+            {% if permissions.PROJECT_OWNER %}
             <!-- Button trigger modal -->
             <button type="button" class="btn button-poen-small bg-grey-blue mx-auto" data-toggle="modal"
               data-target="#activiteitnemers-beheren">activiteit&shy;nemers beheren ></button>
@@ -309,7 +309,7 @@
         <div class="row">
           <div class="col-12">
             <div id="toolbar">
-              {% if project_owner %}
+              {% if permissions.FINANCIAL %}
               <button type="button" class="btn button-poen-small button-toolbar bg-grey-blue mx-auto"
                 data-toggle="modal" data-target="#modal-betaling-toevoegen">
                 + betaling
@@ -370,7 +370,7 @@
                     <div class="modal-body">
                       <div class="row">
                         {% for payment in subproject.payments|sort(attribute='booking_date', reverse=true) %}
-                        {% if not payment.hidden or (project_owner or user_in_subproject) %}
+                        {% if not payment.hidden or permissions.SUBPROJECT_OWNER %}
                         {% for attachment in payment.attachments %}
                         <div class="col-6 col-sm-2">
                           <div class="attachment-div">
@@ -404,7 +404,7 @@
               </div>
 
               {% for payment in subproject.payments|sort(attribute='created', reverse=true) %}
-              {% if not payment.hidden or (project_owner or user_in_subproject) %}
+              {% if not payment.hidden or permissions.SUBPROJECT_OWNER %}
               {% for attachment in payment.attachments %}
               {% if attachment.mimetype not in ['image/jpeg', 'image/jpg', 'image/png'] %}
               <div class="modal fade" id="pdf{{attachment.id}}" tabindex="-1" role="dialog"
@@ -481,7 +481,7 @@
                 {% set payment_form = payment_forms[payment.id] %}
                 {% endif %}
 
-                {% if not payment.hidden or (project_owner or user_in_subproject) %}
+                {% if not payment.hidden or permissions.SUBPROJECT_OWNER %}
                 <tr{% if payment.type=='MANUAL_PAYMENT' %} class="manual-payment" {% elif payment.type=="MANUAL_TOPUP"
                   %} class="manual-topup" {% endif %} id="payment_row_{{ payment.id }}">
                   <td>
@@ -643,9 +643,7 @@
                                 <b>Bonnen</b>
                               </div>
                               {% for attachment in bonnen %}
-                              {{ macros.edit_attachment_form_subproject(attachment, edit_attachment_forms, payment,
-                              project_owner,
-                              user_in_subproject) }}
+                              {{ macros.edit_attachment_form_subproject(attachment, edit_attachment_forms, payment) }}
                               {% endfor %}
                               {% endif %}
 
@@ -654,15 +652,14 @@
                                 <b>Media</b>
                               </div>
                               {% for attachment in media %}
-                              {{ macros.edit_attachment_form_project(attachment, edit_attachment_forms, payment,
-                              project_owner,
-                              user_in_subproject) }}
+                              {{ macros.edit_attachment_form_project(attachment, edit_attachment_forms, payment) }}
                               {% endfor %}
                               {% endif %}
                             </div>
                             {% endif %}
                           </div>
                           <div class="col-6">
+                            {% if payment.editable %}
                             {% if transaction_attachment_form %}
                             <hr>
                             <b>Nieuwe media toevoegen</b>
@@ -678,6 +675,7 @@
                               {{ transaction_attachment_form.payment_id(**{'value': payment.id}) }}
                               {{ transaction_attachment_form.submit() }}
                             </form>
+                            {% endif %}
                             {% endif %}
                           </div>
                         </div>
@@ -697,7 +695,7 @@
   </div>
   </div>
 
-  {% if project_owner %}
+  {% if permissions.PROJECT_OWNER %}
   <!-- Modal for 'Categorie toevoegen' -->
   <div class="modal fade" id="categorie-toevoegen" tabindex="-1" role="dialog" aria-labelledby="categorieToevoegenLabel"
     aria-hidden="true">
@@ -801,15 +799,17 @@
   Table's detail view #}
   {% if edit_attachment_forms %}
   {% for payment in subproject.payments %}
+  {% if payment.editable %}
   {% for attachment in payment.attachments %}
   {% include 'partials/remove_attachment_form.html' %}
   {% endfor %}
+  {% endif %}
   {% endfor %}
   {% endif %}
 
-  {% if project_owner %}
+  {% if permissions.PROJECT_OWNER %}
   {% for payment in subproject.payments %}
-  {% if payment_forms[payment.id].remove %}
+  {% if payment.editable and payment_forms[payment.id].remove %}
   <!-- Modal -->
   <div class="modal fade" id="transactie-verwijder-{{ payment.id }}" tabindex="-1" role="dialog"
     aria-labelledby="transactieVerwijderLabel" aria-hidden="true">

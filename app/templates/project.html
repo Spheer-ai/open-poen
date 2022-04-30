@@ -941,9 +941,7 @@
                                 <b>Bonnen</b>
                               </div>
                               {% for attachment in bonnen %}
-                              {{ macros.edit_attachment_form_project(attachment, edit_attachment_forms, payment,
-                              permissions.PROJECT_OWNER,
-                              user_subproject_ids) }}
+                              {{ macros.edit_attachment_form_project(attachment, edit_attachment_forms, payment) }}
                               {% endfor %}
                               {% endif %}
 
@@ -952,9 +950,7 @@
                                 <b>Media</b>
                               </div>
                               {% for attachment in media %}
-                              {{ macros.edit_attachment_form_project(attachment, edit_attachment_forms, payment,
-                              permissions.PROJECT_OWNER,
-                              user_subproject_ids) }}
+                              {{ macros.edit_attachment_form_project(attachment, edit_attachment_forms, payment) }}
                               {% endfor %}
                               {% endif %}
                             </div>
@@ -964,7 +960,7 @@
                             {# Make sure the user is allowed to edit this payment (especially needed when a normal
                             users
                             edits a subproject payment on a project page #}
-                            {% if permissions.PROJECT_OWNER or payment.subproject.id in user_subproject_ids %}
+                            {% if payment.editable %}
                             {% if transaction_attachment_form %}
                             <hr>
                             <b>Nieuwe media toevoegen</b>
@@ -1002,7 +998,7 @@
   Table's detail view #}
   {% if edit_attachment_forms %}
   {% for payment in payments %}
-  {% if permissions.PROJECT_OWNER or payment.subproject.id in user_subproject_ids %}
+  {% if payment.editable %}
   {% for attachment in payment.attachments %}
   {% include 'partials/remove_attachment_form.html' %}
   {% endfor %}
@@ -1012,7 +1008,7 @@
 
   {% if permissions.PROJECT_OWNER %}
   {% for payment in payments %}
-  {% if payment_forms[payment.id].remove %}
+  {% if payment.editable and payment_forms[payment.id].remove %}
   <!-- Modal -->
   <div class="modal fade" id="transactie-verwijder-{{ payment.id }}" tabindex="-1" role="dialog"
     aria-labelledby="transactieVerwijderLabel" aria-hidden="true">
@@ -1077,7 +1073,7 @@
     </div>
   </div>
 
-  {%if permissions.PROJECT_OWNER %}
+  {% if permissions.PROJECT_OWNER %}
   {% for edit_project_owner_form, project_owner_email in project_owners %}
   <!-- Modal for 'Project owner beheren' -->
   <div class="modal fade" id="project-owner-beheren-{{ edit_project_owner_form.id.data }}" tabindex="-1" role="dialog"
