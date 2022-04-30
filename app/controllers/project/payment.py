@@ -1,15 +1,59 @@
-from typing import Dict
-
-from flask_login import current_user
-
-from app.controllers.util import Controller, create_redirects
-from app.form_processing import process_form
-from app.forms import NewTopupForm, PaymentForm, NewPaymentForm
-from app.models import Payment, Project
 from datetime import date
-from app.controllers.util import Status
+from typing import Dict, Type
+
+from app.controllers.util import Controller, Status, create_redirects
+from app.form_processing import process_form
+from app.forms import FlexibleDecimalField, NewPaymentForm, NewTopupForm
+from app.models import Payment, Project
 from app.util import Clearance, form_in_request
 from flask import request
+from flask_login import current_user
+from flask_wtf import FlaskForm
+from wtforms import (
+    BooleanField,
+    DateField,
+    IntegerField,
+    SelectField,
+    StringField,
+    SubmitField,
+    TextAreaField,
+)
+from wtforms.validators import Length, Optional
+from wtforms.widgets import HiddenInput
+
+
+class ImportedBNGPayment(FlaskForm):
+    short_user_description = StringField(
+        "Korte beschrijving", validators=[Length(max=50)]
+    )
+    long_user_description = TextAreaField(
+        "Lange beschrijving", validators=[Length(max=2000)]
+    )
+    hidden = BooleanField("Transactie verbergen")
+    category_id = SelectField("Categorie", validators=[Optional()], choices=[])
+    subproject_id = SelectField("Activiteit", validators=[Optional()], choices=[])
+    id = IntegerField(widget=HiddenInput())
+    submit = SubmitField("Opslaan", render_kw={"class": "btn btn-info"})
+
+
+class ManualPaymentOrTopup(ImportedBNGPayment):
+    route = SelectField(
+        "Route",
+        validators=[Optional()],
+        choices=[
+            ("inkomsten", "inkomsten"),
+            ("uitgaven", "uitgaven"),
+            ("inbesteding", "inbesteding"),
+        ],
+    )
+    booking_date = DateField("Datum (notatie: dd-mm-jjjj)", format="%d-%m-%Y")
+    transaction_amount = FlexibleDecimalField(
+        'Bedrag (begin met een "-" als het een uitgave is)'
+    )
+
+
+class ProjectOwnerPayment(ManualPaymentOrTopup):
+    remove = SubmitField("Verwijderen", render_kw={"class": "btn btn-danger"})
 
 
 class PaymentController(Controller):
@@ -35,9 +79,14 @@ class PaymentController(Controller):
         self.add_topup_form.card_number.choices = (
             project.make_debit_card_select_options()
         )
-        self.edit_form = PaymentForm(
-            prefix=f"edit_payment_form_{self.get_id_of_submitted_form}"
-        )
+        if self.get_id_of_submitted_form is None:
+            self.edit_form = ImportedBNGPayment(
+                prefix=f"edit_payment_form_{self.get_id_of_submitted_form}"
+            )
+        else:
+            self.edit_form = self.get_right_form(
+                Payment.query.get(self.get_id_of_submitted_form)
+            )(prefix=f"edit_payment_form_{self.get_id_of_submitted_form}")
         self.redirects = create_redirects(self.project.id, None)
 
     def add_payment(self):
@@ -78,22 +127,32 @@ class PaymentController(Controller):
         status = process_form(self.edit_form, Payment)
         return self.redirects[status]
 
+    def get_right_form(self, payment):
+        if payment.type == "BNG":
+            return ImportedBNGPayment
+        elif (
+            payment.type in ("MANUAL_PAYMENT", "MANUAL_TOPUP")
+            and self.clearance < Clearance.PROJECT_OWNER
+        ):
+            return ManualPaymentOrTopup
+        elif (
+            payment.type in ("MANUAL_PAYMENT", "MANUAL_TOPUP")
+            and self.clearance >= Clearance.PROJECT_OWNER
+        ):
+            return ProjectOwnerPayment
+        else:
+            raise ValueError("Unaccounted for edge case in form selection for payment.")
+
     def get_forms(self):
-        forms: Dict[int, PaymentForm] = {}
+        forms: Dict[int, Type[ImportedBNGPayment]] = {}
         # TODO: Make sure only the payments for the user's permissions are returned.
         # AKA: Editable payments.
         for payment in self.project.get_all_payments():
             data = payment.__dict__
             id = data["id"]
-            form = PaymentForm(prefix=f"edit_payment_form_{id}", **data)
-            if payment.type not in ("MANUAL_PAYMENT", "MANUAL_TOPUP"):
-                del form["booking_date"]
-                del form["route"]
-            if self.clearance < Clearance.PROJECT_OWNER or payment.type not in (
-                "MANUAL_PAYMENT",
-                "MANUAL_TOPUP",
-            ):
-                del form["remove"]
+            form = self.get_right_form(payment)(
+                prefix=f"edit_payment_form_{id}", **data
+            )
             form.category_id.choices = payment.make_category_select_options()
             form.subproject_id.choices = payment.make_subproject_select_options(
                 self.subproject_owner_id
