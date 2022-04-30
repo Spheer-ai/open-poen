@@ -176,17 +176,19 @@ class User(UserMixin, db.Model, DefaultCRUD):
             return super(User, self).update(kwargs)
 
     @classmethod
-    def add_user(cls, email, admin=False, project_id=0, subproject_id=0):
+    def add_user(
+        cls, email, admin=False, financial=False, project_id=0, subproject_id=0
+    ):
         user = cls.query.filter_by(email=email).first()
 
         if user:
-            _set_user_role(user, admin, project_id, subproject_id)
+            _set_user_role(user, admin, financial, project_id, subproject_id)
         if not user:
             user = cls(email=email)
             user.set_password(urandom(24))
             db.session.add(user)
             db.session.commit()
-            _set_user_role(user, admin, project_id, subproject_id)
+            _set_user_role(user, admin, financial, project_id, subproject_id)
             send_invite(user)
 
         return user
@@ -398,9 +400,12 @@ class Subproject(db.Model, DefaultCRUD):
             return "Aanmaken mislukt vanwege een onbekende fout. De beheerder van Open Poen is op de hoogte gesteld."
 
 
-def _set_user_role(user, admin=False, project_id=0, subproject_id=0):
+def _set_user_role(user, admin=False, financial=False, project_id=0, subproject_id=0):
     if admin:
         user.admin = True
+        db.session.commit()
+    if financial:
+        user.financial = True
         db.session.commit()
     if project_id:
         project = Project.query.get(project_id)

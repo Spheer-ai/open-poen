@@ -101,6 +101,11 @@
                             admin toevoegen
                           </button>
 
+                          <button type="button" class="btn button-poen-small bg-grey-blue" data-toggle="modal"
+                            data-target="#financial-toevoegen">
+                            financial toevoegen
+                          </button>
+
                           <!-- Modal -->
                           <div class="modal fade" id="admin-toevoegen" tabindex="-1" role="dialog"
                             aria-labelledby="adminToevoegenLabel" aria-hidden="true">
@@ -123,6 +128,40 @@
 
                                       {{ wtf.form_field(add_user_form.email, class="form-control") }}
                                       {{ add_user_form.admin(**{'value': 1}) }}
+                                    </div>
+                                  </div>
+                                  <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary"
+                                      data-dismiss="modal">Annuleren</button>
+                                    {{ add_user_form.submit }}
+                                  </div>
+                                </form>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div class="modal fade" id="financial-toevoegen" tabindex="-1" role="dialog"
+                            aria-labelledby="financialToevoegenLabel" aria-hidden="true">
+                            <div class="modal-dialog" role="document">
+                              <div class="modal-content">
+                                <form method="POST">
+                                  <div class="modal-header">
+                                    <h5 class="modal-title" id="financialToevoegenLabel">Financial Toevoegen</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
+                                      <span aria-hidden="true">&times;</span>
+                                    </button>
+                                  </div>
+                                  <div class="modal-body">
+                                    <p>Als er nog geen gebruiker bestaat met dit e-mailadres dan krijgt deze een
+                                      uitnodigingsmail met daarin een link om een wachtwoord aan te maken. Als er wel al
+                                      een gebruiker bestaat met dit e-mailadres dan krijgt deze gebruiker
+                                      financial-rechten
+                                      (er wordt daar geen e-mail over verstuurd).</p>
+                                    <div>
+                                      {{ add_user_form.csrf_token }}
+
+                                      {{ wtf.form_field(add_user_form.email, class="form-control") }}
+                                      {{ add_user_form.financial(**{'value': 1}) }}
                                     </div>
                                   </div>
                                   <div class="modal-footer">

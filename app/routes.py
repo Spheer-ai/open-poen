@@ -12,6 +12,7 @@ from flask_login import current_user, login_required, login_user, logout_user
 
 import app.controllers.project as pc
 import app.controllers.subproject as subpc
+from sqlalchemy import or_
 from app import app, db, util
 from app.bng import get_bng_info, process_bng_callback
 from app.email import send_password_reset_email
@@ -92,13 +93,18 @@ def index():
     edit_admin_form = EditAdminForm(prefix="edit_admin_form")
     form_redirect = process_form(edit_admin_form, User)
     if form_redirect:
-        return form_redirect
+        return redirect(url_for("index"))
 
     edit_admin_forms = {}
-    for admin in User.query.filter_by(admin=True).order_by("email"):
+    admins = (
+        db.session.query(User)
+        .filter(or_(User.admin, User.financial))
+        .order_by("email")
+        .all()
+    )
+    for admin in admins:
         edit_admin_forms[admin.email] = EditAdminForm(
-            prefix="edit_admin_form",
-            **{"admin": admin.admin, "active": admin.active, "id": admin.id},
+            prefix="edit_admin_form", **admin.__dict__
         )
 
     # AddUserForm is a misleading name, because it is rendered in index.html with a flag
@@ -109,9 +115,8 @@ def index():
         for f in add_user_form:
             if f.type != "SubmitField" and f.type != "CSRFTokenField":
                 new_user_data[f.short_name] = f.data
-
         try:
-            util.add_user(**new_user_data)
+            User.add_user(**new_user_data)
             util.formatted_flash(
                 (
                     f"{new_user_data['email']} is uitgenodigd als admin of initiatiefnemer. "

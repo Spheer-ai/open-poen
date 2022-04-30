@@ -51,23 +51,22 @@ def show_all_payments():
 
 
 @database.command()
-@click.option('-e', '--email', required=True)
-@click.option('-a', '--admin', is_flag=True)
-@click.option('-pid', '--project_id', type=int)
-@click.option('-sid', '--subproject_id', type=int)
-def add_user(email, admin=False,
-             project_id=0, subproject_id=0):
+@click.option("-e", "--email", required=True)
+@click.option("-a", "--admin", is_flag=True)
+@click.option("-pid", "--project_id", type=int)
+@click.option("-sid", "--subproject_id", type=int)
+def add_user(email, admin=False, project_id=0, subproject_id=0):
     """
     Adds a user. This command will prompt for an email address and
     allows the user to be added as admin or linked to a (sub)project. If
     it does not exist yet a user will be created.
     """
-    util.add_user(email, admin, project_id, subproject_id)
+    User.add_user(email, admin, project_id, subproject_id)
     print("Added user")
 
 
 @database.command()
-@click.argument('email')
+@click.argument("email")
 def create_user_invite_link(email):
     """
     Create a 'reset password' URL for a user. Useful to avoid emails
@@ -76,12 +75,10 @@ def create_user_invite_link(email):
     """
     user = User.query.filter_by(email=email).first()
     if not user:
-        print('No user with email address %s' % (email))
+        print("No user with email address %s" % (email))
         return
     token = user.get_reset_password_token()
     print(
-        'Password reset URL for %s: %s' % (
-            email,
-            url_for('reset_wachtwoord', token=token, _external=True)
-        )
+        "Password reset URL for %s: %s"
+        % (email, url_for("reset_wachtwoord", token=token, _external=True))
     )

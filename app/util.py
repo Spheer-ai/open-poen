@@ -118,46 +118,6 @@ def validate_on_submit(form, request):
         return False
 
 
-def _set_user_role(user, admin=False, project_id=0, subproject_id=0):
-    if admin:
-        user.admin = True
-        db.session.commit()
-    if project_id:
-        project = Project.query.get(project_id)
-        if user in project.users:
-            raise ValueError(
-                "Gebruiker niet toegevoegd: deze gebruiker was al initiatiefnemer van dit initiatief"
-            )
-        project.users.append(user)
-        db.session.commit()
-    if subproject_id:
-        subproject = Subproject.query.get(subproject_id)
-        if user in subproject.users:
-            raise ValueError(
-                "Gebruiker niet toegevoegd: deze gebruiker was al activiteitnemer van deze activiteit"
-            )
-        subproject.users.append(user)
-        db.session.commit()
-
-
-def add_user(email, admin=False, project_id=0, subproject_id=0):
-    # Check if a user already exists with this email address
-    user = User.query.filter_by(email=email).first()
-
-    if user:
-        _set_user_role(user, admin, project_id, subproject_id)
-    if not user:
-        user = User(email=email)
-        user.set_password(urandom(24))
-        db.session.add(user)
-        db.session.commit()
-
-        _set_user_role(user, admin, project_id, subproject_id)
-
-        # Send the new user an invitation email
-        send_invite(user)
-
-
 def get_export_timestamp():
     return (
         datetime.now(app.config["TZ"])

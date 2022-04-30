@@ -1,3 +1,4 @@
+from xmlrpc.client import Boolean
 from wtforms.fields.core import FieldList, FormField
 from app import app
 from flask_wtf import FlaskForm
@@ -485,6 +486,7 @@ class AddUserForm(FlaskForm):
         "E-mailadres", validators=[DataRequired(), Email(), Length(max=120)]
     )
     admin = BooleanField(widget=HiddenInput())
+    financial = BooleanField(widget=HiddenInput())
     project_id = IntegerField(widget=HiddenInput())
     subproject_id = IntegerField(widget=HiddenInput())
 
@@ -493,6 +495,7 @@ class AddUserForm(FlaskForm):
 
 class EditAdminForm(FlaskForm):
     admin = BooleanField("Admin")
+    financial = BooleanField("Financial")
     active = BooleanField("Gebruikersaccount is actief")
     id = IntegerField(widget=HiddenInput())
 
