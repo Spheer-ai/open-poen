@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Union, Type
 
 from flask_login import current_user
 
@@ -8,6 +8,11 @@ from app.forms import PaymentForm, NewPaymentForm
 from app.models import Payment, Subproject
 from datetime import date
 from app.controllers.util import Status
+from app.controllers.project.payment import (
+    ImportedBNGPayment,
+    ManualPaymentOrTopup,
+    ProjectOwnerPayment,
+)
 from app.util import Clearance, form_in_request
 from flask import request
 
@@ -27,12 +32,30 @@ class PaymentController(Controller):
             booking_date=date.today(),
             type="MANUAL_PAYMENT",  # TODO: Make enum.
         )
-        self.edit_form = PaymentForm(
+        payment = Payment.query.get(self.get_id_of_submitted_form)
+        form_class = self.get_right_form(payment)
+        self.edit_form = form_class(
             prefix=f"edit_payment_form_{self.get_id_of_submitted_form}"
         )
         self.redirects = create_redirects(
             self.subproject.project.id, self.subproject.id
         )
+
+    def get_right_form(self, payment: Union[Payment, None]) -> Type[ImportedBNGPayment]:
+        if payment is None or payment.type == "BNG":
+            return ImportedBNGPayment
+        elif (
+            payment.type in ("MANUAL_PAYMENT", "MANUAL_TOPUP")
+            and self.clearance < Clearance.PROJECT_OWNER
+        ):
+            return ManualPaymentOrTopup
+        elif (
+            payment.type in ("MANUAL_PAYMENT", "MANUAL_TOPUP")
+            and self.clearance >= Clearance.PROJECT_OWNER
+        ):
+            return ProjectOwnerPayment
+        else:
+            raise ValueError("Unaccounted for edge case in form selection for payment.")
 
     def add_payment(self):
         # TODO: permissions check.
@@ -69,15 +92,8 @@ class PaymentController(Controller):
         for payment in self.subproject.payments:
             data = payment.__dict__
             id = data["id"]
-            form = PaymentForm(prefix=f"edit_payment_form_{id}", **data)
-            if payment.type not in ("MANUAL_PAYMENT", "MANUAL_TOPUP"):
-                del form["booking_date"]
-                del form["route"]
-            if self.clearance < Clearance.PROJECT_OWNER or payment.type not in (
-                "MANUAL_PAYMENT",
-                "MANUAL_TOPUP",
-            ):
-                del form["remove"]
+            form_class = self.get_right_form(payment)
+            form = form_class(prefix=f"edit_payment_form_{id}", **data)
             form.category_id.choices = payment.make_category_select_options()
             form.subproject_id.choices = payment.make_subproject_select_options(
                 self.subproject_owner_id

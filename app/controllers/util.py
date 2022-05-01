@@ -1,15 +1,14 @@
 import re
-from abc import ABC, abstractmethod
-from typing import Dict, List, Union, Type
-from app.util import Clearance
+from abc import ABCMeta, abstractmethod
+from typing import Dict, List, Union
 from app import app
-from app.form_processing import Status, process_form, return_redirect
+from app.form_processing import Status, return_redirect
 from flask import Response, request
 from flask.templating import render_template
 from flask_wtf import FlaskForm
 
 
-class Controller(ABC):
+class Controller(metaclass=ABCMeta):
     @property
     def get_id_of_submitted_form(self):
         keys = list(request.form.keys())

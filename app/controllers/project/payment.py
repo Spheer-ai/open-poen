@@ -1,5 +1,5 @@
 from datetime import date
-from typing import Dict, Type
+from typing import Dict, Type, Union
 
 from app.controllers.util import Controller, Status, create_redirects
 from app.form_processing import process_form
@@ -79,15 +79,28 @@ class PaymentController(Controller):
         self.add_topup_form.card_number.choices = (
             project.make_debit_card_select_options()
         )
-        if self.get_id_of_submitted_form is None:
-            self.edit_form = ImportedBNGPayment(
-                prefix=f"edit_payment_form_{self.get_id_of_submitted_form}"
-            )
-        else:
-            self.edit_form = self.get_right_form(
-                Payment.query.get(self.get_id_of_submitted_form)
-            )(prefix=f"edit_payment_form_{self.get_id_of_submitted_form}")
+        payment = Payment.query.get(self.get_id_of_submitted_form)
+        form_class = self.get_right_form(payment)
+        self.edit_form = form_class(
+            prefix=f"edit_payment_form_{self.get_id_of_submitted_form}"
+        )
         self.redirects = create_redirects(self.project.id, None)
+
+    def get_right_form(self, payment: Union[Payment, None]) -> Type[ImportedBNGPayment]:
+        if payment is None or payment.type == "BNG":
+            return ImportedBNGPayment
+        elif (
+            payment.type in ("MANUAL_PAYMENT", "MANUAL_TOPUP")
+            and self.clearance < Clearance.PROJECT_OWNER
+        ):
+            return ManualPaymentOrTopup
+        elif (
+            payment.type in ("MANUAL_PAYMENT", "MANUAL_TOPUP")
+            and self.clearance >= Clearance.PROJECT_OWNER
+        ):
+            return ProjectOwnerPayment
+        else:
+            raise ValueError("Unaccounted for edge case in form selection for payment.")
 
     def add_payment(self):
         # TODO: permissions check.
@@ -127,32 +140,13 @@ class PaymentController(Controller):
         status = process_form(self.edit_form, Payment)
         return self.redirects[status]
 
-    def get_right_form(self, payment):
-        if payment.type == "BNG":
-            return ImportedBNGPayment
-        elif (
-            payment.type in ("MANUAL_PAYMENT", "MANUAL_TOPUP")
-            and self.clearance < Clearance.PROJECT_OWNER
-        ):
-            return ManualPaymentOrTopup
-        elif (
-            payment.type in ("MANUAL_PAYMENT", "MANUAL_TOPUP")
-            and self.clearance >= Clearance.PROJECT_OWNER
-        ):
-            return ProjectOwnerPayment
-        else:
-            raise ValueError("Unaccounted for edge case in form selection for payment.")
-
     def get_forms(self):
         forms: Dict[int, Type[ImportedBNGPayment]] = {}
-        # TODO: Make sure only the payments for the user's permissions are returned.
-        # AKA: Editable payments.
         for payment in self.project.get_all_payments():
             data = payment.__dict__
             id = data["id"]
-            form = self.get_right_form(payment)(
-                prefix=f"edit_payment_form_{id}", **data
-            )
+            form_class = self.get_right_form(payment)
+            form = form_class(prefix=f"edit_payment_form_{id}", **data)
             form.category_id.choices = payment.make_category_select_options()
             form.subproject_id.choices = payment.make_subproject_select_options(
                 self.subproject_owner_id
