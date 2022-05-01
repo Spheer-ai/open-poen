@@ -560,9 +560,9 @@ class Payment(db.Model, DefaultCRUD):
         # TODO: Refactor.
         if self.subproject:
             return self.subproject.project.make_subproject_select_options(user_id)
-        elif self.project and self.project.contains_subprojects:
+        elif self.project:
             return self.project.make_subproject_select_options(user_id)
-        elif self.debit_card and self.debit_card.project.contains_subprojects:
+        elif self.debit_card:
             return self.debit_card.project.make_subproject_select_options(user_id)
         else:
             raise AssertionError("Edge case: can't find this payment's project.")
