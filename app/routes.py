@@ -390,6 +390,7 @@ def project(project_id):
         bng_info=bng_info,
         edit_debit_card_forms=debit_cards,
         debit_card_donuts=debit_card_donuts,
+        user_subproject_ids=user_subproject_ids,
     )
 
 

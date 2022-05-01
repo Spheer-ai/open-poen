@@ -767,7 +767,8 @@
                 {% set payment_form = payment_forms[payment.id] %}
                 {% endif %}
 
-                {% if not payment.hidden or (permissions.PROJECT_OWNER or payment.subproject.id in user_subproject_ids)
+                {% if (not payment.hidden and not payment.subproject.hidden ) or (permissions.PROJECT_OWNER or
+                payment.subproject.id in user_subproject_ids)
                 %}
                 <tr{% if payment.type=='MANUAL_PAYMENT' %} class="manual-payment" {% elif payment.type=="MANUAL_TOPUP"
                   %} class="manual-topup" {% endif %} id="payment_row_{{ payment.id }}">
