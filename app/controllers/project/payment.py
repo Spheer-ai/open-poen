@@ -1,5 +1,5 @@
 from datetime import date
-from typing import Dict, Type, Union
+from typing import Dict, Type
 
 from app.controllers.util import Controller, Status, create_redirects
 from app.form_processing import process_form
@@ -35,6 +35,10 @@ class ImportedBNGPayment(FlaskForm):
     id = IntegerField(widget=HiddenInput())
     submit = SubmitField("Opslaan", render_kw={"class": "btn btn-info"})
 
+    def __init__(self, *args, **kwargs):
+        kwargs["prefix"] = "imported_bng"
+        super().__init__(*args, **kwargs)
+
 
 class ManualPaymentOrTopup(ImportedBNGPayment):
     route = SelectField(
@@ -51,9 +55,17 @@ class ManualPaymentOrTopup(ImportedBNGPayment):
         'Bedrag (begin met een "-" als het een uitgave is)'
     )
 
+    def __init__(self, *args, **kwargs):
+        kwargs["prefix"] = "manual_payment_or_topup"
+        super(ImportedBNGPayment, self).__init__(*args, **kwargs)
+
 
 class ProjectOwnerPayment(ManualPaymentOrTopup):
     remove = SubmitField("Verwijderen", render_kw={"class": "btn btn-danger"})
+
+    def __init__(self, *args, **kwargs):
+        kwargs["prefix"] = "project_owner"
+        super(ImportedBNGPayment, self).__init__(*args, **kwargs)
 
 
 class PaymentController(Controller):
@@ -79,15 +91,88 @@ class PaymentController(Controller):
         self.add_topup_form.card_number.choices = (
             project.make_debit_card_select_options()
         )
-        payment = Payment.query.get(self.get_id_of_submitted_form)
-        form_class = self.get_right_form(payment)
-        self.edit_form = form_class(
-            prefix=f"edit_payment_form_{self.get_id_of_submitted_form}"
-        )
+        self.edit_forms = [
+            ImportedBNGPayment(),
+            ManualPaymentOrTopup(),
+            ProjectOwnerPayment(),
+        ]
         self.redirects = create_redirects(self.project.id, None)
 
-    def get_right_form(self, payment: Union[Payment, None]) -> Type[ImportedBNGPayment]:
-        if payment is None or payment.type == "BNG":
+    def add(self, form):
+        # TODO: permissions check.
+        # TODO: Handle attachment.
+        del form["mediatype"]
+        del form["data_file"]
+        status = process_form(
+            form,
+            Payment,
+            alt_create=Payment.add_manual_topup_or_payment,
+        )
+        return self.redirects[status]
+
+    def edit(self, form):
+        if form_in_request(form, request):
+            payment = Payment.query.get(form.id.data)
+            if not payment:
+                return self.redirects[Status.not_found]
+            # This is necessary because a Selectfield's choices have to be set.
+            # Otherwise the form will be invalid.
+            form.category_id.choices = payment.make_category_select_options()
+            form.subproject_id.choices = payment.make_subproject_select_options(
+                self.subproject_owner_id
+            )
+
+        status = process_form(form, Payment)
+        return self.redirects[status]
+
+    def get_forms(self):
+        forms: Dict[int, Type[ImportedBNGPayment]] = {}
+        for payment in self.project.get_all_payments():
+            data = payment.__dict__
+            id = data["id"]
+            form_class = self.get_right_form(payment)
+            form = form_class(formdata=None, **data)
+            form.category_id.choices = payment.make_category_select_options()
+            form.subproject_id.choices = payment.make_subproject_select_options(
+                self.subproject_owner_id
+            )
+            forms[id] = form
+
+        # If a payment has previously been edited with an error, we have to insert it.
+        for form in self.edit_forms:
+            if len(form.errors) > 0:
+                forms[form.id.data] = form
+
+        return forms
+
+    def process_forms(self):
+        redirect = self.add(self.add_payment_form)
+        if redirect:
+            return redirect
+        redirect = self.add(self.add_topup_form)
+        if redirect:
+            return redirect
+        for form in self.edit_forms:
+            redirect = self.edit(form)
+            if redirect:
+                return redirect
+
+    def get_modal_ids(self, modals):
+        if len(self.add_payment_form.errors) > 0:
+            assert len(modals) == 0
+            modals.append("#modal-betaling-toevoegen")
+        if len(self.add_topup_form.errors) > 0:
+            assert len(modals) == 0
+            modals.append("#modal-topup-toevoegen")
+        return modals
+
+    def get_payment_id(self):
+        for form in self.edit_forms:
+            if len(form.errors) > 0:
+                return form.id.data
+
+    def get_right_form(self, payment: Payment) -> Type[ImportedBNGPayment]:
+        if payment.type == "BNG":
             return ImportedBNGPayment
         elif (
             payment.type in ("MANUAL_PAYMENT", "MANUAL_TOPUP")
@@ -101,84 +186,3 @@ class PaymentController(Controller):
             return ProjectOwnerPayment
         else:
             raise ValueError("Unaccounted for edge case in form selection for payment.")
-
-    def add_payment(self):
-        # TODO: permissions check.
-        # TODO: Handle attachment.
-        del self.add_payment_form["mediatype"]
-        del self.add_payment_form["data_file"]
-        status = process_form(
-            self.add_payment_form,
-            Payment,
-            alt_create=Payment.add_manual_topup_or_payment,
-        )
-        return self.redirects[status]
-
-    def add_topup(self):
-        # TODO: permissions check.
-        # TODO: Handle attachment.
-        del self.add_topup_form["mediatype"]
-        del self.add_topup_form["data_file"]
-        status = process_form(
-            self.add_topup_form, Payment, alt_create=Payment.add_manual_topup_or_payment
-        )
-        return self.redirects[status]
-
-    def edit(self):
-        payment = Payment.query.get(self.edit_form.id.data)
-
-        # This is necessary because a Selectfield's choices have to be set. Otherwise
-        # the form will be invalid.
-        if payment is None and form_in_request(self.edit_form, request):
-            return self.redirects[Status.not_found]
-        elif payment and form_in_request(self.edit_form, request):
-            self.edit_form.category_id.choices = payment.make_category_select_options()
-            self.edit_form.subproject_id.choices = (
-                payment.make_subproject_select_options(self.subproject_owner_id)
-            )
-
-        status = process_form(self.edit_form, Payment)
-        return self.redirects[status]
-
-    def get_forms(self):
-        forms: Dict[int, Type[ImportedBNGPayment]] = {}
-        for payment in self.project.get_all_payments():
-            data = payment.__dict__
-            id = data["id"]
-            form_class = self.get_right_form(payment)
-            form = form_class(prefix=f"edit_payment_form_{id}", **data)
-            form.category_id.choices = payment.make_category_select_options()
-            form.subproject_id.choices = payment.make_subproject_select_options(
-                self.subproject_owner_id
-            )
-            forms[id] = form
-
-        # If a payment has previously been edited with an error, we have to insert it.
-        if len(self.edit_form.errors) > 0:
-            forms[self.get_id_of_submitted_form] = self.edit_form
-
-        return forms
-
-    def process_forms(self):
-        redirect = self.add_payment()
-        if redirect:
-            return redirect
-        redirect = self.add_topup()
-        if redirect:
-            return redirect
-        redirect = self.edit()
-        if redirect:
-            return redirect
-
-    def get_modal_ids(self, modals):
-        if len(self.add_payment_form.errors) > 0:
-            assert len(modals) == 0
-            modals.append("#modal-betaling-toevoegen")
-        if len(self.add_topup_form.errors) > 0:
-            assert len(modals) == 0
-            modals.append("#modal-topup-toevoegen")
-        return modals
-
-    def get_payment_id(self):
-        if len(self.edit_form.errors) > 0:
-            return self.edit_form.id.data
