@@ -1,24 +1,15 @@
-from app.controllers.util import Controller, create_redirects
-from app.form_processing import Status, process_form, return_redirect
-from flask_wtf import FlaskForm
-from app.models import Project
-from app.forms import validate_budget
-from wtforms.validators import (
-    DataRequired,
-    Length,
-    Optional,
-)
-from wtforms.widgets import HiddenInput
-from wtforms import (
-    StringField,
-    IntegerField,
-    BooleanField,
-    SubmitField,
-    TextAreaField,
-)
-from app.util import Clearance, formatted_flash
 from typing import Dict, Type
-from flask import url_for, redirect
+
+from app.controllers.util import Controller, create_redirects
+from app.form_processing import Status, process_form
+from app.forms import validate_budget
+from app.models import Project
+from app.util import Clearance
+from flask import redirect, url_for
+from flask_wtf import FlaskForm
+from wtforms import BooleanField, IntegerField, StringField, SubmitField, TextAreaField
+from wtforms.validators import DataRequired, Length, Optional
+from wtforms.widgets import HiddenInput
 
 
 class BaseForm(FlaskForm):

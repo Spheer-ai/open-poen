@@ -425,23 +425,6 @@ class PaymentForm(FlaskForm):
     # Only manually added payments are allowed to be removed
     remove = SubmitField("Verwijderen", render_kw={"class": "btn btn-danger"})
 
-    def validate(self):
-        rv = FlaskForm.validate(self)
-        if not rv:
-            return False
-
-        p = Payment.query.filter_by(id=self.id.data).first()
-        if p is None:
-            return False
-
-        if p.type == "MANUAL_TOPUP" and self.transaction_amount.data < 0:
-            self.transaction_amount.errors.append(
-                f"{self.transaction_amount.data} is niet een positief bedrag. Topups moeten meer dan 0 € zijn."
-            )
-            return False
-
-        return True
-
 
 class TransactionAttachmentForm(FlaskForm):
     data_file = FileField(

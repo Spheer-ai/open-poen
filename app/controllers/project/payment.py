@@ -39,6 +39,26 @@ class ImportedBNGPayment(FlaskForm):
         kwargs["prefix"] = "imported_bng"
         super().__init__(*args, **kwargs)
 
+    def validate(self):
+        rv = FlaskForm.validate(self)
+        if not rv:
+            return False
+
+        p = Payment.query.filter_by(id=self.id.data).first()
+        if p is None:
+            return False
+
+        if p.type == "MANUAL_TOPUP" and self.transaction_amount.data < 0:
+            self.transaction_amount.errors.append(
+                (
+                    f"{self.transaction_amount.data} is niet een positief bedrag. "
+                    "Topups moeten meer dan 0 € zijn."
+                )
+            )
+            return False
+
+        return True
+
 
 class ManualPaymentOrTopup(ImportedBNGPayment):
     route = SelectField(
