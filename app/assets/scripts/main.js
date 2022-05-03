@@ -264,6 +264,85 @@ $(window).on('load', function () {
   }
 });
 
+class FormWizard {
+  constructor(unitClass) {
+    this.idx = 0;
+    this.prev_button = $(unitClass + " .interactive-prev")
+    this.next_button = $(unitClass + " .interactive-next")
+    this.submit_button = $(unitClass + " .interactive-submit")
+    this.units = $(unitClass).find(".interactive-unit")
+    $(this.units.get(this.idx)).show()
+    this.set_buttons()
+    this.submit_button.on("click", function (e) {
+      console.log(e)
+    })
+  }
+
+  next() {
+    if (this.idx === (this.units.length - 1)) return
+    $(this.units.get(this.idx + 1)).show()
+    $(this.units.get(this.idx)).hide()
+    this.idx += 1
+    this.set_buttons()
+  }
+
+  prev() {
+    if (this.idx === 0) return
+    $(this.units.get(this.idx - 1)).show()
+    $(this.units.get(this.idx)).hide()
+    this.idx -= 1
+    this.set_buttons()
+  }
+
+  set_buttons() {
+    this.set_submit_and_next()
+    this.set_prev()
+  }
+
+  set_submit_and_next() {
+    if (this.idx === (this.units.length - 1)) {
+      this.next_button.hide()
+      this.submit_button.show()
+    } else {
+      this.next_button.show()
+      this.submit_button.hide()
+    }
+  }
+
+  set_prev() {
+    if (this.idx === 0) {
+      this.prev_button.hide()
+    } else {
+      this.prev_button.show()
+    }
+  }
+}
+
+window.wizard = new FormWizard(".interactive-form")
+
+// window.activeProjectUnit = 0;
+// $("#project-unit-" + window.activeProjectUnit).css({ "display": "inline" })
+// window.nextProjectUnit = function () {
+//   if (window.activeProjectUnit === 3) {
+//     return
+//   }
+//   let next = window.activeProjectUnit + 1
+//   console.log(next);
+//   $("#project-unit-" + next).css({ "display": "inline" })
+//   $("#project-unit-" + window.activeProjectUnit).css({ "display": "none" })
+//   window.activeProjectUnit += 1;
+// }
+// window.previousProjectUnit = function () {
+//   if (window.activeProjectUnit === 0) {
+//     return
+//   }
+//   let prev = window.activeProjectUnit - 1
+//   console.log(prev);
+//   $("#project-unit-" + prev).css({ "display": "inline" })
+//   $("#project-unit-" + window.activeProjectUnit).css({ "display": "none" })
+//   window.activeProjectUnit -= 1;
+// }
+
 window.IBANIdx = $("#project-ibans").find(".form-group").length + 1
 
 var addIBAN = function () {
@@ -374,3 +453,5 @@ $("#add-subproject").on("click", function () {
   cloneForm(".project-subproject:last", window.subprojectIdx);
   window.subprojectIdx += 1;
 })
+
+export let x = 9;

@@ -148,6 +148,18 @@ def get_permissions(clearance: Clearance) -> Dict[str, bool]:
     return {k: v <= clearance.value for k, v in permissions.items()}
 
 
+def get_index_clearance() -> Clearance:
+    if not current_user.is_authenticated:
+        return Clearance.ANONYMOUS
+    elif current_user.admin:
+        return Clearance.ADMIN
+    elif current_user.financial:
+        return Clearance.FINANCIAL
+    else:
+        # Default to anonymous, because that's the lowest level of clearance.
+        return Clearance.ANONYMOUS
+
+
 def get_project_clearance(project: Project) -> Clearance:
     if not current_user.is_authenticated:
         return Clearance.ANONYMOUS

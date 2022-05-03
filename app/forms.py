@@ -190,58 +190,6 @@ class DebitCardForm(FlaskForm):
     submit = SubmitField("Opslaan", render_kw={"class": "btn btn-info"})
 
 
-class NewProjectSubprojectForm(FlaskForm):
-    name = StringField("Naam", validators=[DataRequired(), Length(max=120)])
-    description = TextAreaField("Beschrijving", validators=[DataRequired()])
-    hidden = BooleanField("Activiteit verbergen")
-    budget = IntegerField(
-        "Budget voor deze activiteit", validators=[Optional(), validate_budget]
-    )
-
-
-class NewProjectForm(FlaskForm):
-    name = StringField("Naam", validators=[DataRequired(), Length(max=120)])
-    description = TextAreaField("Beschrijving", validators=[DataRequired()])
-    contains_subprojects = BooleanField(
-        "Uitgaven van dit initiatief worden geregistreerd op activiteiten",
-        default="checked",
-    )
-    hidden = BooleanField("Initiatief verbergen")
-    hidden_sponsors = BooleanField("Sponsoren verbergen")
-    budget = IntegerField(
-        "Budget voor dit initiatief", validators=[Optional(), validate_budget]
-    )
-    card_numbers_amount = IntegerField(
-        "Aantal toe te voegen betaalpassen.*",
-        default=0,
-        validators=[positive_integer, Optional()],
-    )
-    card_numbers = FieldList(
-        FormField(DebitCardForm), min_entries=0, max_entries=None, validators=[]
-    )
-    funders_amount = IntegerField(
-        "Aantal toe te voegen sponsoren.*",
-        default=0,
-        validators=[positive_integer, Optional()],
-    )
-    funders = FieldList(
-        FormField(NewProjectFunderForm), min_entries=0, max_entries=None, validators=[]
-    )
-    subprojects_amount = IntegerField(
-        "Aantal toe te voegen activiteiten.*",
-        default=0,
-        validators=[positive_integer, Optional()],
-    )
-    subprojects = FieldList(
-        FormField(NewProjectSubprojectForm),
-        min_entries=0,
-        max_entries=None,
-        validators=[],
-    )
-    id = IntegerField(widget=HiddenInput())
-    submit = SubmitField("Opslaan", render_kw={"class": "btn btn-info"})
-
-
 class SubprojectForm(FlaskForm):
     name = StringField("Naam", validators=[DataRequired(), Length(max=120)])
     description = TextAreaField("Beschrijving", validators=[DataRequired()])

@@ -244,17 +244,18 @@
                   aria-labelledby="projectToevoegenLabel" aria-hidden="true">
                   <div class="modal-dialog" role="document">
                     <div class="modal-content">
-                      <form method="POST">
+                      <form method="POST" class="interactive-form" novalidate>
                         <div class="modal-header">
                           <h5 class="modal-title" id="projectToevoegenLabel">Initiatief Toevoegen</h5>
                           <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
                             <span aria-hidden="true">&times;</span>
                           </button>
                         </div>
-                        <div class="modal-body">
+                        <div class="modal-body"
+                          style="display: flex; flex-direction: column; justify-content: space-between;">
                           <div>
                             {{ project_form.csrf_token }}
-                            <div class="project-unit">
+                            <div class="interactive-unit">
                               <h2>Algemene initiatiefinstellingen</h2>
                               {{ wtf.form_field(project_form.name) }}
                               {{ wtf.form_field(project_form.description) }}
@@ -262,20 +263,10 @@
                               {{ wtf.form_field(project_form.hidden) }}
                               {{ wtf.form_field(project_form.hidden_sponsors) }}
                               {{ wtf.form_field(project_form.budget) }}
-                              {% if project_form.funders_amount %}
-                              {{ wtf.form_field(project_form.funders_amount)}}
-                              {% endif %}
-                              {% if project_form.card_numbers_amount %}
-                              {{ wtf.form_field(project_form.card_numbers_amount)}}
-                              {% endif %}
-                              {% if project_form.subprojects_amount %}
-                              {{ wtf.form_field(project_form.subprojects_amount)}}
                               <p>* Het is op een later moment in het projectscherm ook mogelijk om nieuwe sponsoren,
                                 betaalpassen of activiteiten toe te voegen.</p>
-                              {% endif %}
                             </div>
-                            {% if project_form.funders|length > 0 %}
-                            <div class="project-unit">
+                            <div class="interactive-unit">
                               <h2>Sponsoren</h2>
                               <p>Voer hier de sponsoren van het initiatief in. De URL moet het volgende format hebben:
                                 http(s)://voorbeeld.com</p>
@@ -286,9 +277,7 @@
                               {{ funder.csrf_token }}
                               {% endfor %}
                             </div>
-                            {% endif %}
-                            {% if project_form.card_numbers|length > 0 %}
-                            <div class="project-unit">
+                            <div class="interactive-unit">
                               <h2>Betaalpassen</h2>
                               <p>Voer hier de betaalpassen in die aan het initiatief moeten worden gekoppeld.</p>
                               {% for card_number in project_form.card_numbers %}
@@ -297,9 +286,7 @@
                               {{ card_number.csrf_token }}
                               {% endfor %}
                             </div>
-                            {% endif %}
-                            {% if project_form.subprojects|length > 0 %}
-                            <div class="project-unit">
+                            <div class="interactive-unit">
                               <h2>Activiteiten</h2>
                               <p>Voeg hier de activiteiten in die moeten worden aangemaakt voor dit initiatief.</p>
                               {% for subproject in project_form.subprojects %}
@@ -311,13 +298,26 @@
                               {{ subproject.csrf_token }}
                               {% endfor %}
                             </div>
-                            {% endif %}
                           </div>
+
+                          {% if project_form.has_errors %}
+                          <div>
+                            <h2 style="color: red">Het formulier bevat fout(en).
+                              Doorloop het formulier opnieuw en
+                              volg
+                              de
+                              aanwijzingen op.
+                            </h2>
+                          </div>
+                          {% endif %}
                         </div>
-                        <div class="modal-footer">
-                          <button onClick="window.location.reload();" type="button"
-                            class="btn btn-secondary">Annuleren</button>
+                        <div class="modal-footer" style="justify-content: space-between">
+                          <button type="button" onclick="wizard.prev()"
+                            class="btn btn-secondary interactive-prev">Vorige</button>
+                          <button type="button" class="btn btn-danger" data-dismiss="modal">Annuleren</button>
                           {{ project_form.submit }}
+                          <button type="button" onclick="wizard.next()"
+                            class="btn btn-primary interactive-next">Volgende</button>
                         </div>
                       </form>
                     </div>

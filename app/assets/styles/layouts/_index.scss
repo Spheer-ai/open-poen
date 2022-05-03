@@ -45,7 +45,7 @@
 .bng-info-unit {
   display: flex;
   align-items: center;
-  margin-bottom: 1rem; 
+  margin-bottom: 1rem;
 }
 
 .bng-info-unit p {
@@ -53,10 +53,14 @@
   margin-left: 1rem;
 }
 
-.project-unit {
-  margin-bottom: 7rem;
+.interactive-form .interactive-unit {
+  display: none;
 }
 
-.project-unit h2 {
+.interactive-unit h2 {
   margin-bottom: 1rem;
+}
+
+.interactive-form .modal-body {
+  min-height: 65vh;
 }

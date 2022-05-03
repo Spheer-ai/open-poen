@@ -239,6 +239,7 @@ def process_form(
     if not util.validate_on_submit(form, request):
         return None
 
+    # TODO: Make filter_fields work for nested dicts.
     data = filter_fields(form)
 
     if hasattr(form, "id") and form.id.data is not None:

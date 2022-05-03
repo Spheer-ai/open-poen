@@ -10,17 +10,14 @@ from flask import (
 )
 from flask_login import current_user, login_required, login_user, logout_user
 
+import app.controllers.index as ic
 import app.controllers.project as pc
 import app.controllers.subproject as subpc
 from sqlalchemy import or_
 from app import app, db, util
 from app.bng import get_bng_info, process_bng_callback
 from app.email import send_password_reset_email
-from app.form_processing import (
-    process_bng_link_form,
-    process_form,
-    process_new_project_form,
-)
+from app.form_processing import process_bng_link_form, process_form
 from app.forms import (
     AddUserForm,
     BNGLinkForm,
@@ -28,7 +25,6 @@ from app.forms import (
     EditAttachmentForm,
     EditProfileForm,
     LoginForm,
-    NewProjectForm,
     ResetPasswordForm,
     ResetPasswordRequestForm,
 )
@@ -85,9 +81,11 @@ def before_request():
 
 @app.route("/", methods=["GET", "POST"])
 def index():
-    modal_id = None  # This is used to pop open a modal on page load in case of
+    modal_id = []  # This is used to pop open a modal on page load in case of
     # form errors.
     bng_info = {}
+
+    clearance = util.get_index_clearance()
 
     # ADMIN
     edit_admin_form = EditAdminForm(prefix="edit_admin_form")
@@ -132,12 +130,12 @@ def index():
         util.flash_form_errors(add_user_form, request)
 
     # PROJECT
-    project_form = NewProjectForm(prefix="project_form")
-    form_redirect = process_new_project_form(project_form)
-    if form_redirect:
-        return form_redirect
-    if len(project_form.errors) > 0:
-        modal_id = ["#modal-project-toevoegen"]
+    project_controller = ic.Project(clearance)
+    controller_redirect = project_controller.process_forms()
+    if controller_redirect:
+        return controller_redirect
+    project_form = project_controller.get_forms()
+    modal_id = project_controller.get_modal_ids(modal_id)
 
     # BNG
     if current_user.is_authenticated:
@@ -198,6 +196,9 @@ def index():
                 "budget": budget,
             }
         )
+
+    if modal_id == []:
+        modal_id = None
 
     return render_template(
         "index.html",
