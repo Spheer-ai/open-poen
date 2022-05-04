@@ -319,7 +319,7 @@ class FormWizard {
   }
 
   addSubproject() {
-    let attrs = ["id", "name", "for"]
+    let attrs = ["id", "name", "for"] // Relevant attributes for constructing the next batch of fields.
     let subprojects = $(".interactive-form").find(".subproject");
     let newIdx = subprojects.length + this.removedCounter
     let last = subprojects.last().clone(true);
@@ -329,23 +329,24 @@ class FormWizard {
         if (x.attr(attrs[i]) === undefined) {
           continue;
         }
+        // Set the right index in all relevant attributes.
         x.attr(attrs[i], x.attr(attrs[i]).replace(/subprojects-\d+/, "subprojects-" + newIdx));
       }
+      // Don't remove the csrf token because it will invalidate the form,
+      // but do reset values of all other elements.
       if (!String(x.attr("id")).includes("csrf")) {
         x.val("");
       }
     });
-    last.find(".help-block").remove();
-    last.attr("id", "subproject-" + newIdx)
-    last.find("svg").attr("onclick", "wizard.removeSubproject('" + newIdx + "')")
+    last.find(".help-block").remove(); // Remove form errrors.
+    last.attr("id", "subproject-" + newIdx) // Set new id.
+    last.find("svg").attr("onclick", "wizard.removeSubproject('" + newIdx + "')") // Make it removable.
     last.insertAfter(subprojects.last());
-    console.log("added: ");
-    console.log(last);
   }
 
   removeSubproject(id) {
     let subproject = $("#subproject-" + id)
-    subproject.detach()
+    subproject.remove()
     this.removedCounter += 1
   }
 }
