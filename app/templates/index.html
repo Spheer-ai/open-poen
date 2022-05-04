@@ -294,20 +294,27 @@
                               <h2>Betaalpas(sen) initiatief</h2>
                               <hr>
                               {% for card_number in project_form.card_numbers %}
-                              <div class="debit-card" , id="debit-card-{{loop.index - 1}}">
+                              <div class="card_number" , id="card_number-{{loop.index - 1}}">
                                 <div style="display: flex">
-                                  {{ wtf.form_field(card_number.card_number, class="form-control-sm",
+                                  {{ wtf.form_field(card_number.form.card_number, class="form-control-sm",
                                   form_type="inline") }}
                                   {{ card_number.csrf_token }}
                                   <div class="bng-info-unit" style="margin-left: 1rem;">
                                     <i class="fas fa-trash fa-2x"
-                                      onclick="wizard.remove('#debit-card-', '{{loop.index -1}}')"></i>
+                                      onclick="wizard.remove('#card_number-', '{{loop.index -1}}')"></i>
                                   </div>
                                 </div>
+                                {% if card_number.errors %}
+                                {% for field, errors in card_number.errors.items() %}
+                                {% for error in errors %}
+                                <p style="color: red">{{ error }}</p>
+                                {% endfor %}
+                                {% endfor %}
+                                {% endif %}
                               </div>
                               {% endfor %}
                               <div class="bng-info-unit">
-                                <i class="fas fa-plus fa-2x" onclick="wizard.add('debit-card')"></i>
+                                <i class="fas fa-plus fa-2x" onclick="wizard.add('card_number')"></i>
                                 <p>Extra betaalpas toevoegen.</p>
                               </div>
                             </div>
@@ -341,20 +348,27 @@
                               {{ wtf.form_field(project_form.owner_email) }}
                               <label class="control-label">Initiatiefnemers</label>
                               {% for project_owner in project_form.project_owners %}
-                              <div class="project-owner" id="project-owner-{{loop.index - 1}}">
+                              <div class="project_owner" id="project_owner-{{loop.index - 1}}">
                                 <div style="display: flex">
                                   {{ wtf.form_field(project_owner.email, class="form-control-sm", placeholder="email",
                                   form_type="inline") }}
                                   {{ project_owner.csrf_token }}
                                   <div class="bng-info-unit" style="margin-left: 1rem;">
                                     <i class="fas fa-trash fa-2x"
-                                      onclick="wizard.remove('#project-owner-', '{{loop.index - 1}}')"></i>
+                                      onclick="wizard.remove('#project_owner-', '{{loop.index - 1}}')"></i>
                                   </div>
                                 </div>
+                                {% if project_owner.errors %}
+                                {% for field, errors in project_owner.errors.items() %}
+                                {% for error in errors %}
+                                <p style="color: red">{{ error }}</p>
+                                {% endfor %}
+                                {% endfor %}
+                                {% endif %}
                               </div>
                               {% endfor %}
                               <div class="bng-info-unit">
-                                <i class="fas fa-plus fa-2x" onclick="wizard.add('project-owner')"></i>
+                                <i class="fas fa-plus fa-2x" onclick="wizard.add('project_owner')"></i>
                                 <p>Extra initiatiefnemer toevoegen.</p>
                               </div>
                               {{ wtf.form_field(project_form.legal_entity) }}

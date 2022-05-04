@@ -45,8 +45,6 @@ class DebitCard(FlaskForm):
         ],
         filters=[trim_whitespace],
     )
-    project_id = IntegerField(widget=HiddenInput(), validators=[Optional()])
-    submit = SubmitField("Opslaan", render_kw={"class": "btn btn-info"})
 
 
 class Subproject(FlaskForm):
