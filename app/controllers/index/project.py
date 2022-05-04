@@ -6,18 +6,33 @@ from app.forms import (
     validate_card_number_to_project,
 )
 from flask_wtf import FlaskForm
-from wtforms import BooleanField, IntegerField, StringField, SubmitField, TextAreaField
+from wtforms import (
+    BooleanField,
+    IntegerField,
+    StringField,
+    SubmitField,
+    TextAreaField,
+    SelectField,
+)
 from wtforms.fields.core import FieldList, FormField
-from wtforms.validators import URL, DataRequired, Length, Optional
+from wtforms.validators import URL, DataRequired, Length, Optional, Email
 from wtforms.widgets import HiddenInput
 from app.util import Clearance, form_in_request
 from app.form_processing import process_form
 from flask import url_for, redirect, request
+from flask_wtf.file import FileField, FileRequired, FileAllowed
+
+ALLOWED_EXTENSIONS = [".pdf", ".xls", ".xlsx"]
 
 
 class Funder(FlaskForm):
     name = StringField("Naam", validators=[DataRequired(), Length(max=120)])
+    # TODO: Not in design?
     url = StringField("URL", validators=[DataRequired(), URL(), Length(max=2000)])
+    subsidy = StringField("Subsidieregeling", validators=[DataRequired()])
+    subsidy_number = StringField("Beschikkingsnummer", validators=[DataRequired()])
+    budget = IntegerField("Budget voor deze sponsor", validators=[validate_budget])
+    # TODO: Hide individual sponsors?
 
 
 class DebitCard(FlaskForm):
@@ -43,30 +58,82 @@ class Subproject(FlaskForm):
     )
 
 
+class ProjectOwner(FlaskForm):
+    email = StringField(
+        "E-mailadres initiatiefnemer",
+        validators=[DataRequired(), Email(), Length(max=120)],
+    )
+
+
 class Project(FlaskForm):
     name = StringField("Naam", validators=[DataRequired(), Length(max=120)])
     description = TextAreaField("Beschrijving", validators=[DataRequired()])
+    purpose = TextAreaField("Doel", validators=[DataRequired()])
+    target_audience = TextAreaField("Doelgroep", validators=[DataRequired()])
+    hidden = BooleanField("Initiatief verbergen")
     contains_subprojects = BooleanField(
         "Uitgaven van dit initiatief worden geregistreerd op activiteiten",
         default="checked",
     )
-    hidden = BooleanField("Initiatief verbergen")
-    hidden_sponsors = BooleanField("Sponsoren verbergen")
-    budget = IntegerField(
-        "Budget voor dit initiatief", validators=[Optional(), validate_budget]
-    )
-    card_numbers = FieldList(
-        FormField(DebitCard), min_entries=0, max_entries=None, validators=[]
-    )
+
     funders = FieldList(
         FormField(Funder), min_entries=0, max_entries=None, validators=[]
     )
+    hidden_sponsors = BooleanField("Sponsoren verbergen")
+
+    # TODO: No card numbers anymore in design?
+    card_numbers = FieldList(
+        FormField(DebitCard), min_entries=0, max_entries=None, validators=[]
+    )
+
+    # TODO: No subprojects anymore in design?
     subprojects = FieldList(
         FormField(Subproject),
         min_entries=0,
         max_entries=None,
         validators=[],
     )
+
+    owner = StringField("Beheerder", validators=[DataRequired()])
+    owner_email = StringField(
+        "E-mailadres", validators=[DataRequired(), Email(), Length(max=120)]
+    )
+    # TODO: Can project owners fill in their own names?
+    project_owners = FieldList(
+        FormField(ProjectOwner),
+        min_entries=3,
+        max_entries=None,
+    )
+    legal_entity = SelectField(
+        "Rechtsvorm", choices=[("Stichting", "Stichting"), ("Vereniging", "Vereniging")]
+    )
+    address_applicant = StringField(
+        "Adres aanvrager", validators=[DataRequired(), Length(max=120)]
+    )
+    registration_kvk = StringField(
+        "Inschrijving KvK", validators=[DataRequired(), Length(max=120)]
+    )
+    project_location = StringField(
+        "Locatie initiatief", validators=[DataRequired(), Length(max=120)]
+    )
+
+    budget_file = FileField(
+        "Begroting",
+        validators=[
+            FileAllowed(
+                ALLOWED_EXTENSIONS,
+                (
+                    "bestandstype niet toegstaan. Enkel de volgende "
+                    "bestandstypen worden geaccepteerd: %s"
+                    % ", ".join(ALLOWED_EXTENSIONS)
+                ),
+            ),
+        ],
+    )
+    budget = IntegerField(
+        "Totaal budget initiatief", validators=[Optional(), validate_budget]
+    )
+
     id = IntegerField(widget=HiddenInput())
     submit = SubmitField(
         "Opslaan", render_kw={"class": "btn btn-info interactive-submit"}
