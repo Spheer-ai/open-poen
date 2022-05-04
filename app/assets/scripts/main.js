@@ -273,10 +273,9 @@ class FormWizard {
     this.units = $(unitClass).find(".interactive-unit")
     $(this.units.get(this.idx)).show()
     this.set_buttons()
-    this.submit_button.on("click", function (e) {
-      console.log(e)
-    })
     this.removedCounter = 0
+    // Relevant attributes for constructing the next batch of fields.
+    this.attrsToEdit = ["id", "name", "for"]
   }
 
   next() {
@@ -318,11 +317,16 @@ class FormWizard {
     }
   }
 
-  addSubproject() {
-    let attrs = ["id", "name", "for"] // Relevant attributes for constructing the next batch of fields.
-    let subprojects = $(".interactive-form").find(".subproject");
-    let newIdx = subprojects.length + this.removedCounter
-    let last = subprojects.last().clone(true);
+  add(name) {
+    let className = "." + name;  // ".funder"
+    let inputIdPrefix = name + "s-"  // "funders-"
+    let formIdPrefix = "#" + name + "-"  // "#funder-"
+
+    let x = $(".interactive-form").find(className);
+    let newIdx = x.length + this.removedCounter
+    let last = x.last().clone(true);
+    let attrs = this.attrsToEdit
+    let pattern = new RegExp(inputIdPrefix + "\\d+")
     last.find("*").each(function () {
       let x = $(this);
       for (var i = 0; i < attrs.length; i++) {
@@ -330,7 +334,7 @@ class FormWizard {
           continue;
         }
         // Set the right index in all relevant attributes.
-        x.attr(attrs[i], x.attr(attrs[i]).replace(/subprojects-\d+/, "subprojects-" + newIdx));
+        x.attr(attrs[i], x.attr(attrs[i]).replace(pattern, inputIdPrefix + newIdx));
       }
       // Don't remove the csrf token because it will invalidate the form,
       // but do reset values of all other elements.
@@ -339,14 +343,14 @@ class FormWizard {
       }
     });
     last.find(".help-block").remove(); // Remove form errrors.
-    last.attr("id", "subproject-" + newIdx) // Set new id.
-    last.find("svg").attr("onclick", "wizard.removeSubproject('" + newIdx + "')") // Make it removable.
-    last.insertAfter(subprojects.last());
+    last.attr("id", name + "-" + newIdx) // Set new id.
+    last.find("svg").attr("onclick", "wizard.remove('" + formIdPrefix + "', '" + newIdx + "')") // Make it removable.
+    last.insertAfter(x.last());
   }
 
-  removeSubproject(id) {
-    let subproject = $("#subproject-" + id)
-    subproject.remove()
+  remove(idPrefix, idx) {
+    let x = $(idPrefix + idx)
+    x.remove()
     this.removedCounter += 1
   }
 }

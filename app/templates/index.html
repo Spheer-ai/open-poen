@@ -257,38 +257,57 @@
                             {{ project_form.csrf_token }}
                             <div class="interactive-unit">
                               <h2>Algemene initiatiefinstellingen</h2>
+                              <hr>
                               {{ wtf.form_field(project_form.name) }}
                               {{ wtf.form_field(project_form.description) }}
                               {{ wtf.form_field(project_form.contains_subprojects) }}
                               {{ wtf.form_field(project_form.hidden) }}
                               {{ wtf.form_field(project_form.hidden_sponsors) }}
                               {{ wtf.form_field(project_form.budget) }}
-                              <p>* Het is op een later moment in het projectscherm ook mogelijk om nieuwe sponsoren,
-                                betaalpassen of activiteiten toe te voegen.</p>
                             </div>
                             <div class="interactive-unit">
                               <h2>Sponsoren</h2>
                               <p>Voer hier de sponsoren van het initiatief in. De URL moet het volgende format hebben:
                                 http(s)://voorbeeld.com</p>
+                              <hr>
                               {% for funder in project_form.funders %}
-                              <div class="single-funder">
-                                <p>Sponsor {{ loop.index }}</p>
+                              <div class="funder" id="funder-{{loop.index - 1}}">
                                 {{ wtf.form_field(funder.form.name) }}
                                 {{ wtf.form_field(funder.form.url) }}
                                 {{ funder.csrf_token }}
+                                <div class="bng-info-unit">
+                                  <i class="fas fa-trash fa-2x"
+                                    onclick="wizard.remove('#funder-', '{{loop.index -1}}')"></i>
+                                  <p>Verwijderen.</p>
+                                </div>
+                                <hr>
                               </div>
                               {% endfor %}
+                              <div class="bng-info-unit">
+                                <i class="fas fa-plus fa-2x" onclick="wizard.add('funder')"></i>
+                                <p>Extra Sponsor toevoegen.</p>
+                              </div>
                             </div>
                             <div class="interactive-unit">
                               <h2>Betaalpassen</h2>
                               <p>Voer hier de betaalpassen in die aan het initiatief moeten worden gekoppeld.</p>
+                              <hr>
                               {% for card_number in project_form.card_numbers %}
-                              <div class="single-debit-card">
-                                <p>Betaalpas {{ loop.index }}</p>
+                              <div class="debit-card" , id="debit-card-{{loop.index - 1}}">
                                 {{ wtf.form_field(card_number.card_number) }}
                                 {{ card_number.csrf_token }}
+                                <div class="bng-info-unit">
+                                  <i class="fas fa-trash fa-2x"
+                                    onclick="wizard.remove('#debit-card-', '{{loop.index -1}}')"></i>
+                                  <p>Verwijderen.</p>
+                                </div>
+                                <hr>
                               </div>
                               {% endfor %}
+                              <div class="bng-info-unit">
+                                <i class="fas fa-plus fa-2x" onclick="wizard.add('debit-card')"></i>
+                                <p>Extra betaalpas toevoegen.</p>
+                              </div>
                             </div>
                             <div class="interactive-unit">
                               <h2>Activiteiten</h2>
@@ -296,7 +315,6 @@
                               <hr>
                               {% for subproject in project_form.subprojects %}
                               <div class="subproject" id="subproject-{{loop.index - 1}}">
-                                <!-- <p>Activiteit {{ loop.index }}</p> -->
                                 {{ wtf.form_field(subproject.form.name) }}
                                 {{ wtf.form_field(subproject.form.description) }}
                                 {{ wtf.form_field(subproject.form.hidden) }}
@@ -304,15 +322,15 @@
                                 {{ subproject.csrf_token }}
                                 <div class="bng-info-unit">
                                   <i class="fas fa-trash fa-2x"
-                                    onclick="wizard.removeSubproject('{{loop.index - 1}}')"></i>
-                                  <p>Deze activiteit verwijderen.</p>
+                                    onclick="wizard.remove('#subproject-', '{{loop.index - 1}}')"></i>
+                                  <p>Verwijderen.</p>
                                 </div>
                                 <hr>
                               </div>
 
                               {% endfor %}
                               <div class="bng-info-unit">
-                                <i class="fas fa-plus fa-2x" onclick="wizard.addSubproject()"></i>
+                                <i class="fas fa-plus fa-2x" onclick="wizard.add('subproject')"></i>
                                 <p>Extra activiteit toevoegen.</p>
                               </div>
                             </div>
