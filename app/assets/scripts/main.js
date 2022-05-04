@@ -24,13 +24,13 @@ import { config, library, dom } from '@fortawesome/fontawesome-svg-core';
 // Import required icons
 import {
   faBars, faChevronDown, faFile, faCamera, faDownload, faReceipt, faWindowRestore,
-  faLink, faWifi, faCheckCircle, faSyncAlt, faPlus
+  faLink, faWifi, faCheckCircle, faSyncAlt, faPlus, faTrash
 } from '@fortawesome/free-solid-svg-icons';
 import moment from 'moment';
 
 // Add the imported icons to the library
 library.add(faBars, faChevronDown, faFile, faCamera, faDownload, faReceipt, faLink, faWifi,
-  faCheckCircle, faSyncAlt, faPlus);
+  faCheckCircle, faSyncAlt, faPlus, faTrash);
 
 // Tell FontAwesome to watch the DOM and add the SVGs when it detects icon markup
 dom.watch();
@@ -276,6 +276,7 @@ class FormWizard {
     this.submit_button.on("click", function (e) {
       console.log(e)
     })
+    this.removedCounter = 0
   }
 
   next() {
@@ -316,142 +317,37 @@ class FormWizard {
       this.prev_button.show()
     }
   }
+
+  addSubproject() {
+    let attrs = ["id", "name", "for"]
+    let subprojects = $(".interactive-form").find(".subproject");
+    let newIdx = subprojects.length + this.removedCounter
+    let last = subprojects.last().clone(true);
+    last.find("*").each(function () {
+      let x = $(this);
+      for (var i = 0; i < attrs.length; i++) {
+        if (x.attr(attrs[i]) === undefined) {
+          continue;
+        }
+        x.attr(attrs[i], x.attr(attrs[i]).replace(/subprojects-\d+/, "subprojects-" + newIdx));
+      }
+      if (!String(x.attr("id")).includes("csrf")) {
+        x.val("");
+      }
+    });
+    last.find(".help-block").remove();
+    last.attr("id", "subproject-" + newIdx)
+    last.find("svg").attr("onclick", "wizard.removeSubproject('" + newIdx + "')")
+    last.insertAfter(subprojects.last());
+    console.log("added: ");
+    console.log(last);
+  }
+
+  removeSubproject(id) {
+    let subproject = $("#subproject-" + id)
+    subproject.detach()
+    this.removedCounter += 1
+  }
 }
 
 window.wizard = new FormWizard(".interactive-form")
-
-// window.activeProjectUnit = 0;
-// $("#project-unit-" + window.activeProjectUnit).css({ "display": "inline" })
-// window.nextProjectUnit = function () {
-//   if (window.activeProjectUnit === 3) {
-//     return
-//   }
-//   let next = window.activeProjectUnit + 1
-//   console.log(next);
-//   $("#project-unit-" + next).css({ "display": "inline" })
-//   $("#project-unit-" + window.activeProjectUnit).css({ "display": "none" })
-//   window.activeProjectUnit += 1;
-// }
-// window.previousProjectUnit = function () {
-//   if (window.activeProjectUnit === 0) {
-//     return
-//   }
-//   let prev = window.activeProjectUnit - 1
-//   console.log(prev);
-//   $("#project-unit-" + prev).css({ "display": "inline" })
-//   $("#project-unit-" + window.activeProjectUnit).css({ "display": "none" })
-//   window.activeProjectUnit -= 1;
-// }
-
-window.IBANIdx = $("#project-ibans").find(".form-group").length + 1
-
-var addIBAN = function () {
-  var newDiv = $('<div>').attr({
-    class: "form-group"
-  });
-  newDiv.appendTo('#project-ibans');
-
-  var newLabel = $('<label>').attr({
-    class: "control-label",
-    for: "project_form-ibans-" + window.IBANIdx + "-iban"
-  });
-  newLabel.append("Pasnummer " + window.IBANIdx);
-  newLabel.appendTo(newDiv);
-
-  var newField = $('<input>').attr({
-    type: "text",
-    class: "form-control",
-    id: "project_form-ibans-" + window.IBANIdx + "-iban",
-    name: "project_form-ibans-" + window.IBANIdx + "-iban",
-    value: ""
-  })
-  newField.appendTo(newDiv);
-
-  window.IBANIdx += 1;
-}
-
-$("#add-iban").on("click", function () {
-  addIBAN();
-});
-
-window.FunderIdx = ($("#project-funders").find(".form-group").length / 2) + 1
-
-var addFunder = function () {
-  $("#project-funders").append(
-    $('<p>').append("Sponsor " + window.FunderIdx)
-  );
-
-  // NAME
-  var newNameDiv = $('<div>').attr({
-    class: "form-group required"
-  });
-  newNameDiv.appendTo("#project-funders");
-  var newNameLabel = $('<label>').attr({
-    class: "control-label",
-    for: "project_form-funders-" + window.FunderIdx + "-funder_name"
-  });
-  newNameLabel.append("Naam");
-  newNameLabel.appendTo(newNameDiv);
-  var newNameField = $('<input>').attr({
-    type: "text",
-    class: "form-control",
-    id: "project_form-funders-" + window.FunderIdx + "-funder_name",
-    name: "project_form-funders-" + window.FunderIdx + "-funder_name",
-    value: ""
-  })
-  newNameField.appendTo(newNameDiv);
-
-  // URL
-  var newURLDiv = $('<div>').attr({
-    class: "form-group required"
-  });
-  newURLDiv.appendTo("#project-funders");
-  var newURLLabel = $('<label>').attr({
-    class: "control-label",
-    for: "project_form-funders-" + window.FunderIdx + "-url"
-  });
-  newURLLabel.append("URL");
-  newURLLabel.appendTo(newURLDiv);
-  var newURLField = $('<input>').attr({
-    type: "text",
-    class: "form-control",
-    id: "project_form-funders-" + window.FunderIdx + "-url",
-    name: "project_form-funders-" + window.FunderIdx + "-url",
-    value: ""
-  })
-  newURLField.appendTo(newURLDiv);
-
-  window.FunderIdx += 1;
-}
-
-$("#add-funder").on("click", function () {
-  addFunder();
-});
-
-var cloneForm = function (formDiv, idx) {
-  var $newDiv = $(formDiv).clone(true);
-  $newDiv.find('input, textarea').each(function () {
-    var $this = $(this);
-    $this.attr('id', $this.attr('id').replace(idx - 1, idx));
-    $this.attr('name', $this.attr('name').replace(idx - 1, idx));
-    $this.val('');
-  });
-  $newDiv.find('label').each(function () {
-    var $this = $(this);
-    if ($this.attr('for') !== undefined) {
-      $this.attr('for', $this.attr('for').replace(idx - 1, idx));
-    }
-  });
-  $newDiv.find("p").remove();
-  $newDiv.prepend('<p>Initiatief ' + (idx + 1) + '</p>')
-  $newDiv.insertAfter(formDiv);
-};
-
-window.subprojectIdx = $("#project-subprojects").find(".project-subproject").length
-
-$("#add-subproject").on("click", function () {
-  cloneForm(".project-subproject:last", window.subprojectIdx);
-  window.subprojectIdx += 1;
-})
-
-export let x = 9;

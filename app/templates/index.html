@@ -271,43 +271,61 @@
                               <p>Voer hier de sponsoren van het initiatief in. De URL moet het volgende format hebben:
                                 http(s)://voorbeeld.com</p>
                               {% for funder in project_form.funders %}
-                              <p>Sponsor {{ loop.index }}</p>
-                              {{ wtf.form_field(funder.form.name) }}
-                              {{ wtf.form_field(funder.form.url) }}
-                              {{ funder.csrf_token }}
+                              <div class="single-funder">
+                                <p>Sponsor {{ loop.index }}</p>
+                                {{ wtf.form_field(funder.form.name) }}
+                                {{ wtf.form_field(funder.form.url) }}
+                                {{ funder.csrf_token }}
+                              </div>
                               {% endfor %}
                             </div>
                             <div class="interactive-unit">
                               <h2>Betaalpassen</h2>
                               <p>Voer hier de betaalpassen in die aan het initiatief moeten worden gekoppeld.</p>
                               {% for card_number in project_form.card_numbers %}
-                              <p>Betaalpas {{ loop.index }}</p>
-                              {{ wtf.form_field(card_number.card_number) }}
-                              {{ card_number.csrf_token }}
+                              <div class="single-debit-card">
+                                <p>Betaalpas {{ loop.index }}</p>
+                                {{ wtf.form_field(card_number.card_number) }}
+                                {{ card_number.csrf_token }}
+                              </div>
                               {% endfor %}
                             </div>
                             <div class="interactive-unit">
                               <h2>Activiteiten</h2>
                               <p>Voeg hier de activiteiten in die moeten worden aangemaakt voor dit initiatief.</p>
+                              <hr>
                               {% for subproject in project_form.subprojects %}
-                              <p>Activiteit {{ loop.index }}</p>
-                              {{ wtf.form_field(subproject.form.name) }}
-                              {{ wtf.form_field(subproject.form.description) }}
-                              {{ wtf.form_field(subproject.form.hidden) }}
-                              {{ wtf.form_field(subproject.form.budget) }}
-                              {{ subproject.csrf_token }}
+                              <div class="subproject" id="subproject-{{loop.index - 1}}">
+                                <!-- <p>Activiteit {{ loop.index }}</p> -->
+                                {{ wtf.form_field(subproject.form.name) }}
+                                {{ wtf.form_field(subproject.form.description) }}
+                                {{ wtf.form_field(subproject.form.hidden) }}
+                                {{ wtf.form_field(subproject.form.budget) }}
+                                {{ subproject.csrf_token }}
+                                <div class="bng-info-unit">
+                                  <i class="fas fa-trash fa-2x"
+                                    onclick="wizard.removeSubproject('{{loop.index - 1}}')"></i>
+                                  <p>Deze activiteit verwijderen.</p>
+                                </div>
+                                <hr>
+                              </div>
+
                               {% endfor %}
+                              <div class="bng-info-unit">
+                                <i class="fas fa-plus fa-2x" onclick="wizard.addSubproject()"></i>
+                                <p>Extra activiteit toevoegen.</p>
+                              </div>
                             </div>
                           </div>
 
                           {% if project_form.has_errors %}
                           <div>
-                            <h2 style="color: red">Het formulier bevat fout(en).
+                            <p style="color: red; margin-bottom: 0px;">Het formulier bevat fout(en).
                               Doorloop het formulier opnieuw en
                               volg
                               de
                               aanwijzingen op.
-                            </h2>
+                            </p>
                           </div>
                           {% endif %}
                         </div>
