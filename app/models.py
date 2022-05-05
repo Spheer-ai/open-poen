@@ -34,6 +34,14 @@ subproject_user = db.Table(
     db.PrimaryKeyConstraint("subproject_id", "user_id"),
 )
 
+subproject_funder = db.Table(
+    "subproject_funder",
+    db.Column(
+        "subproject_id", db.Integer, db.ForeignKey("subproject.id", ondelete="CASCADE")
+    ),
+    db.Column("funder_id", db.Integer, db.ForeignKey("funder.id", ondelete="CASCADE")),
+    db.PrimaryKeyConstraint("subproject_id", "funder_id"),
+)
 
 # Association table between Payment and File for attachments
 payment_attachment = db.Table(
@@ -387,6 +395,12 @@ class Subproject(db.Model, DefaultCRUD):
         lazy="dynamic",
         cascade="all,delete,delete-orphan",
     )
+    funders = db.relationship(
+        "Funder",
+        secondary=subproject_funder,
+        lazy="dynamic",
+        back_populates="subprojects",
+    )
 
     # Subproject names must be unique within a project
     __table_args__ = (db.UniqueConstraint("project_id", "name"),)
@@ -638,15 +652,18 @@ class Payment(db.Model, DefaultCRUD):
 class Funder(db.Model, DefaultCRUD):
     id = db.Column(db.Integer, primary_key=True)
     project_id = db.Column(db.Integer, db.ForeignKey("project.id", ondelete="CASCADE"))
-    subproject_id = db.Column(
-        db.Integer, db.ForeignKey("subproject.id", ondelete="CASCADE")
-    )
     name = db.Column(db.String(120), index=True)
     url = db.Column(db.String(2000))
     subsidy = db.Column(db.String(120))
     subsidy_number = db.Column(db.String(120))
     budget = db.Column(db.Integer)
     images = db.relationship("File", secondary=funder_image, lazy="dynamic")
+    subprojects = db.relationship(
+        "Subproject",
+        secondary=subproject_funder,
+        lazy="dynamic",
+        back_populates="funders",
+    )
 
     @property
     def message_after_edit(self):
