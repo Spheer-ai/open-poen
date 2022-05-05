@@ -193,15 +193,15 @@ class DebitCardForm(FlaskForm):
 class SubprojectForm(FlaskForm):
     name = StringField("Naam", validators=[DataRequired(), Length(max=120)])
     description = TextAreaField("Beschrijving", validators=[DataRequired()])
+    purpose = TextAreaField("Doel", validators=[DataRequired()])
+    target_audience = TextAreaField("Doelgroep", validators=[DataRequired()])
     hidden = BooleanField("Activiteit verbergen")
     budget = IntegerField(
         "Budget voor deze activiteit", validators=[Optional(), validate_budget]
     )
     project_id = IntegerField(widget=HiddenInput())
     id = IntegerField(widget=HiddenInput())
-
     submit = SubmitField("Opslaan", render_kw={"class": "btn btn-info"})
-
     remove = SubmitField("Verwijderen", render_kw={"class": "btn btn-danger"})
 
 

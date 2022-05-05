@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
+{% import 'macros.html' as macros %}
 {% set active_page = "Home" %}
 {% block head %}
 <title>Open Poen</title>
@@ -275,18 +276,11 @@
                                 {{ wtf.form_field(funder.form.subsidy_number) }}
                                 {{ wtf.form_field(funder.form.budget) }}
                                 {{ wtf.form_field(funder.form.url) }}
-                                <div class="bng-info-unit">
-                                  <i class="fas fa-trash fa-2x"
-                                    onclick="wizard.remove('#funder-', '{{loop.index -1}}')"></i>
-                                  <p>Verwijderen.</p>
-                                </div>
+                                {{ macros.trashbin('#funder-', loop.index - 1) }}
                                 <hr>
                               </div>
                               {% endfor %}
-                              <div class="bng-info-unit">
-                                <i class="fas fa-plus fa-2x" onclick="wizard.add('funder')"></i>
-                                <p>Extra Sponsor toevoegen.</p>
-                              </div>
+                              {{ macros.plussign("funder", "Sponsor") }}
                               {{ wtf.form_field(project_form.hidden_sponsors) }}
                             </div>
                             <div class="interactive-unit">
@@ -297,24 +291,12 @@
                                 <div style="display: flex">
                                   {{ wtf.form_field(card_number.form.card_number, class="form-control-sm",
                                   form_type="inline") }}
-                                  <div class="bng-info-unit" style="margin-left: 1rem;">
-                                    <i class="fas fa-trash fa-2x"
-                                      onclick="wizard.remove('#card_number-', '{{loop.index -1}}')"></i>
-                                  </div>
+                                  {{ macros.trashbin('#card_number-', loop.index - 1, True) }}
                                 </div>
-                                {% if card_number.errors %}
-                                {% for field, errors in card_number.errors.items() %}
-                                {% for error in errors %}
-                                <p style="color: red">{{ error }}</p>
-                                {% endfor %}
-                                {% endfor %}
-                                {% endif %}
+                                {{ macros.render_single_field_field_list_errors(card_number) }}
                               </div>
                               {% endfor %}
-                              <div class="bng-info-unit">
-                                <i class="fas fa-plus fa-2x" onclick="wizard.add('card_number')"></i>
-                                <p>Extra betaalpas toevoegen.</p>
-                              </div>
+                              {{ macros.plussign("card_number", "betaalpas") }}
                             </div>
                             <div class="interactive-unit">
                               <h2>Activiteiten initiatief</h2>
@@ -323,20 +305,15 @@
                               <div class="subproject" id="subproject-{{loop.index - 1}}">
                                 {{ wtf.form_field(subproject.form.name) }}
                                 {{ wtf.form_field(subproject.form.description) }}
+                                {{ wtf.form_field(subproject.form.purpose) }}
+                                {{ wtf.form_field(subproject.form.target_audience) }}
                                 {{ wtf.form_field(subproject.form.hidden) }}
                                 {{ wtf.form_field(subproject.form.budget) }}
-                                <div class="bng-info-unit">
-                                  <i class="fas fa-trash fa-2x"
-                                    onclick="wizard.remove('#subproject-', '{{loop.index - 1}}')"></i>
-                                  <p>Verwijderen.</p>
-                                </div>
+                                {{ macros.trashbin("#subproject-", loop.index -1) }}
                                 <hr>
                               </div>
                               {% endfor %}
-                              <div class="bng-info-unit">
-                                <i class="fas fa-plus fa-2x" onclick="wizard.add('subproject')"></i>
-                                <p>Extra activiteit toevoegen.</p>
-                              </div>
+                              {{ macros.plussign("subproject", "activiteit") }}
                             </div>
                             <div class="interactive-unit">
                               <h2>Gegevens initiatief</h2>
@@ -349,24 +326,12 @@
                                 <div style="display: flex">
                                   {{ wtf.form_field(project_owner.email, class="form-control-sm", placeholder="email",
                                   form_type="inline") }}
-                                  <div class="bng-info-unit" style="margin-left: 1rem;">
-                                    <i class="fas fa-trash fa-2x"
-                                      onclick="wizard.remove('#project_owner-', '{{loop.index - 1}}')"></i>
-                                  </div>
+                                  {{ macros.trashbin("#project_owner-", loop.index - 1, True) }}
                                 </div>
-                                {% if project_owner.errors %}
-                                {% for field, errors in project_owner.errors.items() %}
-                                {% for error in errors %}
-                                <p style="color: red">{{ error }}</p>
-                                {% endfor %}
-                                {% endfor %}
-                                {% endif %}
+                                {{ macros.render_single_field_field_list_errors(project_owner) }}
                               </div>
                               {% endfor %}
-                              <div class="bng-info-unit">
-                                <i class="fas fa-plus fa-2x" onclick="wizard.add('project_owner')"></i>
-                                <p>Extra initiatiefnemer toevoegen.</p>
-                              </div>
+                              {{ macros.plussign("project_owner", "Activiteitnemer") }}
                               {{ wtf.form_field(project_form.legal_entity) }}
                               {{ wtf.form_field(project_form.address_applicant) }}
                               {{ wtf.form_field(project_form.registration_kvk) }}

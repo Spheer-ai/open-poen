@@ -1,27 +1,27 @@
 from app.controllers.util import Controller
+from app.form_processing import process_form
 from app.forms import (
     trim_whitespace,
     validate_budget,
     validate_card_number,
     validate_card_number_to_project,
 )
+from app.models import Project
+from app.util import Clearance, form_in_request
+from flask import redirect, request, url_for
 from flask_wtf import FlaskForm
+from flask_wtf.file import FileAllowed, FileField
 from wtforms import (
     BooleanField,
     IntegerField,
+    SelectField,
     StringField,
     SubmitField,
     TextAreaField,
-    SelectField,
 )
 from wtforms.fields.core import FieldList, FormField
-from wtforms.validators import URL, DataRequired, Length, Optional, Email
+from wtforms.validators import URL, DataRequired, Email, Length, Optional
 from wtforms.widgets import HiddenInput
-from app.util import Clearance, form_in_request
-from app.form_processing import process_form
-from flask import url_for, redirect, request
-from flask_wtf.file import FileField, FileRequired, FileAllowed
-from app.models import Project
 
 ALLOWED_EXTENSIONS = [".pdf", ".xls", ".xlsx"]
 
@@ -65,6 +65,8 @@ class Subproject(FlaskForm):
 
     name = StringField("Naam", validators=[DataRequired(), Length(max=120)])
     description = TextAreaField("Beschrijving", validators=[DataRequired()])
+    purpose = TextAreaField("Doel", validators=[DataRequired()])
+    target_audience = TextAreaField("Doelgroep", validators=[DataRequired()])
     hidden = BooleanField("Activiteit verbergen")
     budget = IntegerField(
         "Budget voor deze activiteit", validators=[Optional(), validate_budget]

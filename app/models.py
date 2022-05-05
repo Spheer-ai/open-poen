@@ -369,11 +369,10 @@ class Project(db.Model, DefaultCRUD):
 class Subproject(db.Model, DefaultCRUD):
     id = db.Column(db.Integer, primary_key=True)
     project_id = db.Column(db.Integer, db.ForeignKey("project.id", ondelete="CASCADE"))
-    # This needs to be removed, or needs to become something linked to BNG.
-    iban = db.Column(db.String(34), index=True, unique=True)
-    iban_name = db.Column(db.String(120), index=True)
     name = db.Column(db.String(120), index=True)
     description = db.Column(db.Text)
+    purpose = db.Column(db.Text)
+    target_audience = db.Column(db.Text)
     hidden = db.Column(db.Boolean, default=False)
     budget = db.Column(db.Integer)
 
