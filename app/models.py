@@ -225,9 +225,18 @@ class Project(db.Model, DefaultCRUD):
     iban_name = db.Column(db.String(120), index=True)
     name = db.Column(db.String(120), index=True, unique=True)
     description = db.Column(db.Text)
+    purpose = db.Column(db.Text)
+    target_audience = db.Column(db.Text)
     contains_subprojects = db.Column(db.Boolean, default=True)
     hidden = db.Column(db.Boolean, default=False)
     hidden_sponsors = db.Column(db.Boolean, default=False)
+    owner = db.Column(db.String(120))
+    owner_email = db.Column(db.String(120))
+    legal_entity = db.Column(db.String(20))
+    address_applicant = db.Column(db.String(120))
+    registration_kvk = db.Column(db.String(120), unique=True)
+    project_location = db.Column(db.String(120))
+    # TODO: budget_file
     budget = db.Column(db.Integer)
 
     subprojects = db.relationship(
@@ -284,10 +293,12 @@ class Project(db.Model, DefaultCRUD):
             .filter(Project.id == self.id)
             .all()
         )
-        subproject_payments = (
+        # As of now, all manual payments either have a project id, or a project id and
+        # a subproject id. Never only a subproject id.
+        other_payments = (
             db.session.query(Payment).join(Project).filter(Project.id == self.id).all()
         )
-        return list(set(debit_card_payments + subproject_payments))
+        return list(set(debit_card_payments + other_payments))
 
     def get_all_attachments(self):
         all_payments = self.get_all_payments()
@@ -299,6 +310,35 @@ class Project(db.Model, DefaultCRUD):
             .filter(Payment.id.in_([x.id for x in all_payments]))
             .all()
         )
+
+    @classmethod
+    def add_project(cls, card_numbers, funders, subprojects, project_owners, **kwargs):
+
+        project = cls(**kwargs)
+
+        existing = (  # Existing debit cards that are not linked to a project yet.
+            db.session.query(DebitCard)
+            .filter(DebitCard.card_number.in_([x["card_number"] for x in card_numbers]))
+            .all()
+        )
+        new = [  # New debit cards that are not in the database yet.
+            DebitCard(**x)
+            for x in card_numbers
+            if x["card_number"] not in [i.card_number for i in existing]
+        ]
+        project.debit_cards = existing + new
+
+        project.funders = [Funder(**x) for x in funders]
+
+        if len(subprojects) != len(set([x["name"] for x in subprojects])):
+            raise ValueError("Subproject names are not unique.")
+        project.subprojects = [Subproject(**x) for x in subprojects]
+
+        db.session.add(project)
+        db.session.commit()
+
+        for project_owner in project_owners:
+            User.add_user(project_owner["email"], project_id=project.id)
 
     @property
     def message_after_edit(self):
@@ -599,8 +639,14 @@ class Payment(db.Model, DefaultCRUD):
 class Funder(db.Model, DefaultCRUD):
     id = db.Column(db.Integer, primary_key=True)
     project_id = db.Column(db.Integer, db.ForeignKey("project.id", ondelete="CASCADE"))
+    subproject_id = db.Column(
+        db.Integer, db.ForeignKey("subproject.id", ondelete="CASCADE")
+    )
     name = db.Column(db.String(120), index=True)
     url = db.Column(db.String(2000))
+    subsidy = db.Column(db.String(120))
+    subsidy_number = db.Column(db.String(120))
+    budget = db.Column(db.Integer)
     images = db.relationship("File", secondary=funder_image, lazy="dynamic")
 
     @property

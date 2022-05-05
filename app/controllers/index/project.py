@@ -21,21 +21,32 @@ from app.util import Clearance, form_in_request
 from app.form_processing import process_form
 from flask import url_for, redirect, request
 from flask_wtf.file import FileField, FileRequired, FileAllowed
+from app.models import Project
 
 ALLOWED_EXTENSIONS = [".pdf", ".xls", ".xlsx"]
 
 
 class Funder(FlaskForm):
+    class Meta:
+        csrf = False
+
     name = StringField("Naam", validators=[DataRequired(), Length(max=120)])
     # TODO: Not in design?
     url = StringField("URL", validators=[DataRequired(), URL(), Length(max=2000)])
-    subsidy = StringField("Subsidieregeling", validators=[DataRequired()])
-    subsidy_number = StringField("Beschikkingsnummer", validators=[DataRequired()])
+    subsidy = StringField(
+        "Subsidieregeling", validators=[DataRequired(), Length(max=120)]
+    )
+    subsidy_number = StringField(
+        "Beschikkingsnummer", validators=[DataRequired(), Length(max=120)]
+    )
     budget = IntegerField("Budget voor deze sponsor", validators=[validate_budget])
     # TODO: Hide individual sponsors?
 
 
 class DebitCard(FlaskForm):
+    class Meta:
+        csrf = False
+
     card_number = StringField(
         "Pasnummer",
         validators=[
@@ -45,9 +56,13 @@ class DebitCard(FlaskForm):
         ],
         filters=[trim_whitespace],
     )
+    # TODO: check all card numbers are unique.
 
 
 class Subproject(FlaskForm):
+    class Meta:
+        csrf = False
+
     name = StringField("Naam", validators=[DataRequired(), Length(max=120)])
     description = TextAreaField("Beschrijving", validators=[DataRequired()])
     hidden = BooleanField("Activiteit verbergen")
@@ -57,13 +72,16 @@ class Subproject(FlaskForm):
 
 
 class ProjectOwner(FlaskForm):
+    class Meta:
+        csrf = False
+
     email = StringField(
         "E-mailadres initiatiefnemer",
         validators=[DataRequired(), Email(), Length(max=120)],
     )
 
 
-class Project(FlaskForm):
+class ProjectForm(FlaskForm):
     name = StringField("Naam", validators=[DataRequired(), Length(max=120)])
     description = TextAreaField("Beschrijving", validators=[DataRequired()])
     purpose = TextAreaField("Doel", validators=[DataRequired()])
@@ -92,14 +110,14 @@ class Project(FlaskForm):
         validators=[],
     )
 
-    owner = StringField("Beheerder", validators=[DataRequired()])
+    owner = StringField("Beheerder", validators=[DataRequired(), Length(max=120)])
     owner_email = StringField(
         "E-mailadres", validators=[DataRequired(), Email(), Length(max=120)]
     )
     # TODO: Can project owners fill in their own names?
     project_owners = FieldList(
         FormField(ProjectOwner),
-        min_entries=3,
+        min_entries=0,
         max_entries=None,
     )
     legal_entity = SelectField(
@@ -143,14 +161,18 @@ class Project(FlaskForm):
 class ProjectController(Controller):
     def __init__(self, clearance: Clearance):
         self.clearance = clearance
-        self.form = Project()
+        self.form = ProjectForm()
         if not form_in_request(self.form, request):
             self.form.card_numbers.append_entry()
             self.form.funders.append_entry()
             self.form.subprojects.append_entry()
+            for _ in range(0, 3):
+                self.form.project_owners.append_entry()
 
     def process(self, form):
-        status = process_form(form, Project)
+        # TODO: Handle attachment.
+        del form["budget_file"]
+        status = process_form(form, Project, alt_create=Project.add_project)
         if status is not None:
             return redirect(url_for("index"))
 

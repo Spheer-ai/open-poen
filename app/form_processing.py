@@ -12,7 +12,7 @@ from sqlalchemy.exc import IntegrityError
 from app import app
 from app import bng as bng
 from app import db, util
-from app.models import BNGAccount, DebitCard, Funder, Project, Subproject
+from app.models import BNGAccount
 from app.util import formatted_flash
 
 
@@ -23,9 +23,18 @@ def filter_fields(form: FlaskForm) -> Dict:
         for x in form
         if x.type not in ["SubmitField", "CSRFTokenField"]
     }
-    # Set empty strings to None to keep everything consistent. Also, values like
+    # Set empty strings to None to keep everything consistent. Also because column like
     # foreign keys can't handle empty strings.
-    return {key: (value if value != "" else None) for key, value in fields.items()}
+    for key, value in fields.items():
+        # In case of FieldLists.
+        if type(value) == list:
+            fields[key] = [
+                {k: (v if v != "" else None) for k, v in x.items()} for x in value
+            ]
+        # In case of single fields.
+        else:
+            fields[key] = value if value != "" else None
+    return fields
 
 
 def return_redirect(project_id: int, subproject_id: Union[None, int]):
@@ -36,105 +45,6 @@ def return_redirect(project_id: int, subproject_id: Union[None, int]):
         )
 
     return redirect(url_for("project", project_id=project_id))
-
-
-def process_new_project_form(form):
-    if not util.validate_on_submit(form, request):
-        return
-
-    # We need to rerender the form if the user wants to add funders, debit cards or subprojects, but hasn't
-    # received the rerendered form yet to actually enter those.
-    # TODO: Refactor.
-    rerender = False
-    if form.funders_amount.data is not None:
-        funders_to_add = form.funders_amount.data - len(form.funders)
-        if funders_to_add > 0:
-            for x in range(0, funders_to_add):
-                form.funders.append_entry()
-            rerender = True
-    if form.card_numbers_amount.data is not None:
-        debit_cards_to_add = form.card_numbers_amount.data - len(form.card_numbers)
-        if debit_cards_to_add > 0:
-            for x in range(0, debit_cards_to_add):
-                form.card_numbers.append_entry()
-            rerender = True
-    if form.subprojects_amount.data is not None:
-        subprojects_to_add = form.subprojects_amount.data - len(form.subprojects)
-        if subprojects_to_add > 0:
-            for x in range(0, subprojects_to_add):
-                form.subprojects.append_entry()
-            rerender = True
-    if rerender:
-        del form.funders_amount
-        del form.card_numbers_amount
-        del form.subprojects_amount
-        form.errors["rerender"] = "rerender"
-        return
-
-    # TODO: We don't want this hardcoded.
-    new_project_fields = [
-        "name",
-        "description",
-        "contains_subprojects",
-        "hidden",
-        "hidden_sponsors",
-        "budget",
-    ]
-    new_project_data = {
-        x.short_name: x.data for x in form if x.short_name in new_project_fields
-    }
-    new_project = Project(**new_project_data)
-
-    # Of all the cards entered, check whether they already exist. (Debit cards are created as payments are parsed.)
-    # If they already exist, we just need to assign them to the project that we are creating. If they are already
-    # assigned to a project, the user made a mistake. If the card does not exist yet, a payment for that card has
-    # never been parsed yet, but that doesn't matter to the user, so we add it in advance.
-    card_numbers = [x.card_number.data for x in form.card_numbers]
-    already_existing_debit_cards = [
-        x for x in DebitCard.query.all() if x.card_number in card_numbers
-    ]
-    new_debit_cards = [
-        DebitCard(card_number=x)
-        for x in card_numbers
-        if x not in [i.card_number for i in already_existing_debit_cards]
-    ]
-
-    funders = [Funder(name=x.form.name.data, url=x.form.url.data) for x in form.funders]
-
-    # TODO: We don't want this hardcoded.
-    new_subproject_fields = ["name", "description", "hidden", "budget"]
-    new_subproject_data = [
-        {x.short_name: x.data for x in i if x.short_name in new_subproject_fields}
-        for i in form.subprojects
-    ]
-    subprojects = [Subproject(**x) for x in new_subproject_data]
-    if not len(subprojects) == len(set([x.name for x in subprojects])):
-        formatted_flash(
-            (
-                "Minstens twee initiatieven hebben dezelfde naam. Geef elk initiatief "
-                "een unieke naam om een project aan te maken."
-            ),
-            color="red",
-        )
-        return
-
-    new_project.debit_cards = already_existing_debit_cards + new_debit_cards
-    new_project.funders = funders
-    new_project.subprojects = subprojects
-
-    try:
-        db.session.add(new_project)
-        db.session.commit()
-        formatted_flash(f"Project {new_project.name} is toegevoegd.", color="green")
-        return redirect(url_for("index"))
-    except (ValueError, IntegrityError) as e:
-        app.logger.error(repr(e))
-        db.session().rollback()
-        # This should, in practise, be the only case possible that results in the aforementioned exceptions.
-        formatted_flash(
-            f"Het project is niet toegevoegd. Er bestaat al een project met de naam {new_project.name}.",
-            color="red",
-        )
 
 
 def process_bng_link_form(form):

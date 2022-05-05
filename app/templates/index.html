@@ -275,7 +275,6 @@
                                 {{ wtf.form_field(funder.form.subsidy_number) }}
                                 {{ wtf.form_field(funder.form.budget) }}
                                 {{ wtf.form_field(funder.form.url) }}
-                                {{ funder.csrf_token }}
                                 <div class="bng-info-unit">
                                   <i class="fas fa-trash fa-2x"
                                     onclick="wizard.remove('#funder-', '{{loop.index -1}}')"></i>
@@ -298,7 +297,6 @@
                                 <div style="display: flex">
                                   {{ wtf.form_field(card_number.form.card_number, class="form-control-sm",
                                   form_type="inline") }}
-                                  {{ card_number.csrf_token }}
                                   <div class="bng-info-unit" style="margin-left: 1rem;">
                                     <i class="fas fa-trash fa-2x"
                                       onclick="wizard.remove('#card_number-', '{{loop.index -1}}')"></i>
@@ -327,7 +325,6 @@
                                 {{ wtf.form_field(subproject.form.description) }}
                                 {{ wtf.form_field(subproject.form.hidden) }}
                                 {{ wtf.form_field(subproject.form.budget) }}
-                                {{ subproject.csrf_token }}
                                 <div class="bng-info-unit">
                                   <i class="fas fa-trash fa-2x"
                                     onclick="wizard.remove('#subproject-', '{{loop.index - 1}}')"></i>
@@ -352,7 +349,6 @@
                                 <div style="display: flex">
                                   {{ wtf.form_field(project_owner.email, class="form-control-sm", placeholder="email",
                                   form_type="inline") }}
-                                  {{ project_owner.csrf_token }}
                                   <div class="bng-info-unit" style="margin-left: 1rem;">
                                     <i class="fas fa-trash fa-2x"
                                       onclick="wizard.remove('#project_owner-', '{{loop.index - 1}}')"></i>
@@ -378,7 +374,7 @@
                             </div>
                             <div class="interactive-unit">
                               <h2>Financiën initiatief</h2>
-                              {{ wtf.form_field(project_form.budget_file, class="form-control") }}
+
                               {{ wtf.form_field(project_form.budget) }}
                             </div>
                           </div>
