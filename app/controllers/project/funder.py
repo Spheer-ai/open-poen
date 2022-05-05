@@ -25,6 +25,12 @@ class BaseForm(FlaskForm):
         "URL (format: http(s)://voorbeeld.com)",
         validators=[DataRequired(), URL(), Length(max=2000)],
     )
+    subsidy = StringField(
+        "Subsidieregeling", validators=[DataRequired(), Length(max=120)]
+    )
+    subsidy_number = StringField(
+        "Beschikkingsnummer", validators=[DataRequired(), Length(max=120)]
+    )
     id = IntegerField(widget=HiddenInput())
     project_id = IntegerField(widget=HiddenInput())
     submit = SubmitField("Opslaan", render_kw={"class": "btn btn-info"})
