@@ -340,6 +340,8 @@ class Project(db.Model, DefaultCRUD):
 
         if len(subprojects) != len(set([x["name"] for x in subprojects])):
             raise ValueError("Subproject names are not unique.")
+        # TODO: Raise an errors if we're adding subprojects to a project that doesn't
+        # have the contains_subprojects flag.
         project.subprojects = [Subproject(**x) for x in subprojects]
 
         db.session.add(project)

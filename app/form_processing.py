@@ -150,6 +150,7 @@ def process_form(
         return None
 
     # TODO: Make filter_fields work for nested dicts.
+    # TODO: Deal with Model instances in case of QueryMultipleSelectField.
     data = filter_fields(form)
 
     if hasattr(form, "id") and form.id.data is not None:

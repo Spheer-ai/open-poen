@@ -1,13 +1,19 @@
+from xmlrpc.client import Boolean
 from app.controllers.util import Controller, create_redirects
 from app.form_processing import process_form
 from app.forms import SubprojectForm
 from app.models import Project, Subproject
+from wtforms import BooleanField
+from app.models import Funder
 
 
 class SubprojectController(Controller):
     def __init__(self, project: Project):
         self.project = project
         self.form = SubprojectForm(prefix="subproject_form")
+        self.form.funder.query = Funder.query.filter_by(
+            project_id=self.project.id
+        ).all()
         self.redirects = create_redirects(self.project.id, None)
 
     def process(self):
@@ -18,9 +24,11 @@ class SubprojectController(Controller):
         if len(self.form.errors) > 0:
             return self.form
         else:
-            return SubprojectForm(
+            test = SubprojectForm(
                 prefix="subproject_form", **{"project_id": self.project.id}
             )
+            test.funder.query = Funder.query.filter_by(project_id=self.project.id).all()
+            return test
 
     def process_forms(self):
         redirect = self.process()

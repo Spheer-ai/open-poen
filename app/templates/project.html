@@ -505,7 +505,7 @@
               aria-labelledby="subprojectToevoegenLabel" aria-hidden="true">
               <div class="modal-dialog" role="document">
                 <div class="modal-content">
-                  <form method="POST">
+                  <form method="POST" class="interactive-form" novalidate>
                     <div class="modal-header">
                       <h5 class="modal-title" id="subprojectToevoegenLabel">Activiteit Toevoegen</h5>
                       <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
@@ -513,15 +513,25 @@
                       </button>
                     </div>
                     <div class="modal-body">
-                      <div>
-                        {{ subproject_form.csrf_token }}
-
-                        {% for f in subproject_form %}
-                        {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' %}
-                        {{ wtf.form_field(f, class="form-control") }}
-                        {% endif %}
+                      {{ subproject_form.csrf_token }}
+                      <div class="interactive-unit">
+                        <h2>Over activiteit</h2>
+                        <hr>
+                        {{ wtf.form_field(subproject_form.name) }}
+                        {{ wtf.form_field(subproject_form.description) }}
+                        {{ wtf.form_field(subproject_form.purpose) }}
+                        {{ wtf.form_field(subproject_form.target_audience) }}
+                        {{ wtf.form_field(subproject_form.hidden) }}
+                        {{ wtf.form_field(subproject_form.budget) }}
+                        {% for f in subproject_form.funder %}
+                        {{ wtf.form_field(f) }}
                         {% endfor %}
                         {{ subproject_form.project_id }}
+                      </div>
+                      <div class="interactive-unit">
+                        <h2>Sponsor(s) activiteit</h2>
+                        <hr>
+
                       </div>
                     </div>
                     <div class="modal-footer">

@@ -12,7 +12,7 @@ from wtforms.validators import (
     URL,
     ValidationError,
 )
-from wtforms.widgets import HiddenInput
+from wtforms.widgets import HiddenInput, ListWidget, CheckboxInput
 from wtforms import (
     StringField,
     IntegerField,
@@ -27,7 +27,8 @@ from wtforms import (
     Form,
 )
 from wtforms.fields.html5 import EmailField
-from app.models import DebitCard, Payment
+from app.models import DebitCard, Payment, Funder
+from wtforms.ext.sqlalchemy.fields import QuerySelectMultipleField
 
 allowed_extensions = [
     "jpg",
@@ -201,6 +202,11 @@ class SubprojectForm(FlaskForm):
     )
     project_id = IntegerField(widget=HiddenInput())
     id = IntegerField(widget=HiddenInput())
+    funder = QuerySelectMultipleField(
+        "Funder",
+        option_widget=CheckboxInput(),
+        get_label="name",
+    )
     submit = SubmitField("Opslaan", render_kw={"class": "btn btn-info"})
     remove = SubmitField("Verwijderen", render_kw={"class": "btn btn-danger"})
 
