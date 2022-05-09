@@ -1,22 +1,14 @@
 from typing import Dict, Type
 
 from app.controllers.util import Controller, create_redirects
-from app.form_processing import process_form, return_redirect
+from app.form_processing import process_form
+from app.forms import validate_budget
 from app.models import Funder, Project
+from app.util import Clearance
 from flask_wtf import FlaskForm
-
-from wtforms.validators import (
-    DataRequired,
-    Length,
-    URL,
-)
+from wtforms import IntegerField, StringField, SubmitField
+from wtforms.validators import URL, DataRequired, Length
 from wtforms.widgets import HiddenInput
-from wtforms import (
-    StringField,
-    IntegerField,
-    SubmitField,
-)
-from app.util import Clearance, formatted_flash
 
 
 class BaseForm(FlaskForm):
@@ -31,6 +23,7 @@ class BaseForm(FlaskForm):
     subsidy_number = StringField(
         "Beschikkingsnummer", validators=[DataRequired(), Length(max=120)]
     )
+    budget = IntegerField("Budget voor deze sponsor", validators=[validate_budget])
     id = IntegerField(widget=HiddenInput())
     project_id = IntegerField(widget=HiddenInput())
     submit = SubmitField("Opslaan", render_kw={"class": "btn btn-info"})

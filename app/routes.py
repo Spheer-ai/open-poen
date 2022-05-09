@@ -612,6 +612,19 @@ def profile(user_id):
     )
 
 
+@app.route("/projectprofiel/<project_id>", methods=["GET"])
+def projectprofile(project_id):
+    project = Project.query.filter_by(id=project_id).first()
+
+    return render_template(
+        "projectprofiel.html",
+        project=project,
+        image=None,
+        use_square_borders=app.config["USE_SQUARE_BORDERS"],
+        footer=app.config["FOOTER"],
+    )
+
+
 @app.route("/profiel-bewerken", methods=["GET", "POST"])
 @login_required
 def profile_edit():

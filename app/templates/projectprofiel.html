@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% import "macros.html" as macros %}
+{% block head %}
+<title>Open Poen - Initiatiefprofiel</title>
+<meta property="og:title" content="Open Poen - Initiatiefprofiel" />
+{{ super() }}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    {% if not project %}
+    <br>
+    <h1>Dit initiatief bestaat niet.</h1>
+    <br>
+    <br>
+    {% else %}
+    <br>
+    <h1>{{ project.name }}</h1>
+    <br>
+    <br>
+    <div class="row">
+        <div class="col-12 col-sm-9 col-md-6">
+            {{ macros.info_unit("Naam:", project.name) }}
+            {{ macros.info_unit("Beschrijving:", project.description) }}
+            {{ macros.info_unit("Doel:", project.purpose) }}
+            {{ macros.info_unit("Doelgroep:", project.target_audience) }}
+            {{ macros.info_unit("Beheerder:", project.owner) }}
+            {{ macros.info_unit("E-mail beheerder:", project.owner_email) }}
+            <b>Initiatiefnemers</b>
+            <br>
+            {% if project.users | list | length > 0 %}
+            <ul>
+                {% for user in project.users %}
+                <li><a href="{{ url_for('profile', user_id=user.id) }}">{{ user.first_name }} {{ user.last_name }}</a>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <i>Dit initiatief heeft nog geen initiatiefnemers.</i>
+            <br>
+            <br>
+            {% endif %}
+            {{ macros.info_unit("Rechtsvorm:", project.legal_entity) }}
+            {{ macros.info_unit("Adres aanvrager:", project.address_applicant) }}
+            {{ macros.info_unit("KvK:", project.registration_kvk) }}
+            {{ macros.info_unit("Locatie initiatief:", project.project_location) }}
+        </div>
+        <div class="col-12 col-sm-3 col-md-6">
+            <!-- TODO: Display image if it exists and allow user to upload it. -->
+            <div class="attachment-div">
+                {% if image.mimetype in ['image/jpeg', 'image/jpg', 'image/png'] %}
+                <a class="embed-responsive embed-responsive-1by1"
+                    href="{{ url_for('upload', filename='user-image/' + image.filename) }}" data-toggle="lightbox"
+                    data-gallery="image-gallery-{{ user.id }}">
+                    <img class="img-fluid embed-responsive-item attachment"
+                        src="{{ url_for('upload', filename='user-image/' + image.filename) }}">
+                </a>
+                {% endif %}
+            </div>
+            <b>Lopende activiteiten:</b>
+            {% if project.subprojects | list | length > 0 %}
+            <ul>
+                {% for subproject in project.subprojects %}
+                <li><a href="{{ url_for('subproject', project_id=project.id, subproject_id=subproject.id) }}">{{
+                        subproject.name}}</a></li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <i>Er zijn geen lopende activiteiten.</i>
+            <br>
+            <br>
+            {% endif %}
+            <b>Afgeronde activiteiten:</b>
+            <br>
+            <br>
+            <b>Verantwoorde activiteiten:</b>
+            <br>
+            <br>
+        </div>
+    </div>
+    <br>
+    <h1>Sponsoren:</h1>
+    <br>
+    <br>
+    <div class="row">
+        {% if project.funders | list | length == 0 %}
+        <p>Dit initiatief heeft nog geen sponsors.</p>
+        {% else %}
+        <div class="table-responsive">
+            <table class="table table-striped profile-table">
+                <thead>
+                    <tr>
+                        <th scope="col">Sponsor(s):</th>
+                        <th scope="col">Subsidieregeling:</th>
+                        <th scope="col">Beschikkingsnummer:</th>
+                        <th scope="col">Budget:</th>
+                        <th scope="col">Activiteiten:</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for funder in project.funders %}
+                    <tr>
+                        <!-- TODO: How to render if the variable is None? -->
+                        <td>{{ funder.name }}</td>
+                        <td>{{ funder.subsidy }}</td>
+                        <td>{{ funder.subsidy_number }}</td>
+                        <td>{{ funder.budget }}</td>
+                        <td>
+                            {% if funder.subprojects | list | length == 0 %}
+                            Geen.
+                            {% else %}
+                            {% for subproject in funder.subprojects %}
+                            <a
+                                href="{{ url_for('subproject', project_id=subproject.project_id, subproject_id=subproject.id) }}">{{
+                                subproject.name }}</a>
+                            <br>
+                            {% endfor %}
+                            {% endif %}
+                            <!-- <a href="http://nu.nl">Dagtripje Duinrell</a>
+                            <br>
+                            Koken voor Ouderen -->
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+    <br>
+    <br>
+    <!-- TODO: Begroting bekijken / downloaden. -->
+    <a href="{{ url_for('project', project_id=project.id) }}"><b>Initiatief beheren</b></a>
+    <br>
+    <br>
+    <b class="projectprofile-action">Tussentijds rapporteren</b>
+    <br>
+    <br>
+    <b class="projectprofile-action">Verantwoorden</b>
+    {% endif %}
+</div>
+{% endblock %}
