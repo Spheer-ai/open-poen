@@ -324,6 +324,8 @@ class Project(db.Model, DefaultCRUD):
 
         project = cls(**kwargs)
 
+        # Check that ensures the debit card is not already linked to a different project,
+        # is done in the form validator.
         existing = (  # Existing debit cards that are not linked to a project yet.
             db.session.query(DebitCard)
             .filter(DebitCard.card_number.in_([x["card_number"] for x in card_numbers]))
@@ -349,6 +351,8 @@ class Project(db.Model, DefaultCRUD):
 
         for project_owner in project_owners:
             User.add_user(project_owner["email"], project_id=project.id)
+
+        return project
 
     @property
     def message_after_edit(self):

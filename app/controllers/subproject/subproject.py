@@ -1,7 +1,28 @@
 from app.controllers.util import Controller, create_redirects
 from app.form_processing import Status, process_form, return_redirect
-from app.forms import SubprojectForm
 from app.models import Subproject
+from flask_wtf import FlaskForm
+import wtforms.validators as v
+import wtforms as w
+from wtforms.widgets import HiddenInput
+from app.forms import validate_budget
+
+
+class SubprojectForm(FlaskForm):
+    name = w.StringField("Naam", validators=[v.DataRequired(), v.Length(max=120)])
+    description = w.TextAreaField("Beschrijving", validators=[v.DataRequired()])
+    purpose = w.TextAreaField("Doel", validators=[v.DataRequired()])
+    target_audience = w.TextAreaField("Doelgroep", validators=[v.DataRequired()])
+    hidden = w.BooleanField("Activiteit verbergen")
+    budget = w.IntegerField(
+        "Budget voor deze activiteit", validators=[v.Optional(), validate_budget]
+    )
+    project_id = w.IntegerField(widget=HiddenInput())
+    id = w.IntegerField(widget=HiddenInput())
+    submit = w.SubmitField(
+        "Opslaan", render_kw={"class": "btn btn-info interactive-submit"}
+    )
+    remove = w.SubmitField("Verwijderen", render_kw={"class": "btn btn-danger"})
 
 
 class SubprojectController(Controller):

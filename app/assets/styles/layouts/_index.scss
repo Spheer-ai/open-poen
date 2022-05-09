@@ -59,6 +59,7 @@
 
 .interactive-unit h2 {
   margin-bottom: 1rem;
+  color: #3D46CB;
 }
 
 .interactive-form .modal-body {
@@ -66,4 +67,8 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+}
+
+.interactive-form .modal-footer {
+  justify-content: space-between
 }

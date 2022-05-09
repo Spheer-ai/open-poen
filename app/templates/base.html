@@ -1,4 +1,5 @@
 <!doctype html>
+
 <head lang="nl">
   {% block head %}
   <meta charset="utf-8">
@@ -28,7 +29,7 @@
   <script async src="https://www.googletagmanager.com/gtag/js?id=UA-32274817-20"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
+    function gtag() { dataLayer.push(arguments); }
     gtag('js', new Date());
     gtag('config', 'UA-32274817-20', { 'anonymize_ip': true });
   </script>
@@ -41,24 +42,27 @@
   {% endblock %}
 </head>
 {% block body %}
+
 <body onresize="createDonuts()" class="bg-grey{% if use_square_borders %} use-square-borders{% endif %}">
-{% endblock %}
+  {% endblock %}
   <header class="bg-white">
     <nav class="navbar navbar-fixed-top my-auto">
       <div class="col-4">
         {% if current_user.is_authenticated %}
-          <a class="text-color-main" href="{{ url_for('profile', user_id=current_user.id)}}">
-            <h1>{{ current_user.first_name }} {{ current_user.last_name }}</h1>
-          </a>
+        <a class="text-color-main" href="{{ url_for('profile', user_id=current_user.id)}}">
+          <h1>{{ current_user.first_name }} {{ current_user.last_name }}</h1>
+        </a>
         {% endif %}
       </div>
 
       <a class="navbar-brand abs-center-x" href="/">
-        <img class="logo img-fluid" src="{{ url_for('static', filename='images/Open-Poen-Logo.svg') }}" alt="Open Poen logo">
+        <img class="logo img-fluid" src="{{ url_for('static', filename='images/Open-Poen-Logo.svg') }}"
+          alt="Open Poen logo">
       </a>
 
       <div class="col-4 text-right">
-        <button class="navbar-toggler ml-auto" type="button" data-toggle="collapse" data-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Open of sluit navigatiemenu">
+        <button class="navbar-toggler ml-auto" type="button" data-toggle="collapse" data-target="#navbar"
+          aria-controls="navbar" aria-expanded="false" aria-label="Open of sluit navigatiemenu">
           <h3 class="d-inline">menu </h3><i class="my-bottom fas fa-bars"></i>
         </button>
       </div>
@@ -66,23 +70,24 @@
 
     <div id="navbar" class="collapse navbar-collapse">
       {% set menu = [
-          (url_for('index'), 'Home'),
-          (url_for('over'), 'Over'),
-          (url_for('meest_gestelde_vragen'), 'Meest gestelde vragen')
+      (url_for('index'), 'Home'),
+      (url_for('over'), 'Over'),
+      (url_for('meest_gestelde_vragen'), 'Meest gestelde vragen')
       ] %}
 
       {% if current_user.is_authenticated %}
-        {{ menu.append((url_for('profile', user_id=current_user.id), 'Profiel'))|default("", True) }}
-        {{ menu.append((url_for('logout'), 'Uitloggen'))|default("", True) }}
+      {{ menu.append((url_for('profile', user_id=current_user.id), 'Profiel'))|default("", True) }}
+      {{ menu.append((url_for('logout'), 'Uitloggen'))|default("", True) }}
       {% else %}
-        {{ menu.append((url_for('login'), 'Inloggen'))|default("", True) }}
+      {{ menu.append((url_for('login'), 'Inloggen'))|default("", True) }}
       {% endif %}
 
       <ul class="navbar-nav">
         {% for page, name in menu %}
-          <li {% if name == active_page %} class="nav-item active"{% endif%}>
-            <a class="nav-link" href="{{ page }}">{{ name }}{% if page == active_page %}<span class="sr-only">(huidige pagina)</span>{% endif %}</a>
-          </li>
+        <li {% if name==active_page %} class="nav-item active" {% endif%}>
+          <a class="nav-link" href="{{ page }}">{{ name }}{% if page == active_page %}<span class="sr-only">(huidige
+              pagina)</span>{% endif %}</a>
+        </li>
         {% endfor %}
       </ul>
     </div>
@@ -100,12 +105,13 @@
         {{ footer|safe }}
       </p>
       <a href="/">
-        <img class="logo-footer img-fluid" src="{{ url_for('static', filename='images/Open-Poen-Logo.svg') }}" alt="Open Poen logo">
+        <img class="logo-footer img-fluid" src="{{ url_for('static', filename='images/Open-Poen-Logo.svg') }}"
+          alt="Open Poen logo">
       </a>
     </div>
   </footer>
 
   {% block scripts %}
-    <script src="{{ url_for('static', filename='scripts/main.js') }}"></script>
+  <script src="{{ url_for('static', filename='scripts/main.js') }}"></script>
   {% endblock %}
 </body>

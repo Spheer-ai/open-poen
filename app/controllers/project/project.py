@@ -7,9 +7,18 @@ from app.models import Project
 from app.util import Clearance
 from flask import redirect, url_for
 from flask_wtf import FlaskForm
-from wtforms import BooleanField, IntegerField, StringField, SubmitField, TextAreaField
-from wtforms.validators import DataRequired, Length, Optional
+from wtforms import (
+    BooleanField,
+    IntegerField,
+    StringField,
+    SubmitField,
+    TextAreaField,
+    SelectField,
+)
+from wtforms.validators import DataRequired, Length, Optional, Email
 from wtforms.widgets import HiddenInput
+
+ALLOWED_EXTENSIONS = [".pdf", ".xls", ".xlsx"]
 
 
 class BaseForm(FlaskForm):
@@ -29,6 +38,24 @@ class BaseForm(FlaskForm):
 class Admin(BaseForm):
     hidden = BooleanField("Initiatief verbergen")
     hidden_sponsors = BooleanField("Sponsoren verbergen")
+    # TODO: No design for these new fields. Should this be admin? Should this be here?
+    owner = StringField("Beheerder", validators=[DataRequired(), Length(max=120)])
+    owner_email = StringField(
+        "E-mailadres", validators=[DataRequired(), Email(), Length(max=120)]
+    )
+    legal_entity = SelectField(
+        "Rechtsvorm", choices=[("Stichting", "Stichting"), ("Vereniging", "Vereniging")]
+    )
+    address_applicant = StringField(
+        "Adres aanvrager", validators=[DataRequired(), Length(max=120)]
+    )
+    registration_kvk = StringField(
+        "Inschrijving KvK", validators=[DataRequired(), Length(max=120)]
+    )
+    project_location = StringField(
+        "Locatie initiatief", validators=[DataRequired(), Length(max=120)]
+    )
+    # TODO: Budget file.
     budget = IntegerField(
         "Budget voor dit initiatief", validators=[Optional(), validate_budget]
     )

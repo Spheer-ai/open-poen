@@ -354,7 +354,7 @@
                           </div>
                           {% endif %}
                         </div>
-                        <div class="modal-footer" style="justify-content: space-between">
+                        <div class="modal-footer">
                           <button type="button" onclick="wizard.prev()"
                             class="btn btn-secondary interactive-prev">Vorige</button>
                           <button type="button" class="btn btn-danger" data-dismiss="modal">Annuleren</button>
@@ -508,4 +508,7 @@
   </script>
   {% endif %}
   {{ super() }}
+  <script>
+    window.wizard = new FormWizard(".interactive-form")
+  </script>
   {% endblock %}

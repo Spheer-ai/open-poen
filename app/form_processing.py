@@ -26,8 +26,8 @@ def filter_fields(form: FlaskForm) -> Dict:
     # Set empty strings to None to keep everything consistent. Also because column like
     # foreign keys can't handle empty strings.
     for key, value in fields.items():
-        # In case of FieldLists.
-        if type(value) == list:
+        # In case of FieldLists. Extra check so that we skip data from QuerySelectMultipleField.
+        if type(value) == list and not any([isinstance(i, db.Model) for i in value]):
             fields[key] = [
                 {k: (v if v != "" else None) for k, v in x.items()} for x in value
             ]

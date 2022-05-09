@@ -264,7 +264,7 @@ $(window).on('load', function () {
   }
 });
 
-class FormWizard {
+window.FormWizard = class FormWizard {
   constructor(unitClass) {
     this.idx = 0;
     this.prev_button = $(unitClass + " .interactive-prev")
@@ -354,5 +354,3 @@ class FormWizard {
     this.removedCounter += 1
   }
 }
-
-window.wizard = new FormWizard(".interactive-form")

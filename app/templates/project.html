@@ -523,20 +523,38 @@
                         {{ wtf.form_field(subproject_form.target_audience) }}
                         {{ wtf.form_field(subproject_form.hidden) }}
                         {{ wtf.form_field(subproject_form.budget) }}
-                        {% for f in subproject_form.funder %}
-                        {{ wtf.form_field(f) }}
-                        {% endfor %}
                         {{ subproject_form.project_id }}
                       </div>
                       <div class="interactive-unit">
                         <h2>Sponsor(s) activiteit</h2>
                         <hr>
-
+                        {% if subproject_form.funders.query | length > 0 %}
+                        {% for f in subproject_form.funders %}
+                        {{ wtf.form_field(f) }}
+                        {% endfor %}
+                        {% else %}
+                        <p>Het is niet mogelijk om sponsoren te selecteren, omdat er nog geen sponsoren zijn gekoppeld
+                          aan dit initiatief.</p>
+                        {% endif %}
                       </div>
+                      {% if subproject_form.has_errors %}
+                      <div>
+                        <p style="color: red; margin-bottom: 0px;">Het formulier bevat fout(en).
+                          Doorloop het formulier opnieuw en
+                          volg
+                          de
+                          aanwijzingen op.
+                        </p>
+                      </div>
+                      {% endif %}
                     </div>
                     <div class="modal-footer">
-                      <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
+                      <button type="button" onclick="wizard.prev()"
+                        class="btn btn-secondary interactive-prev">Vorige</button>
+                      <button type="button" class="btn btn-danger" data-dismiss="modal">Annuleren</button>
                       {{ subproject_form.submit }}
+                      <button type="button" onclick="wizard.next()"
+                        class="btn btn-primary interactive-next">Volgende</button>
                     </div>
                   </form>
                 </div>
@@ -1295,4 +1313,7 @@
     window.paymentId = {{ payment_id | safe }};
   </script>
   {{ super() }}
+  <script>
+    window.wizard = new FormWizard(".interactive-form")
+  </script>
   {% endblock %}

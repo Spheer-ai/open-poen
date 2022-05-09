@@ -202,13 +202,17 @@ class SubprojectForm(FlaskForm):
     )
     project_id = IntegerField(widget=HiddenInput())
     id = IntegerField(widget=HiddenInput())
-    funder = QuerySelectMultipleField(
+    funders = QuerySelectMultipleField(
         "Funder",
         option_widget=CheckboxInput(),
         get_label="name",
     )
-    submit = SubmitField("Opslaan", render_kw={"class": "btn btn-info"})
+    submit = SubmitField(
+        "Opslaan", render_kw={"class": "btn btn-info interactive-submit"}
+    )
     remove = SubmitField("Verwijderen", render_kw={"class": "btn btn-danger"})
+
+    has_errors = False
 
 
 # Allow both dot '.' and comma ',' as decimal separator
