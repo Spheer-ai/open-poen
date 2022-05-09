@@ -941,7 +941,7 @@
                         <form method="POST">
                           {% endif %}
                           <div class="row">
-                            <div class="col-6">
+                            <div class="col-12 col-sm-6">
                               {% if payment.type == "MANUAL_TOPUP" %}
                               {{ macros.payment_info_left_manual_topup(payment_form, payment) }}
                               {% elif payment.type == "MANUAL_PAYMENT" %}
@@ -953,7 +953,7 @@
                               {% endif %}
                             </div>
 
-                            <div class="col-6">
+                            <div class="col-12 col-sm-6">
                               {{ macros.payment_info_right(payment_form, payment) }}
                             </div>
                           </div>
@@ -961,7 +961,7 @@
                         </form>
                         {% endif %}
                         <div class="row">
-                          <div class="col-6">
+                          <div class="col-12 col-sm-6">
                             {% if payment.attachments.all() %}
                             <hr>
                             <div class="row">
@@ -985,7 +985,7 @@
                             </div>
                             {% endif %}
                           </div>
-                          <div class="col-6">
+                          <div class="col-12 col-sm-6">
                             {# Make sure the user is allowed to edit this payment (especially needed when a normal
                             users
                             edits a subproject payment on a project page #}

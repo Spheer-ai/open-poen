@@ -446,7 +446,7 @@
                   </th>
                   <th data-sortable="true" data-field="betaalpas" class="d-none d-xl-table-cell">betaalpas</th>
                   <th data-sortable="true" data-field="ontvanger" class="d-none d-md-table-cell">ontvanger</th>
-                  <th data-sortable="true" data-field="omschrijving" class="d-none d-sm-table-cell">omschrijving</th>
+                  <th data-sortable="true" data-field="omschrijving">omschrijving</th>
                   <th data-sortable="true" data-field="datum" data-sorter="sortByDate" class="d-none d-xl-table-cell">
                     datum</th>
                   <th data-sortable="true" data-field="media" data-force-hide="true" class="d-none d-xl-table-cell">
@@ -613,7 +613,7 @@
                         <form method="POST">
                           {% endif %}
                           <div class="row">
-                            <div class="col-6">
+                            <div class="col-12 col-sm-6">
                               {% if payment.type == "MANUAL_TOPUP" %}
                               {{ macros.payment_info_left_manual_topup(payment_form, payment) }}
                               {% elif payment.type == "MANUAL_PAYMENT" %}
@@ -625,7 +625,7 @@
                               {% endif %}
                             </div>
 
-                            <div class="col-6">
+                            <div class="col-12 col-sm-6">
                               {{ macros.payment_info_right(payment_form, payment) }}
                             </div>
                           </div>
@@ -634,7 +634,7 @@
                         {% endif %}
 
                         <div class="row">
-                          <div class="col-6">
+                          <div class="col-12 col-sm-6">
                             {% if payment.attachments.all() %}
                             <hr>
                             <div class="row">
@@ -658,7 +658,7 @@
                             </div>
                             {% endif %}
                           </div>
-                          <div class="col-6">
+                          <div class="col-12 col-sm-6">
                             {% if payment.editable %}
                             {% if transaction_attachment_form %}
                             <hr>
