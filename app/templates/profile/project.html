@@ -116,7 +116,7 @@
                         <td>{{ funder.name }}</td>
                         <td>{{ funder.subsidy }}</td>
                         <td>{{ funder.subsidy_number }}</td>
-                        <td>{{ funder.budget }}</td>
+                        <td>{{ funder.get_formatted_currency() }}</td>
                         <td>
                             {% if funder.subprojects | list | length == 0 %}
                             Geen.

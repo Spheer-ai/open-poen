@@ -76,8 +76,7 @@
                         <td>{{ funder.name }}</td>
                         <td>{{ funder.subsidy }}</td>
                         <td>{{ funder.subsidy_number }}</td>
-                        <!-- TODO: Format currency -->
-                        <td>{{ funder.budget }}</td>
+                        <td>{{ funder.get_formatted_currency() }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>

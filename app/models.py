@@ -673,6 +673,9 @@ class Funder(db.Model, DefaultCRUD):
         back_populates="funders",
     )
 
+    def get_formatted_currency(self):
+        return locale.format("%.2f", self.budget, grouping=True, monetary=True)
+
     @property
     def message_after_edit(self):
         return f"Sponsor {self.name} is aangepast."
