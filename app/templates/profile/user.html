@@ -34,7 +34,7 @@
 
       {% if current_user.is_authenticated and current_user.id == user.id %}
       <div>
-        <p><a href="{{ url_for('profile_edit') }}">Profiel bewerken</a></p>
+        <p><a href="{{ url_for('profile_user_edit') }}">Profiel bewerken</a></p>
         <p><a href="{{ url_for('reset_wachtwoord_verzoek') }}">Wachtwoord veranderen</a></p>
       </div>
       {% endif %}

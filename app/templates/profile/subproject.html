@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% import "macros.html" as macros %}
+{% block head %}
+<title>Open Poen - Activiteitsprofiel</title>
+<meta property="og:title" content="Open Poen - Activiteitsprofiel" />
+{{ super() }}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <br>
+    <h1>{{ subproject.name}}</h1>
+    <br>
+    <br>
+    <div class="row">
+        <div class="col-12 col-sm-9 col-md-6">
+            <!-- TODO: make dynamic. -->
+            <h2 class="active-subproject">Lopende activiteit</h2>
+            <br>
+            <br>
+            {{ macros.info_unit("Beschrijving:", subproject.description) }}
+            {{ macros.info_unit("Doel:", subproject.purpose) }}
+            {{ macros.info_unit("Doelgroep:", subproject.target_audience) }}
+        </div>
+        <div class="col-12 col-sm-3 col-md-6">
+            {% if image %}
+            <div class="attachment-div">
+                <a class="embed-responsive embed-responsive-16by9"
+                    href="{{ url_for('upload', filename='subproject-attachment/' + image.filename) }}"
+                    data-toggle="lightbox" data-gallery="image-gallery-{{ subproject.id }}">
+                    <img class="img-fluid embed-responsive-item attachment"
+                        src="{{ url_for('upload', filename='subproject-attachment/' + image.filename) }}">
+                </a>
+            </div>
+            <button type="button" class="btn btn-danger" data-toggle="modal"
+                data-target="#bijlage-verwijder-{{ image.id }}">
+                Verwijderen
+            </button>
+            {{ macros.remove_attachment_modal(image, edit_attachment_form) }}
+            {% else %}
+            <form method="POST" enctype="multipart/form-data">
+                {{ edit_project_profile_form.csrf_token }}
+                {% for f in edit_project_profile_form %}
+                {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' %}
+                {{ wtf.form_field(f, class="form-control") }}
+                {% endif %}
+                {% endfor %}
+                {{ edit_project_profile_form.submit }}
+            </form>
+            {% endif %}
+        </div>
+    </div>
+    <br>
+    <h1>Sponsoren</h1>
+    <br>
+    <br>
+    <div class="row">
+        {% if subproject.funders | list | length == 0 %}
+        <p>Deze activiteit heeft nog geen sponsors.</p>
+        {% else %}
+        <div class="table-responsive">
+            <table class="table table-striped profile-table">
+                <thead>
+                    <tr>
+                        <th scope="col">Sponsor(s):</th>
+                        <th scope="col">Subsidieregeling:</th>
+                        <th scope="col">Beschikkingsnummer:</th>
+                        <th scope="col">Budget:</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for funder in subproject.funders %}
+                    <tr>
+                        <!-- TODO: How to render if the variable is None? -->
+                        <td>{{ funder.name }}</td>
+                        <td>{{ funder.subsidy }}</td>
+                        <td>{{ funder.subsidy_number }}</td>
+                        <!-- TODO: Format currency -->
+                        <td>{{ funder.budget }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+        <!-- TODO: Totaal budget -->
+    </div>
+    <br>
+    <br>
+    <a href="{{ url_for('subproject', project_id=subproject.project.id, subproject_id=subproject.id) }}"><b>Activiteit
+            beheren</b></a>
+    <br>
+    <br>
+    <!-- TODO -->
+    <b class="projectprofile-action">Activiteit afronden</b>
+</div>
+{% endblock %}

@@ -173,7 +173,8 @@
               <ul class="card-small-list mx-auto my-auto">
                 {% for user in subproject.users|list %}
                 {% if user.first_name and not user.hidden %}
-                <li><a href="{{ url_for('profile', user_id=user.id) }}">{{ user.first_name }} {{ user.last_name }}</a>
+                <li><a href="{{ url_for('profile_user', user_id=user.id) }}">{{ user.first_name }} {{ user.last_name
+                    }}</a>
                 </li>
                 {% endif %}
                 {% endfor %}

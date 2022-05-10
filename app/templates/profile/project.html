@@ -25,7 +25,8 @@
             {% if project.users | list | length > 0 %}
             <ul>
                 {% for user in project.users %}
-                <li><a href="{{ url_for('profile', user_id=user.id) }}">{{ user.first_name }} {{ user.last_name }}</a>
+                <li><a href="{{ url_for('profile_user', user_id=user.id) }}">{{ user.first_name }} {{ user.last_name
+                        }}</a>
                 </li>
                 {% endfor %}
             </ul>
@@ -80,9 +81,11 @@
             <br>
             {% endif %}
             <b>Afgeronde activiteiten:</b>
+            <!-- TODO -->
             <br>
             <br>
             <b>Verantwoorde activiteiten:</b>
+            <!-- TODO -->
             <br>
             <br>
         </div>
@@ -132,6 +135,7 @@
             </table>
         </div>
         {% endif %}
+        <!-- TODO: Totaal budget -->
     </div>
     <br>
     <br>
@@ -139,9 +143,11 @@
     <a href="{{ url_for('project', project_id=project.id) }}"><b>Initiatief beheren</b></a>
     <br>
     <br>
+    <!-- TODO -->
     <b class="projectprofile-action">Tussentijds rapporteren</b>
     <br>
     <br>
+    <!-- TODO -->
     <b class="projectprofile-action">Verantwoorden</b>
 </div>
 {% endblock %}

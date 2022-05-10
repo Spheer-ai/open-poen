@@ -600,12 +600,12 @@ def logout():
     return redirect(url_for("index"))
 
 
-@app.route("/profiel/<user_id>", methods=["GET"])
-def profile(user_id):
+@app.route("/profiel/gebruiker/<user_id>", methods=["GET"])
+def profile_user(user_id):
     user = User.query.filter_by(id=user_id).first()
 
     return render_template(
-        "profiel.html",
+        "profile/user.html",
         user=user,
         image=File.query.filter_by(id=user.image).first(),
         use_square_borders=app.config["USE_SQUARE_BORDERS"],
@@ -613,8 +613,8 @@ def profile(user_id):
     )
 
 
-@app.route("/projectprofiel/<project_id>", methods=["GET", "POST"])
-def projectprofile(project_id):
+@app.route("/profiel/project/<project_id>", methods=["GET", "POST"])
+def profile_project(project_id):
     project = Project.query.filter_by(id=project_id).first()
 
     if not project:
@@ -630,8 +630,8 @@ def projectprofile(project_id):
     if edit_attachment_form.remove.data:
         File.query.filter_by(id=edit_attachment_form.id.data).delete()
         db.session.commit()
-        flash('<span class="text-default-green">Media is verwijderd</span>')
-        return redirect(url_for("projectprofile", project_id=project.id))
+        util.formatted_flash("Media is verwijderd.", color="green")
+        return redirect(url_for("profile_project", project_id=project.id))
 
     image = File.query.filter_by(id=project.image).first()
     if image is not None:
@@ -647,12 +647,63 @@ def projectprofile(project_id):
         save_attachment(
             edit_project_profile_form.data_file.data, "", project, "project-attachment"
         )
-        flash('<span class="text-default-green">Profielfoto is toegevoegd.</span>')
-        return redirect(url_for("projectprofile", project_id=project.id))
+        util.formatted_flash("Media is toegevoegd.", color="green")
+        return redirect(url_for("profile_project", project_id=project.id))
 
     return render_template(
-        "projectprofiel.html",
+        "profile/project.html",
         project=project,
+        image=image,
+        edit_attachment_form=edit_attachment_form,
+        edit_project_profile_form=edit_project_profile_form,
+        use_square_borders=app.config["USE_SQUARE_BORDERS"],
+        footer=app.config["FOOTER"],
+    )
+
+
+@app.route("/profiel/subproject/<subproject_id>", methods=["GET", "POST"])
+def profile_subproject(subproject_id):
+    subproject = Subproject.query.filter_by(id=subproject_id).first()
+
+    if not subproject:
+        return render_template(
+            "404.html",
+            use_square_borders=app.config["USE_SQUARE_BORDERS"],
+            footer=app.config["FOOTER"],
+        )
+
+    # TODO: Permissions
+
+    edit_attachment_form = EditAttachmentForm(prefix="edit_attachment_form")
+    if edit_attachment_form.remove.data:
+        File.query.filter_by(id=edit_attachment_form.id.data).delete()
+        db.session.commit()
+        util.formatted_flash("Media is verwijderd.", color="green")
+        return redirect(url_for("profile_subproject", subproject_id=subproject.id))
+
+    image = File.query.filter_by(id=subproject.image).first()
+    if image is not None:
+        edit_attachment_form = EditAttachmentForm(
+            **image.__dict__, prefix="edit_attachment_form"
+        )
+
+    edit_project_profile_form = EditProjectProfileForm(prefix="edit_profile_form")
+    if (
+        util.validate_on_submit(edit_project_profile_form, request)
+        and edit_project_profile_form.data_file.data
+    ):
+        save_attachment(
+            edit_project_profile_form.data_file.data,
+            "",
+            subproject,
+            "subproject-attachment",
+        )
+        util.formatted_flash("Media is toegevoegd.", color="green")
+        return redirect(url_for("profile_subproject", subproject_id=subproject.id))
+
+    return render_template(
+        "profile/subproject.html",
+        subproject=subproject,
         image=image,
         edit_attachment_form=edit_attachment_form,
         edit_project_profile_form=edit_project_profile_form,
@@ -663,7 +714,7 @@ def projectprofile(project_id):
 
 @app.route("/profiel-bewerken", methods=["GET", "POST"])
 @login_required
-def profile_edit():
+def profile_user_edit():
     edit_profile_form = EditProfileForm(prefix="edit_profile_form")
 
     edit_attachment_form = EditAttachmentForm(prefix="edit_attachment_form")
