@@ -9,11 +9,11 @@ from flask import (
     url_for,
 )
 from flask_login import current_user, login_required, login_user, logout_user
+from sqlalchemy import or_
 
 import app.controllers.index as ic
 import app.controllers.project as pc
 import app.controllers.subproject as subpc
-from sqlalchemy import or_
 from app import app, db, util
 from app.bng import get_bng_info, process_bng_callback
 from app.email import send_password_reset_email
@@ -24,10 +24,10 @@ from app.forms import (
     EditAdminForm,
     EditAttachmentForm,
     EditProfileForm,
+    EditProjectProfileForm,
     LoginForm,
     ResetPasswordForm,
     ResetPasswordRequestForm,
-    EditProjectProfileForm,
 )
 from app.models import (
     BNGAccount,
@@ -658,6 +658,9 @@ def profile_project(project_id):
         edit_project_profile_form=edit_project_profile_form,
         use_square_borders=app.config["USE_SQUARE_BORDERS"],
         footer=app.config["FOOTER"],
+        total_funder_budget=util.format_currency(
+            sum([x.budget for x in project.funders])
+        ),
     )
 
 
@@ -709,6 +712,9 @@ def profile_subproject(subproject_id):
         edit_project_profile_form=edit_project_profile_form,
         use_square_borders=app.config["USE_SQUARE_BORDERS"],
         footer=app.config["FOOTER"],
+        total_funder_budget=util.format_currency(
+            sum([x.budget for x in subproject.funders])
+        ),
     )
 
 

@@ -674,7 +674,10 @@ class Funder(db.Model, DefaultCRUD):
     )
 
     def get_formatted_currency(self):
-        return locale.format("%.2f", self.budget, grouping=True, monetary=True)
+        return "%s%s" % (
+            "€ ",
+            locale.format("%d", self.budget, grouping=True, monetary=True),
+        )
 
     @property
     def message_after_edit(self):

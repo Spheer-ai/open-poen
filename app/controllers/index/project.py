@@ -39,7 +39,9 @@ class Funder(FlaskForm):
     subsidy_number = StringField(
         "Beschikkingsnummer", validators=[DataRequired(), Length(max=120)]
     )
-    budget = IntegerField("Budget voor deze sponsor", validators=[validate_budget])
+    budget = IntegerField(
+        "Budget voor deze sponsor", validators=[DataRequired(), validate_budget]
+    )
     # TODO: Hide individual sponsors?
 
 

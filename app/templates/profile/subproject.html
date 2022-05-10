@@ -72,7 +72,7 @@
                 <tbody>
                     {% for funder in subproject.funders %}
                     <tr>
-                        <!-- TODO: How to render if the variable is None? -->
+                        <!-- No need to check if the value is None, because it's a required field in the funder form. -->
                         <td>{{ funder.name }}</td>
                         <td>{{ funder.subsidy }}</td>
                         <td>{{ funder.subsidy_number }}</td>
@@ -83,8 +83,10 @@
             </table>
         </div>
         {% endif %}
-        <!-- TODO: Totaal budget -->
     </div>
+    <br>
+    <br>
+    {{ macros.info_unit("Totaal budget:", total_funder_budget) }}
     <br>
     <br>
     <a href="{{ url_for('subproject', project_id=subproject.project.id, subproject_id=subproject.id) }}"><b>Activiteit
