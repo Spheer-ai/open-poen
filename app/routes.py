@@ -27,6 +27,7 @@ from app.forms import (
     LoginForm,
     ResetPasswordForm,
     ResetPasswordRequestForm,
+    EditProjectProfileForm,
 )
 from app.models import (
     BNGAccount,
@@ -612,14 +613,49 @@ def profile(user_id):
     )
 
 
-@app.route("/projectprofiel/<project_id>", methods=["GET"])
+@app.route("/projectprofiel/<project_id>", methods=["GET", "POST"])
 def projectprofile(project_id):
     project = Project.query.filter_by(id=project_id).first()
+
+    if not project:
+        return render_template(
+            "404.html",
+            use_square_borders=app.config["USE_SQUARE_BORDERS"],
+            footer=app.config["FOOTER"],
+        )
+
+    # TODO: Permissions
+
+    edit_attachment_form = EditAttachmentForm(prefix="edit_attachment_form")
+    if edit_attachment_form.remove.data:
+        File.query.filter_by(id=edit_attachment_form.id.data).delete()
+        db.session.commit()
+        flash('<span class="text-default-green">Media is verwijderd</span>')
+        return redirect(url_for("projectprofile", project_id=project.id))
+
+    image = File.query.filter_by(id=project.image).first()
+    if image is not None:
+        edit_attachment_form = EditAttachmentForm(
+            **image.__dict__, prefix="edit_attachment_form"
+        )
+
+    edit_project_profile_form = EditProjectProfileForm(prefix="edit_profile_form")
+    if (
+        util.validate_on_submit(edit_project_profile_form, request)
+        and edit_project_profile_form.data_file.data
+    ):
+        save_attachment(
+            edit_project_profile_form.data_file.data, "", project, "project-attachment"
+        )
+        flash('<span class="text-default-green">Profielfoto is toegevoegd.</span>')
+        return redirect(url_for("projectprofile", project_id=project.id))
 
     return render_template(
         "projectprofiel.html",
         project=project,
-        image=None,
+        image=image,
+        edit_attachment_form=edit_attachment_form,
+        edit_project_profile_form=edit_project_profile_form,
         use_square_borders=app.config["USE_SQUARE_BORDERS"],
         footer=app.config["FOOTER"],
     )

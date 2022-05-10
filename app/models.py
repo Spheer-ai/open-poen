@@ -246,6 +246,7 @@ class Project(db.Model, DefaultCRUD):
     project_location = db.Column(db.String(120))
     # TODO: budget_file
     budget = db.Column(db.Integer)
+    image = db.Column(db.Integer, db.ForeignKey("file.id", ondelete="SET NULL"))
 
     subprojects = db.relationship(
         "Subproject",
@@ -389,6 +390,7 @@ class Subproject(db.Model, DefaultCRUD):
     target_audience = db.Column(db.Text)
     hidden = db.Column(db.Boolean, default=False)
     budget = db.Column(db.Integer)
+    image = db.Column(db.Integer, db.ForeignKey("file.id", ondelete="SET NULL"))
 
     users = db.relationship(
         "User", secondary=subproject_user, backref="subprojects", lazy="dynamic"
@@ -725,7 +727,7 @@ def save_attachment(f, mediatype, db_object, folder):
 
     # Link attachment to payment in the database
     # If the db object is a User, then save as FK and store the id
-    if isinstance(db_object, User):
+    if isinstance(db_object, (User, Project, Subproject)):
         db_object.image = new_file.id
         db.session.commit()
     # Elif this is a Payment, then save as many-to-many and we need to append

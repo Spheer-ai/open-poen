@@ -488,6 +488,25 @@ class EditProfileForm(FlaskForm):
     submit = SubmitField("Opslaan", render_kw={"class": "btn btn-info"})
 
 
+class EditProjectProfileForm(FlaskForm):
+    allowed_extensions = ["jpg", "jpeg", "png"]
+    data_file = FileField(
+        "Voeg een profielfoto toe aan dit initiatief.",
+        validators=[
+            FileRequired(),
+            FileAllowed(
+                allowed_extensions,
+                (
+                    "bestandstype niet toegstaan. Enkel de volgende "
+                    "bestandstypen worden geaccepteerd: %s"
+                    % ", ".join(allowed_extensions)
+                ),
+            ),
+        ],
+    )
+    submit = SubmitField("Opslaan", render_kw={"class": "btn btn-info"})
+
+
 class CategoryForm(FlaskForm):
     name = StringField("Naam", validators=[DataRequired(), Length(max=120)])
     id = IntegerField(widget=HiddenInput())

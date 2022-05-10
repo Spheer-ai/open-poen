@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
 {% import "macros.html" as macros %}
 {% block head %}
 <title>Open Poen - Initiatiefprofiel</title>
@@ -8,19 +9,12 @@
 
 {% block content %}
 <div class="container">
-    {% if not project %}
-    <br>
-    <h1>Dit initiatief bestaat niet.</h1>
-    <br>
-    <br>
-    {% else %}
     <br>
     <h1>{{ project.name }}</h1>
     <br>
     <br>
     <div class="row">
         <div class="col-12 col-sm-9 col-md-6">
-            {{ macros.info_unit("Naam:", project.name) }}
             {{ macros.info_unit("Beschrijving:", project.description) }}
             {{ macros.info_unit("Doel:", project.purpose) }}
             {{ macros.info_unit("Doelgroep:", project.target_audience) }}
@@ -46,17 +40,32 @@
             {{ macros.info_unit("Locatie initiatief:", project.project_location) }}
         </div>
         <div class="col-12 col-sm-3 col-md-6">
-            <!-- TODO: Display image if it exists and allow user to upload it. -->
+            {% if image %}
             <div class="attachment-div">
-                {% if image.mimetype in ['image/jpeg', 'image/jpg', 'image/png'] %}
-                <a class="embed-responsive embed-responsive-1by1"
-                    href="{{ url_for('upload', filename='user-image/' + image.filename) }}" data-toggle="lightbox"
-                    data-gallery="image-gallery-{{ user.id }}">
+                <a class="embed-responsive embed-responsive-16by9"
+                    href="{{ url_for('upload', filename='project-attachment/' + image.filename) }}"
+                    data-toggle="lightbox" data-gallery="image-gallery-{{ project.id }}">
                     <img class="img-fluid embed-responsive-item attachment"
-                        src="{{ url_for('upload', filename='user-image/' + image.filename) }}">
+                        src="{{ url_for('upload', filename='project-attachment/' + image.filename) }}">
                 </a>
-                {% endif %}
             </div>
+            <button type="button" class="btn btn-danger" data-toggle="modal"
+                data-target="#bijlage-verwijder-{{ image.id }}">
+                Verwijderen
+            </button>
+            {{ macros.remove_attachment_modal(image, edit_attachment_form) }}
+            {% else %}
+            <form method="POST" enctype="multipart/form-data">
+                {{ edit_project_profile_form.csrf_token }}
+                {% for f in edit_project_profile_form %}
+                {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' %}
+                {{ wtf.form_field(f, class="form-control") }}
+                {% endif %}
+                {% endfor %}
+                {{ edit_project_profile_form.submit }}
+            </form>
+            {% endif %}
+            <hr>
             <b>Lopende activiteiten:</b>
             {% if project.subprojects | list | length > 0 %}
             <ul>
@@ -116,9 +125,6 @@
                             <br>
                             {% endfor %}
                             {% endif %}
-                            <!-- <a href="http://nu.nl">Dagtripje Duinrell</a>
-                            <br>
-                            Koken voor Ouderen -->
                         </td>
                     </tr>
                     {% endfor %}
@@ -137,6 +143,5 @@
     <br>
     <br>
     <b class="projectprofile-action">Verantwoorden</b>
-    {% endif %}
 </div>
 {% endblock %}
