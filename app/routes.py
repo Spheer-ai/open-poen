@@ -14,6 +14,7 @@ from sqlalchemy import or_
 import app.controllers.index as ic
 import app.controllers.project as pc
 import app.controllers.subproject as subpc
+from app.controllers.finish import FinishSubprojectController
 from app import app, db, util
 from app.bng import get_bng_info, process_bng_callback
 from app.email import send_password_reset_email
@@ -666,6 +667,8 @@ def profile_project(project_id):
 
 @app.route("/profiel/subproject/<subproject_id>", methods=["GET", "POST"])
 def profile_subproject(subproject_id):
+    modal_id = []
+
     subproject = Subproject.query.filter_by(id=subproject_id).first()
 
     if not subproject:
@@ -704,6 +707,14 @@ def profile_subproject(subproject_id):
         util.formatted_flash("Media is toegevoegd.", color="green")
         return redirect(url_for("profile_subproject", subproject_id=subproject.id))
 
+    controller = FinishSubprojectController(subproject)
+    controller.process_forms()
+    finish_subproject_form = controller.get_forms()
+    modal_id = controller.get_modal_ids(modal_id)
+
+    if len(modal_id) == 0:
+        modal_id = None
+
     return render_template(
         "profile/subproject.html",
         subproject=subproject,
@@ -715,6 +726,8 @@ def profile_subproject(subproject_id):
         total_funder_budget=util.format_currency(
             sum([x.budget for x in subproject.funders])
         ),
+        finish_subproject_form=finish_subproject_form,
+        modal_id=modal_id,
     )
 
 

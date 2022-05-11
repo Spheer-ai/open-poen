@@ -85,6 +85,10 @@
   color: $blue;
 }
 
+.projectprofile-action:hover {
+  cursor: pointer;
+}
+
 .active-subproject {
   color: $green;
 }

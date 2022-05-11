@@ -3,7 +3,7 @@ from time import time
 from typing import Callable, Dict, Optional, Union
 
 import jwt
-from flask import redirect, request, url_for
+from flask import redirect, request, url_for, Response
 from flask_login import current_user
 from flask_wtf import FlaskForm
 from requests import ConnectionError
@@ -26,7 +26,8 @@ def filter_fields(form: FlaskForm) -> Dict:
     # Set empty strings to None to keep everything consistent. Also because column like
     # foreign keys can't handle empty strings.
     for key, value in fields.items():
-        # In case of FieldLists. Extra check so that we skip data from QuerySelectMultipleField.
+        # In case of FieldLists. Extra check so that we skip data from
+        # QuerySelectMultipleField.
         if type(value) == list and not any([isinstance(i, db.Model) for i in value]):
             fields[key] = [
                 {k: (v if v != "" else None) for k, v in x.items()} for x in value
@@ -38,7 +39,6 @@ def filter_fields(form: FlaskForm) -> Dict:
 
 
 def return_redirect(project_id: int, subproject_id: Union[None, int]):
-    # Redirect back to clear form data
     if subproject_id:
         return redirect(
             url_for("subproject", project_id=project_id, subproject_id=subproject_id)
@@ -47,7 +47,7 @@ def return_redirect(project_id: int, subproject_id: Union[None, int]):
     return redirect(url_for("project", project_id=project_id))
 
 
-def process_bng_link_form(form):
+def process_bng_link_form(form: FlaskForm) -> Union[None, Response]:
     if not current_user.is_authenticated or not current_user.admin:
         return None
 
@@ -60,12 +60,12 @@ def process_bng_link_form(form):
         if len(bng_account) == 0:
             formatted_flash(
                 (
-                    "De BNG-koppeling is niet verwijderd. Alleen degene die de koppeling heeft aangemaakt, "
-                    "mag deze verwijderen."
+                    "De BNG-koppeling is niet verwijderd. Alleen degene die de "
+                    "koppeling heeft aangemaakt, mag deze verwijderen."
                 ),
                 color="red",
             )
-            return
+            return None
         bng_account = bng_account[0]
 
         # TODO: This returns a 401 now for the Sandbox, but I don't see how there is
@@ -78,17 +78,17 @@ def process_bng_link_form(form):
         return redirect(url_for("index"))
 
     if not util.validate_on_submit(form, request):
-        return
+        return None
 
     if form.iban.data in [x.iban for x in BNGAccount.query.all()]:
         formatted_flash(
             (
-                "Het aanmaken van de BNG-koppeling is mislukt. Er bestaat al een koppeling met"
-                f"deze IBAN: {form.iban.data}."
+                "Het aanmaken van de BNG-koppeling is mislukt. Er bestaat al "
+                f"een koppeling met deze IBAN: {form.iban.data}."
             ),
             color="red",
         )
-        return
+        return None
 
     try:
         consent_id, oauth_url = bng.create_consent(
@@ -98,13 +98,13 @@ def process_bng_link_form(form):
         app.logger.error(repr(e))
         formatted_flash(
             (
-                "Het aanmaken van de BNG-koppeling is mislukt door een verbindingsfout. De beheerder van Open "
-                "Poen is op de hoogte gesteld. Probeer het later nog eens, of neem contact op met de "
-                "beheerder."
+                "Het aanmaken van de BNG-koppeling is mislukt door een "
+                "verbindingsfout. De beheerder van Open Poen is op de hoogte gesteld. "
+                "Probeer het later nog eens, of neem contact op met de beheerder."
             ),
             color="red",
         )
-        return
+        return None
 
     bng_token = jwt.encode(
         {
@@ -149,8 +149,6 @@ def process_form(
     if not util.validate_on_submit(form, request):
         return None
 
-    # TODO: Make filter_fields work for nested dicts.
-    # TODO: Deal with Model instances in case of QueryMultipleSelectField.
     data = filter_fields(form)
 
     if hasattr(form, "id") and form.id.data is not None:

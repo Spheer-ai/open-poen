@@ -1,16 +1,14 @@
 import enum
 import locale
 from datetime import datetime
-from os import urandom
 from typing import Dict
 
 from babel.numbers import format_percent
 from flask import flash
 from flask_login import current_user
 
-from app import app, db
-from app.email import send_invite
-from app.models import Project, Subproject, User
+from app import app
+from app.models import Project, Subproject
 
 
 def formatted_flash(text, color):
@@ -86,7 +84,6 @@ def calculate_amounts(model, id, payments):
     return amounts
 
 
-# Check if the given form is in the request
 def form_in_request(form, request):
     if not request.form:
         return False
@@ -97,7 +94,6 @@ def form_in_request(form, request):
         return False
 
 
-# Output form errors to flashed messages
 def flash_form_errors(form, request):
     # Don't print the errors if the request doesn't contain values for
     # this form

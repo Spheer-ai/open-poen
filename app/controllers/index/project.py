@@ -1,4 +1,5 @@
 from app.controllers.util import Controller
+from app.controllers.forms import FunderForm, SubprojectBaseForm
 from app.form_processing import process_form
 from app.forms import (
     trim_whitespace,
@@ -26,25 +27,6 @@ from wtforms.widgets import HiddenInput
 ALLOWED_EXTENSIONS = [".pdf", ".xls", ".xlsx"]
 
 
-class Funder(FlaskForm):
-    class Meta:
-        csrf = False
-
-    name = StringField("Naam", validators=[DataRequired(), Length(max=120)])
-    # TODO: Not in design?
-    url = StringField("URL", validators=[DataRequired(), URL(), Length(max=2000)])
-    subsidy = StringField(
-        "Subsidieregeling", validators=[DataRequired(), Length(max=120)]
-    )
-    subsidy_number = StringField(
-        "Beschikkingsnummer", validators=[DataRequired(), Length(max=120)]
-    )
-    budget = IntegerField(
-        "Budget voor deze sponsor", validators=[DataRequired(), validate_budget]
-    )
-    # TODO: Hide individual sponsors?
-
-
 class DebitCard(FlaskForm):
     class Meta:
         csrf = False
@@ -61,18 +43,11 @@ class DebitCard(FlaskForm):
     # TODO: check all card numbers are unique.
 
 
-class Subproject(FlaskForm):
+class Subproject(SubprojectBaseForm):
     class Meta:
         csrf = False
 
-    name = StringField("Naam", validators=[DataRequired(), Length(max=120)])
-    description = TextAreaField("Beschrijving", validators=[DataRequired()])
-    purpose = TextAreaField("Doel", validators=[DataRequired()])
-    target_audience = TextAreaField("Doelgroep", validators=[DataRequired()])
     hidden = BooleanField("Activiteit verbergen")
-    budget = IntegerField(
-        "Budget voor deze activiteit", validators=[Optional(), validate_budget]
-    )
 
 
 class ProjectOwner(FlaskForm):
@@ -97,7 +72,7 @@ class ProjectForm(FlaskForm):
     )
 
     funders = FieldList(
-        FormField(Funder), min_entries=0, max_entries=None, validators=[]
+        FormField(FunderForm), min_entries=0, max_entries=None, validators=[]
     )
     hidden_sponsors = BooleanField("Sponsoren verbergen")
 

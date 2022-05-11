@@ -434,6 +434,10 @@ class Subproject(db.Model, DefaultCRUD):
             .all()
         )
 
+    def finish(self, budget, funders, **kwargs):
+        # TODO: Implement.
+        pass
+
     @property
     def message_after_edit(self):
         return f"Activiteit {self.name} is aangepast."

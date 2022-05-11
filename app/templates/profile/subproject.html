@@ -55,10 +55,10 @@
     <h1>Sponsoren</h1>
     <br>
     <br>
+    {% if subproject.funders | list | length == 0 %}
+    <p>Deze activiteit heeft nog geen sponsors.</p>
+    {% else %}
     <div class="row">
-        {% if subproject.funders | list | length == 0 %}
-        <p>Deze activiteit heeft nog geen sponsors.</p>
-        {% else %}
         <div class="table-responsive">
             <table class="table table-striped profile-table">
                 <thead>
@@ -82,8 +82,8 @@
                 </tbody>
             </table>
         </div>
-        {% endif %}
     </div>
+    {% endif %}
     <br>
     <br>
     {{ macros.info_unit("Totaal budget:", total_funder_budget) }}
@@ -94,6 +94,89 @@
     <br>
     <br>
     <!-- TODO -->
-    <b class="projectprofile-action">Activiteit afronden</b>
+    <a class="projectprofile-action" data-toggle="modal" data-target="#finish-subproject"><b>Activiteit afronden</b></a>
+
+    <div class="modal fade" id="finish-subproject" tabindex="-1" role="dialog" aria-labelledby="activiteitAfrondenLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <form method="POST" class="interactive-form" novalidate>
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="activiteitAfrondenLabel">Activiteit Afronden</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="interactive-unit">
+                            <p>U gaat deze activiteit afronden. Controleer de gegevens van deze activiteit.</p>
+                            {{ finish_subproject_form.csrf_token }}
+                            {{ finish_subproject_form.id }}
+                            {{ wtf.form_field(finish_subproject_form.name) }}
+                            {{ wtf.form_field(finish_subproject_form.description) }}
+                            {{ wtf.form_field(finish_subproject_form.purpose) }}
+                            {{ wtf.form_field(finish_subproject_form.target_audience) }}
+                        </div>
+                        <div class="interactive-unit">
+                            <p>U gaat deze activiteit afronden. Controleer de sponsor(s) van deze activiteit.</p>
+                            {% if finish_subproject_form.funders | list | length == 0 %}
+                            <i>Deze activiteit heeft geen sponsor(s).</i>
+                            <br>
+                            <br>
+                            {% else %}
+                            {% for funder in finish_subproject_form.funders %}
+                            <h2>Sponsor {{loop.index}}</h2>
+                            {{ funder.form.id }}
+                            {{ wtf.form_field(funder.form.name) }}
+                            {{ wtf.form_field(funder.form.subsidy) }}
+                            {{ wtf.form_field(funder.form.subsidy_number) }}
+                            {{ wtf.form_field(funder.form.url) }}
+                            {{ wtf.form_field(funder.form.budget) }}
+                            {% endfor %}
+                            {% endif %}
+                            <hr>
+                            {{ wtf.form_field(finish_subproject_form.budget) }}
+                        </div>
+                        <div class="interactive-unit">
+                            <p>U gaat deze activiteit afronden.</p>
+                            <br>
+                            <p>Beschrijf hieronder kort wat u heeft gedaan tijdens deze activiteit en welk resultaat
+                                deze activiteit heeft opgeleverd.</p>
+                            {{ wtf.form_field(finish_subproject_form.ending_description) }}
+                        </div>
+                        {% if finish_subproject_form.has_errors %}
+                        <div>
+                            <p style="color: red; margin-bottom: 0px;">Het formulier bevat fout(en).
+                                Doorloop het formulier opnieuw en
+                                volg
+                                de
+                                aanwijzingen op.
+                            </p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" onclick="wizard.prev()"
+                            class="btn btn-secondary interactive-prev">Vorige</button>
+                        <button type="button" class="btn btn-danger" data-dismiss="modal">Annuleren</button>
+                        {{ finish_subproject_form.submit }}
+                        <button type="button" onclick="wizard.next()"
+                            class="btn btn-primary interactive-next">Volgende</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
+{% endblock %}
+{% block scripts %}
+{% if modal_id is not none %}
+<script>
+    window.modal_id = {{ modal_id | safe }}
+</script>
+{% endif %}
+{{ super() }}
+<script>
+    window.wizard = new FormWizard(".interactive-form")
+</script>
 {% endblock %}
