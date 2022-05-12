@@ -247,6 +247,7 @@ class Project(db.Model, DefaultCRUD):
     # TODO: budget_file
     budget = db.Column(db.Integer)
     image = db.Column(db.Integer, db.ForeignKey("file.id", ondelete="SET NULL"))
+    justified = db.Column(db.Boolean, default=False)
 
     subprojects = db.relationship(
         "Subproject",
@@ -355,6 +356,10 @@ class Project(db.Model, DefaultCRUD):
 
         return project
 
+    def justify(self, **kwargs):
+        # TODO: Implement.
+        pass
+
     @property
     def message_after_edit(self):
         return f"Initiatief {self.name} is aangepast."
@@ -391,6 +396,7 @@ class Subproject(db.Model, DefaultCRUD):
     hidden = db.Column(db.Boolean, default=False)
     budget = db.Column(db.Integer)
     image = db.Column(db.Integer, db.ForeignKey("file.id", ondelete="SET NULL"))
+    finished = db.Column(db.Boolean, default=False)
 
     users = db.relationship(
         "User", secondary=subproject_user, backref="subprojects", lazy="dynamic"

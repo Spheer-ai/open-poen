@@ -150,6 +150,114 @@
     <br>
     <br>
     <!-- TODO -->
-    <b class="projectprofile-action">Verantwoorden</b>
+    <a class="projectprofile-action" data-toggle="modal" data-target="#finish-project"><b>Verantwoorden</b></a>
+
+    <div class="modal fade" id="finish-project" tabindex="-1" role="dialog"
+        aria-labelledby="initiatiefVerantwoordenLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <form method="POST" class="interactive-form" novalidate>
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="initiatiefVerantwoordenLabel">Verantwoorden</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="interactive-unit">
+                            {% if eligible_funders | length == 0 %}
+                            <p>Het is op dit moment niet mogelijk om een sponsor voor dit initiatief te verantwoorden,
+                                omdat elke sponsor minstens één onafgeronde activiteit bevat.</p>
+                            <p>Rond alle activiteiten voor een of meerde sponsoren af, om deze vervolgens hier te kunnen
+                                verantwoorden.</p>
+                            {% else %}
+                            <p>U gaat verantwoorden. Selecteer de sponsor die u wilt verantwoorden.</p>
+                            <ul style="list-style: none;">
+                                {% for funder in justify_project_form.funders %}
+                                <li>{{funder}} {{funder.label}}</li>
+                                {% endfor %}
+                            </ul>
+                            {% if ineligible_funders | length > 0 %}
+                            <p>De volgende sponsoren kunt u op dit moment niet verantwoorden, omdat deze nog onafgeronde
+                                activiteiten bevatten.</p>
+                            <ul style="list-style: none;">
+                                {% for ineligible_funder in ineligible_funders %}
+                                <li>{{ ineligible_funder }}</li>
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
+                            {% endif %}
+                        </div>
+                        {% if eligible_funders | length > 0 %}
+                        <div class="interactive-unit">
+                            <p>U gaat verantwoorden:</p>
+                            <ul style="list-style: none;">
+                                {% for funder_id, funder_info in eligible_funders.items() %}
+                                {% if loop.index > 1 %}
+                                {% set style = "display: none" %}
+                                {% endif %}
+                                <li class="funder-info" id="funder-info-{{funder_id}}" style="{{style}}">
+                                    <div class="bng-info-unit">
+                                        <i class="fas fa-check-square fa-lg"></i>
+                                        <p>{{ funder_info["funder"] }}</p>
+                                    </div>
+                                    <ul style="list-style: none;">
+                                        {% for subproject in funder_info["subprojects"] %}
+                                        <li>
+                                            <div class="bng-info-unit">
+                                                <i class="fas fa-check-square fa-lg"></i>
+                                                <p>{{ subproject }}</p>
+                                            </div>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            <!-- TODO: Non editable checkboxes for the selected funder. -->
+                        </div>
+                        <div class="interactive-unit">
+                            <p>U gaat uw initiatief verantwoorden. Let op: verantwoorden is een formele stap binnen het
+                                proces van subsidieverstrekking. Als u uw verantwoording verstuurt naar uw
+                                subsidieverstrekker, kunt u dit niet ongedaan maken.</p>
+                            <br>
+                            <p>Klik voor een conceptversie op 'Conceptversie downloaden'.</p>
+                            <br>
+                            <!-- TODO: Submit buttons. -->
+                        </div>
+                        {% endif %}
+                        {% if justify_project_form.has_errors %}
+                        <div>
+                            <p style="color: red; margin-bottom: 0px;">Het formulier bevat fout(en).
+                                Doorloop het formulier opnieuw en
+                                volg
+                                de
+                                aanwijzingen op.
+                            </p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" onclick="wizard.prev()"
+                            class="btn btn-secondary interactive-prev">Vorige</button>
+                        <button type="button" class="btn btn-danger" data-dismiss="modal">Annuleren</button>
+                        <button type="button" onclick="wizard.next()"
+                            class="btn btn-primary interactive-next">Volgende</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
+{% endblock %}
+{% block scripts %}
+{% if modal_id is not none %}
+<script>
+    window.modal_id = {{ modal_id | safe }}
+</script>
+{% endif %}
+{{ super() }}
+<script>
+    window.wizard = new FormWizard(".interactive-form")
+</script>
 {% endblock %}

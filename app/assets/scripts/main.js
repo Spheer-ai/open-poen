@@ -23,14 +23,14 @@ import transaction from './routes/transaction';
 import { config, library, dom } from '@fortawesome/fontawesome-svg-core';
 // Import required icons
 import {
-  faBars, faChevronDown, faFile, faCamera, faDownload, faReceipt, faWindowRestore,
-  faLink, faWifi, faCheckCircle, faSyncAlt, faPlus, faTrash
+  faBars, faChevronDown, faFile, faCamera, faDownload, faReceipt,
+  faLink, faWifi, faCheckCircle, faSyncAlt, faPlus, faTrash, faCheckSquare
 } from '@fortawesome/free-solid-svg-icons';
 import moment from 'moment';
 
 // Add the imported icons to the library
 library.add(faBars, faChevronDown, faFile, faCamera, faDownload, faReceipt, faLink, faWifi,
-  faCheckCircle, faSyncAlt, faPlus, faTrash);
+  faCheckCircle, faSyncAlt, faPlus, faTrash, faCheckSquare);
 
 // Tell FontAwesome to watch the DOM and add the SVGs when it detects icon markup
 dom.watch();
@@ -354,3 +354,20 @@ window.FormWizard = class FormWizard {
     this.removedCounter += 1
   }
 }
+
+window.setFunderInfo = function (activeFunder) {
+  console.log(this);
+}
+
+// $(".interactive-form").find("[type=radio]")
+
+$(".interactive-form").find("[type=radio]").click(function () {
+  // console.log(this.value) 
+  $(".interactive-form").find(".funder-info").hide()
+  $(".interactive-form").find("#funder-info-" + this.value).show()
+})
+
+
+// $('#betaalpas-saldo').on('shown.bs.modal', function () {
+//   $('.betaalpas-donut').each(function () { window.donut(this, "#004699", "#009de6") })
+// })

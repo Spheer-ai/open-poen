@@ -15,6 +15,7 @@ import app.controllers.index as ic
 import app.controllers.project as pc
 import app.controllers.subproject as subpc
 from app.controllers.finish import FinishSubprojectController
+from app.controllers.justify import JustifyProjectController
 from app import app, db, util
 from app.bng import get_bng_info, process_bng_callback
 from app.email import send_password_reset_email
@@ -616,6 +617,8 @@ def profile_user(user_id):
 
 @app.route("/profiel/project/<project_id>", methods=["GET", "POST"])
 def profile_project(project_id):
+    modal_id = []
+
     project = Project.query.filter_by(id=project_id).first()
 
     if not project:
@@ -651,6 +654,14 @@ def profile_project(project_id):
         util.formatted_flash("Media is toegevoegd.", color="green")
         return redirect(url_for("profile_project", project_id=project.id))
 
+    controller = JustifyProjectController(project)
+    controller.process_forms()
+    justify_project_form = controller.get_forms()
+    modal_id = controller.get_modal_ids(modal_id)
+
+    if len(modal_id) == 0:
+        modal_id = None
+
     return render_template(
         "profile/project.html",
         project=project,
@@ -662,6 +673,10 @@ def profile_project(project_id):
         total_funder_budget=util.format_currency(
             sum([x.budget for x in project.funders])
         ),
+        justify_project_form=justify_project_form,
+        eligible_funders=controller.eligible_funders,
+        ineligible_funders=controller.ineligible_funders,
+        modal_id=modal_id,
     )
 
 
