@@ -186,12 +186,12 @@
             </div>
 
             {% if permissions.SUBPROJECT_OWNER %}
-            <div class="project-modals-card bg-white">
+            <div class="project-modals-card bg-white" style="margin-bottom: 26px;">
 
               <div class="text-center">
 
                 <!-- Button trigger modal -->
-                <button type="button" class="btn btn-info project-modal-btn" data-toggle="modal"
+                <button type="button" class="btn btn-info modal-button" data-toggle="modal"
                   data-target="#betaalpas-saldo">
                   saldo betaalpas(sen)
                 </button>
@@ -244,7 +244,7 @@
                 </div>
 
                 <!-- Button trigger modal -->
-                <button type="button" class="btn btn-danger project-modal-btn" data-toggle="modal"
+                <button type="button" class="btn btn-danger modal-button" data-toggle="modal"
                   data-target="#betaalpas-kwijt">
                   ik ben een betaalpas kwijt
                 </button>
@@ -276,7 +276,7 @@
                 {% if permissions.PROJECT_OWNER %}
 
                 <!-- Button trigger modal -->
-                <button type="button" class="btn btn-primary project-modal-btn" data-toggle="modal"
+                <button type="button" class="btn btn-primary modal-button" data-toggle="modal"
                   data-target="#project-beheren">
                   initiatief beheren
                 </button>
@@ -449,6 +449,11 @@
                 </div>
 
                 {% endif %}
+
+                <a href="{{ url_for('profile_project', project_id=project.id) }}"><button type="button"
+                    class="btn btn-danger modal-button">
+                    initiatief bekijken
+                  </button></a>
 
               </div>
 

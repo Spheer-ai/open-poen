@@ -60,109 +60,119 @@
               <h3 class="text-center totaal">ontvangen inkomsten {{ amounts.awarded_str }}</h3>
               {% endif %}
 
-              {% if permissions.PROJECT_OWNER %}
-              <br>
-              <!-- Button trigger modal -->
-              <div class="text-center">
-                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#subproject-beheren">
-                  activiteit beheren
-                </button>
-              </div>
+              <div class="project-modals-card">
+                {% if permissions.PROJECT_OWNER %}
+                <br>
+                <!-- Button trigger modal -->
+                <div class="text-center">
+                  <button type="button" class="btn btn-primary modal-button" data-toggle="modal"
+                    data-target="#subproject-beheren">
+                    activiteit beheren
+                  </button>
 
-              <!-- Modal -->
-              <div class="modal fade text-left" id="subproject-beheren" tabindex="-1" role="dialog"
-                aria-labelledby="subprojectbeherenLabel" aria-hidden="true">
-                <div class="modal-dialog" role="document">
-                  <div class="modal-content">
-                    <form method="POST">
-                      <div class="modal-header">
-                        <h5 class="modal-title" id="subprojectbeherenLabel">Activiteit beheren</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
-                          <span aria-hidden="true">&times;</span>
-                        </button>
-                      </div>
-                      <div class="modal-body">
-                        <b>Categoriën</b>
-                        <br>
-                        <br>
-                        <!-- Button trigger modal -->
-                        <button type="button" class="btn button-poen-small bg-grey" data-toggle="modal"
-                          data-target="#categorie-toevoegen">
-                          categorie toevoegen
-                        </button>
-                        <br>
-                        <br>
+                  <!-- Modal -->
+                  <div class="modal fade text-left" id="subproject-beheren" tabindex="-1" role="dialog"
+                    aria-labelledby="subprojectbeherenLabel" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                      <div class="modal-content">
+                        <form method="POST">
+                          <div class="modal-header">
+                            <h5 class="modal-title" id="subprojectbeherenLabel">Activiteit beheren</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
+                              <span aria-hidden="true">&times;</span>
+                            </button>
+                          </div>
+                          <div class="modal-body">
+                            <b>Categoriën</b>
+                            <br>
+                            <br>
+                            <!-- Button trigger modal -->
+                            <button type="button" class="btn button-poen-small bg-grey" data-toggle="modal"
+                              data-target="#categorie-toevoegen">
+                              categorie toevoegen
+                            </button>
+                            <br>
+                            <br>
 
-                        {% for category_form, category_name in category_forms %}
-                        <!-- Button trigger modal -->
-                        <div>
-                          <button type="button" class="btn button-poen-small bg-grey-blue" data-toggle="modal"
-                            data-target="#categorie-beheren-{{ category_form.id.data }}">
-                            categorie beheren
-                          </button>
-                          {{ category_name }}
-                        </div>
-                        <br>
-                        {% endfor %}
+                            {% for category_form, category_name in category_forms %}
+                            <!-- Button trigger modal -->
+                            <div>
+                              <button type="button" class="btn button-poen-small bg-grey-blue" data-toggle="modal"
+                                data-target="#categorie-beheren-{{ category_form.id.data }}">
+                                categorie beheren
+                              </button>
+                              {{ category_name }}
+                            </div>
+                            <br>
+                            {% endfor %}
 
-                        <hr>
+                            <hr>
 
-                        <div>
-                          {{ subproject_form.csrf_token }}
+                            <div>
+                              {{ subproject_form.csrf_token }}
 
-                          {% for f in subproject_form %}
-                          {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' %}
-                          {{ wtf.form_field(f, class="form-control") }}
-                          {% endif %}
-                          {% endfor %}
-                          {{ subproject_form.project_id }}
-                          {{ subproject_form.id }}
-                        </div>
-                      </div>
-                      <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
-                        <!-- Button trigger modal -->
-                        <button type="button" class="btn btn-danger" data-toggle="modal"
-                          data-target="#subproject-verwijder">
-                          Verwijderen
-                        </button>
-
-                        {{ subproject_form.submit }}
-
-                        <!-- Modal -->
-                        <div class="modal fade" id="subproject-verwijder" tabindex="-1" role="dialog"
-                          aria-labelledby="subprojectVerwijderLabel" aria-hidden="true">
-                          <div class="modal-dialog" role="document">
-                            <div class="modal-content">
-                              <form method="POST">
-                                <div class="modal-header">
-                                  <h5 class="modal-title" id="subprojectVerwijderLabel">Activiteit Verwijderen</h5>
-                                  <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
-                                    <span aria-hidden="true">&times;</span>
-                                  </button>
-                                </div>
-                                <div class="modal-body">
-                                  <div>
-                                    <p>Weet u zeker dat u activiteit "<b>{{ subproject['name'] }}</b>" wilt verwijderen?
-                                      Als u een activiteit niet wilt tonen aan het publiek kunt u de activiteit ook
-                                      'verbergen' in plaats van verwijderen.</p>
-                                  </div>
-                                </div>
-                                <div class="modal-footer">
-                                  <button type="button" class="btn btn-secondary"
-                                    data-dismiss="modal">Annuleren</button>
-                                  {{ subproject_form.remove }}
-                                </div>
-                              </form>
+                              {% for f in subproject_form %}
+                              {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' %}
+                              {{ wtf.form_field(f, class="form-control") }}
+                              {% endif %}
+                              {% endfor %}
+                              {{ subproject_form.project_id }}
+                              {{ subproject_form.id }}
                             </div>
                           </div>
-                        </div>
+                          <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
+                            <!-- Button trigger modal -->
+                            <button type="button" class="btn btn-danger" data-toggle="modal"
+                              data-target="#subproject-verwijder">
+                              Verwijderen
+                            </button>
+
+                            {{ subproject_form.submit }}
+
+                            <!-- Modal -->
+                            <div class="modal fade" id="subproject-verwijder" tabindex="-1" role="dialog"
+                              aria-labelledby="subprojectVerwijderLabel" aria-hidden="true">
+                              <div class="modal-dialog" role="document">
+                                <div class="modal-content">
+                                  <form method="POST">
+                                    <div class="modal-header">
+                                      <h5 class="modal-title" id="subprojectVerwijderLabel">Activiteit Verwijderen</h5>
+                                      <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
+                                        <span aria-hidden="true">&times;</span>
+                                      </button>
+                                    </div>
+                                    <div class="modal-body">
+                                      <div>
+                                        <p>Weet u zeker dat u activiteit "<b>{{ subproject['name'] }}</b>" wilt
+                                          verwijderen?
+                                          Als u een activiteit niet wilt tonen aan het publiek kunt u de activiteit ook
+                                          'verbergen' in plaats van verwijderen.</p>
+                                      </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                      <button type="button" class="btn btn-secondary"
+                                        data-dismiss="modal">Annuleren</button>
+                                      {{ subproject_form.remove }}
+                                    </div>
+                                  </form>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </form>
                       </div>
-                    </form>
+                    </div>
                   </div>
+                  {% endif %}
+
+                  <a href="{{ url_for('profile_subproject', subproject_id=subproject.id) }}">
+                    <button type="button" class="btn btn-danger modal-button">
+                      activiteit bekijken
+                    </button>
+                  </a>
                 </div>
               </div>
-              {% endif %}
             </div>
           </div>
 
@@ -220,7 +230,8 @@
                               </div>
                               <div class="modal-body">
                                 <p>Als er nog geen gebruiker bestaat met dit e-mailadres dan krijgt deze een
-                                  uitnodigingsmail met daarin een link om een wachtwoord aan te maken. Als er wel al een
+                                  uitnodigingsmail met daarin een link om een wachtwoord aan te maken. Als er wel al
+                                  een
                                   gebruiker bestaat met dit e-mailadres dan krijgt deze gebruiker toegang tot deze
                                   activiteit (er wordt daar geen e-mail over verstuurd).</p>
                                 <div>
@@ -257,7 +268,8 @@
                             <div class="modal-content">
                               <form method="POST">
                                 <div class="modal-header">
-                                  <h5 class="modal-title" id="activiteitnemerbeherenLabel">Activiteitnemer beheren</h5>
+                                  <h5 class="modal-title" id="activiteitnemerbeherenLabel">Activiteitnemer beheren
+                                  </h5>
                                   <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
                                     <span aria-hidden="true">&times;</span>
                                   </button>
@@ -388,7 +400,8 @@
                               <div class="embed-responsive-item bg-grey attachment d-flex"
                                 style="word-wrap: break-word">
                                 <i class="fas fa-file w-75 h-75 mx-auto my-auto text-blue-light"></i>
-                                <span class="w-100 fa-layers-text text-color-main">{{ attachment.mimetype.split('/')[1]
+                                <span class="w-100 fa-layers-text text-color-main">{{
+                                  attachment.mimetype.split('/')[1]
                                   }}</span>
                               </div>
                             </a>
@@ -443,7 +456,8 @@
                   {# Hidden column used to make search work with the detailed view; NOTE: the id should always be the
                   first column of the table #}
                   <th data-force-hide="true" class="d-none">id</th>
-                  <th data-force-hide="true" data-sortable="true" data-field="bedrag" data-sorter="customSort">bedrag €
+                  <th data-force-hide="true" data-sortable="true" data-field="bedrag" data-sorter="customSort">bedrag
+                    €
                   </th>
                   <th data-sortable="true" data-field="betaalpas" class="d-none d-xl-table-cell">betaalpas</th>
                   <th data-sortable="true" data-field="ontvanger" class="d-none d-md-table-cell">ontvanger</th>
