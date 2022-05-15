@@ -285,16 +285,18 @@
                             <div class="interactive-unit">
                               <h2>Betaalpas(sen) initiatief</h2>
                               <hr>
-                              {% for card_number in project_form.card_numbers %}
-                              <div class="card_number" , id="card_number-{{loop.index - 1}}">
-                                <div style="display: flex">
-                                  {{ wtf.form_field(card_number.form.card_number, class="form-control-sm",
-                                  form_type="inline") }}
-                                  {{ macros.trashbin('#card_number-', loop.index - 1, True) }}
+                              <div class="card_number_all">
+                                {% for card_number in project_form.card_numbers %}
+                                <div class="card_number" , id="card_number-{{loop.index - 1}}">
+                                  <div style="display: flex">
+                                    {{ wtf.form_field(card_number.form.card_number, class="form-control-sm",
+                                    form_type="inline") }}
+                                    {{ macros.trashbin('#card_number-', loop.index - 1, True) }}
+                                  </div>
+                                  {{ macros.render_single_field_field_list_errors(card_number) }}
                                 </div>
-                                {{ macros.render_single_field_field_list_errors(card_number) }}
+                                {% endfor %}
                               </div>
-                              {% endfor %}
                               {{ macros.plussign("card_number", "betaalpas") }}
                             </div>
                             <div class="interactive-unit">

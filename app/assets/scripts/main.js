@@ -277,6 +277,12 @@ window.FormWizard = class FormWizard {
     $(this.units.get(this.idx)).show()
     this.set_buttons()
     this.removedCounter = 0
+    this.removedElements = {
+      "#funder-": [],
+      "#card_number-": [],
+      "#subproject-": [],
+      "#project_owner-": []
+    }
     // Relevant attributes for constructing the next batch of fields.
     this.attrsToEdit = ["id", "name", "for"]
   }
@@ -324,9 +330,16 @@ window.FormWizard = class FormWizard {
     let className = "." + name;  // ".funder"
     let inputIdPrefix = name + "s-"  // "funders-"
     let formIdPrefix = "#" + name + "-"  // "#funder-"
-
+    let collectClass = "." + name + "_all"
     let x = $(this.unitClass).find(className);
-    let newIdx = x.length + this.removedCounter
+    let newIdx = x.length
+
+    // Check if removed previously. If so, insert.
+    if (this.removedElements[formIdPrefix].length > 0) {
+      $(collectClass).append(this.removedElements[formIdPrefix].pop())
+      return
+    }
+
     let last = x.last().clone(true);
     let attrs = this.attrsToEdit
     let pattern = new RegExp(inputIdPrefix + "\\d+")
@@ -347,13 +360,15 @@ window.FormWizard = class FormWizard {
     });
     last.find(".help-block").remove(); // Remove form errrors.
     last.attr("id", name + "-" + newIdx) // Set new id.
-    last.find("svg").attr("onclick", "wizard.remove('" + formIdPrefix + "', '" + newIdx + "')") // Make it removable.
-    last.insertAfter(x.last());
+    last.find(".addproject-action").attr("onclick", "wizard.remove('" + formIdPrefix + "', '" + newIdx + "')") // Make it removable.
+    // last.insertAfter(x.last());
+    $(collectClass).append(last)
   }
 
   remove(idPrefix, idx) {
     let x = $(idPrefix + idx)
-    x.remove()
+    x.detach()
+    this.removedElements[idPrefix].push(x)
     this.removedCounter += 1
   }
 }

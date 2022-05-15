@@ -177,15 +177,15 @@
 {% else %}
 {% set styling = "" %}
 {% endif %}
-<div class="bng-info-unit" style="{{styling}}">
-    <i class="fas fa-trash fa-2x" onclick="wizard.remove('{{id}}', '{{idx}}')"></i>
+<div class="bng-info-unit addproject-action" style="{{styling}}" onclick="wizard.remove('{{id}}', '{{idx}}')">
+    <i class="fas fa-trash fa-2x"></i>
     <p>Verwijderen</p>
 </div>
 {% endmacro %}
 
 {% macro plussign(entity, name) %}
-<div class="bng-info-unit">
-    <i class="fas fa-plus fa-2x" onclick="wizard.add('{{entity}}')"></i>
+<div class="bng-info-unit addproject-action" onclick="wizard.add('{{entity}}')">
+    <i class="fas fa-plus fa-2x"></i>
     <p>Extra {{ name }} toevoegen.</p>
 </div>
 {% endmacro %}
