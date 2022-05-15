@@ -220,10 +220,18 @@
                             <p>U gaat uw initiatief verantwoorden. Let op: verantwoorden is een formele stap binnen het
                                 proces van subsidieverstrekking. Als u uw verantwoording verstuurt naar uw
                                 subsidieverstrekker, kunt u dit niet ongedaan maken.</p>
+                            <p>Wilt u dit nog niet doen en alleen
+                                uw verantwoording bekijken ter controle? Klik dan op de onderstaande knop om de
+                                conceptversie te downloaden.</p>
+                            <div class="form-action">
+                                {{ justify_project_form.concept }}
+                            </div>
                             <br>
-                            <p>Klik voor een conceptversie op 'Conceptversie downloaden'.</p>
-                            <br>
-                            <!-- TODO: Submit buttons. -->
+                            <p>Als u wel uw initiatief definitief wil verantwoorden, klik dan op de onderstaande knop.
+                            </p>
+                            <div class="form-action">
+                                {{ justify_project_form.justify }}
+                            </div>
                         </div>
                         {% endif %}
                         {% if justify_project_form.has_errors %}
