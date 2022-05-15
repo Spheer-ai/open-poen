@@ -146,17 +146,18 @@
     <br>
     <br>
     <!-- TODO -->
-    <b class="projectprofile-action">Tussentijds rapporteren</b>
+    <a href="projectprofile-action" data-toggle="modal" data-target="#concept-justify-project"><b
+            class="projectprofile-action">Tussentijds rapporteren</b></a>
     <br>
     <br>
     <!-- TODO -->
-    <a class="projectprofile-action" data-toggle="modal" data-target="#finish-project"><b>Verantwoorden</b></a>
+    <a class="projectprofile-action" data-toggle="modal" data-target="#justify-project"><b>Verantwoorden</b></a>
 
-    <div class="modal fade" id="finish-project" tabindex="-1" role="dialog"
+    <div class="modal fade" id="justify-project" tabindex="-1" role="dialog"
         aria-labelledby="initiatiefVerantwoordenLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
-                <form method="POST" class="interactive-form" novalidate>
+                <form method="POST" id="justify-interactive-form" class="interactive-form" novalidate>
                     <div class="modal-header">
                         <h5 class="modal-title" id="initiatiefVerantwoordenLabel">Verantwoorden</h5>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
@@ -165,6 +166,7 @@
                     </div>
                     <div class="modal-body">
                         <div class="interactive-unit">
+                            {{ justify_project_form.csrf_token }}
                             {% if eligible_funders | length == 0 %}
                             <p>Het is op dit moment niet mogelijk om een sponsor voor dit initiatief te verantwoorden,
                                 omdat elke sponsor minstens één onafgeronde activiteit bevat.</p>
@@ -246,12 +248,56 @@
                         {% endif %}
                     </div>
                     <div class="modal-footer">
-                        <button type="button" onclick="wizard.prev()"
+                        <button type="button" onclick="justifyWizard.prev()"
                             class="btn btn-secondary interactive-prev">Vorige</button>
                         <button type="button" class="btn btn-danger" data-dismiss="modal">Annuleren</button>
-                        <button type="button" onclick="wizard.next()"
+                        <button type="button" onclick="justifyWizard.next()"
                             class="btn btn-primary interactive-next">Volgende</button>
                     </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="concept-justify-project" tabindex="-1" role="dialog"
+        aria-labelledby="initiatiefTussentijdsRapporterenLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <form method="POST" id="concept-justify-interactive-form" class="interactive-form" novalidate>
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="initiatiefTussentijdsRapporterenLabel">Tussentijds Rapporteren
+                        </h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        {{ justify_project_form.csrf_token }}
+                        <div class="interactive-unit">
+
+                        </div>
+                        <div class="interactive-unit">
+
+                        </div>
+                        <div class="interactive-unit">
+                            {% if justify_project_form.has_errors %}
+                            <div>
+                                <p style="color: red; margin-bottom: 0px;">Het formulier bevat fout(en).
+                                    Doorloop het formulier opnieuw en
+                                    volg
+                                    de
+                                    aanwijzingen op.
+                                </p>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" onclick="conceptJustifyWizard.prev()"
+                                class="btn btn-secondary interactive-prev">Vorige</button>
+                            <button type="button" class="btn btn-danger" data-dismiss="modal">Annuleren</button>
+                            <button type="button" onclick="conceptJustifyWizard.next()"
+                                class="btn btn-primary interactive-next">Volgende</button>
+                        </div>
                 </form>
             </div>
         </div>
@@ -266,6 +312,7 @@
 {% endif %}
 {{ super() }}
 <script>
-    window.wizard = new FormWizard(".interactive-form")
+    window.justifyWizard = new FormWizard("#justify-interactive-form")
+    window.conceptJustifyWizard = new FormWizard("#concept-justify-interactive-form")
 </script>
 {% endblock %}

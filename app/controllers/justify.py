@@ -3,6 +3,8 @@ from app.form_processing import process_form
 from app.models import Project
 from flask_wtf import FlaskForm
 from wtforms.fields import SubmitField, RadioField
+from app.util import form_in_request
+from flask import request
 
 
 class JustifyProjectForm(FlaskForm):
@@ -33,7 +35,7 @@ class JustifyProjectController(Controller):
             if not unfinished_subproject:
                 # For the form.
                 self.form.funders.choices.append(
-                    (funder.id, f"{funder.subsidy_number} - {funder.name}")
+                    (str(funder.id), f"{funder.subsidy_number} - {funder.name}")
                 )
                 if self.form.funders.default is None:
                     self.form.funders.default = str(funder.id)
@@ -48,7 +50,8 @@ class JustifyProjectController(Controller):
                 self.ineligible_funders.append(
                     f"{funder.subsidy_number} - {funder.name}"
                 )
-        self.form.process()
+        if not form_in_request(self.form, request):
+            self.form.process()  # This removes the CSRF token if the form is being submitted.
 
     def process(self, form):
         status = process_form(form, Project, alt_update=Project.justify)

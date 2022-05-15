@@ -3,3 +3,11 @@
     justify-content: center;
     padding: 1em;
 }
+
+.projectprofile-action {
+    color: $blue;
+}
+
+.projectprofile-action:hover {
+    cursor: pointer;
+}

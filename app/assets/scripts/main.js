@@ -266,6 +266,7 @@ $(window).on('load', function () {
 
 window.FormWizard = class FormWizard {
   constructor(unitClass) {
+    this.unitClass = unitClass
     this.idx = 0;
     this.prev_button = $(unitClass + " .interactive-prev")
     this.next_button = $(unitClass + " .interactive-next")
@@ -322,7 +323,7 @@ window.FormWizard = class FormWizard {
     let inputIdPrefix = name + "s-"  // "funders-"
     let formIdPrefix = "#" + name + "-"  // "#funder-"
 
-    let x = $(".interactive-form").find(className);
+    let x = $(this.unitClass).find(className);
     let newIdx = x.length + this.removedCounter
     let last = x.last().clone(true);
     let attrs = this.attrsToEdit

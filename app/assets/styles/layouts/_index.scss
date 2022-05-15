@@ -53,40 +53,12 @@
   margin-left: 1rem;
 }
 
-.interactive-form .interactive-unit {
-  display: none;
-}
-
-.interactive-unit h2 {
-  margin-bottom: 1rem;
-  color: #3D46CB;
-}
-
-.interactive-form .modal-body {
-  min-height: 65vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-.interactive-form .modal-footer {
-  justify-content: space-between
-}
-
 .profile-table th {
   color: $text-color-main;
 }
 
 .profile-table td {
   color: $text-color-main;
-}
-
-.projectprofile-action {
-  color: $blue;
-}
-
-.projectprofile-action:hover {
-  cursor: pointer;
 }
 
 .active-subproject {
