@@ -18,6 +18,7 @@ import Router from './util/Router';
 import common from './routes/common';
 import home from './routes/home';
 import transaction from './routes/transaction';
+import projectprofile from './routes/projectprofile'
 
 // Import the needed Font Awesome functionality
 import { config, library, dom } from '@fortawesome/fontawesome-svg-core';
@@ -43,6 +44,7 @@ const routes = new Router({
   home,
   // Project and Subproject pages can add new transactions
   transaction,
+  projectprofile,
 });
 
 // Load events
@@ -355,20 +357,3 @@ window.FormWizard = class FormWizard {
     this.removedCounter += 1
   }
 }
-
-window.setFunderInfo = function (activeFunder) {
-  console.log(this);
-}
-
-// $(".interactive-form").find("[type=radio]")
-
-$(".interactive-form").find("[type=radio]").click(function () {
-  // console.log(this.value) 
-  $(".interactive-form").find(".funder-info").hide()
-  $(".interactive-form").find("#funder-info-" + this.value).show()
-})
-
-
-// $('#betaalpas-saldo').on('shown.bs.modal', function () {
-//   $('.betaalpas-donut').each(function () { window.donut(this, "#004699", "#009de6") })
-// })

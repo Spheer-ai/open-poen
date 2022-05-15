@@ -2,18 +2,31 @@ from app.controllers.util import Controller
 from app.form_processing import process_form
 from app.models import Project
 from flask_wtf import FlaskForm
-from wtforms.fields import SubmitField, RadioField
+from wtforms.fields import SubmitField, RadioField, IntegerField
+from wtforms.widgets import HiddenInput
 from app.util import form_in_request
 from flask import request
 
 
 class JustifyProjectForm(FlaskForm):
+    id = IntegerField(widget=HiddenInput())
     funders = RadioField(choices=[])
     concept = SubmitField(
         "Conceptversie downloaden", render_kw={"class": "btn btn-danger"}
     )
-    justify = SubmitField(
-        "Verantwoording versturen", render_kw={"class": "btn btn-info"}
+    send = SubmitField("Verantwoording versturen", render_kw={"class": "btn btn-info"})
+
+    has_errors = False
+
+
+class ConceptJustifyProjectForm(FlaskForm):
+    id = IntegerField(widget=HiddenInput())
+    funders = RadioField(choices=[])
+    concept = SubmitField(
+        "Conceptversie downloaden", render_kw={"class": "btn btn-danger"}
+    )
+    send = SubmitField(
+        "Tussentijdse rapportage verzenden", render_kw={"class": "btn btn-info"}
     )
 
     has_errors = False
@@ -24,51 +37,60 @@ class JustifyProjectController(Controller):
         # TODO: Permissions.
         # self.clearance = clearance
         self.project = project
-        self.form = JustifyProjectForm()
+        self.justify_form = JustifyProjectForm(id=project.id)
+        self.concept_justify_form = ConceptJustifyProjectForm(id=project.id)
         funders = self.project.funders.all()
-        self.eligible_funder_count = 0
-        self.eligible_funders = {}
-        self.ineligible_funders = []
+
+        self.funder_info = {}
         for funder in funders:
             subprojects = funder.subprojects.all()
             unfinished_subproject = any([not x.finished for x in subprojects])
-            if not unfinished_subproject:
-                # For the form.
-                self.form.funders.choices.append(
-                    (str(funder.id), f"{funder.subsidy_number} - {funder.name}")
-                )
-                if self.form.funders.default is None:
-                    self.form.funders.default = str(funder.id)
-                # For the confirmation what activities will be justified.
-                self.eligible_funders[funder.id] = {
-                    "funder": f"{funder.subsidy_number} - {funder.name}",
-                    "subprojects": [x.name for x in subprojects],
-                }
-            else:
-                # For showing what funders are not shown because of incomplete
-                # activities.
-                self.ineligible_funders.append(
-                    f"{funder.subsidy_number} - {funder.name}"
-                )
-        if not form_in_request(self.form, request):
-            self.form.process()  # This removes the CSRF token if the form is being submitted.
+            funder.eligible = False if unfinished_subproject else True
+            self.funder_info[funder.id] = {
+                "name": f"{funder.subsidy_number} - {funder.name}",
+                "subprojects": [x.name for x in subprojects],
+                "eligible": funder.eligible,
+            }
+
+        all_choices = [(str(x.id), f"{x.subsidy_number} - {x.name}") for x in funders]
+        eligible_choices = [
+            x for x, funder in zip(all_choices, funders) if funder.eligible
+        ]
+        self.justify_form.funders.choices = eligible_choices
+        self.justify_form.funders.default = eligible_choices[0][0]
+        self.concept_justify_form.funders.choices = all_choices
+        self.concept_justify_form.funders.default = all_choices[0][0]
+
+        # Otherwise the CSRF token is removed when this form is submitted.
+        if not form_in_request(self.justify_form, request):
+            self.justify_form.process()
+        if not form_in_request(self.concept_justify_form, request):
+            self.concept_justify_form.process()
 
     def process(self, form):
         status = process_form(form, Project, alt_update=Project.justify)
         return None
 
     def get_forms(self):
-        if len(self.form.errors) > 0:
-            self.form.has_errors = True
-        return self.form
+        if len(self.justify_form.errors) > 0:
+            self.justify_form.has_errors = True
+        return self.justify_form
+
+    def get_concept_justify_form(self):
+        if len(self.concept_justify_form.errors) > 0:
+            self.concept_justify_form.has_errors = True
+        return self.concept_justify_form
 
     def process_forms(self):
-        redirect = self.process(self.form)
+        redirect = self.process(self.justify_form)
+        if redirect:
+            return redirect
+        redirect = self.process(self.concept_justify_form)
         if redirect:
             return redirect
 
     def get_modal_ids(self, modals):
-        if len(self.form.errors) > 0:
+        if len(self.justify_form.errors) > 0:
             assert len(modals) == 0
             modals.append("#justify-project")
         return modals

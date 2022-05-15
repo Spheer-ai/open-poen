@@ -657,6 +657,7 @@ def profile_project(project_id):
     controller = JustifyProjectController(project)
     controller.process_forms()
     justify_project_form = controller.get_forms()
+    concept_justify_project_form = controller.get_concept_justify_form()
     modal_id = controller.get_modal_ids(modal_id)
 
     if len(modal_id) == 0:
@@ -674,8 +675,8 @@ def profile_project(project_id):
             sum([x.budget for x in project.funders])
         ),
         justify_project_form=justify_project_form,
-        eligible_funders=controller.eligible_funders,
-        ineligible_funders=controller.ineligible_funders,
+        concept_justify_project_form=concept_justify_project_form,
+        funder_info=controller.funder_info,
         modal_id=modal_id,
     )
 

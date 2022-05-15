@@ -7,279 +7,249 @@
 {{ super() }}
 {% endblock %}
 
-{% block content %}
-<div class="container">
-    <br>
-    <h1>{{ project.name }}</h1>
-    <br>
-    <br>
-    <div class="row">
-        <div class="col-12 col-sm-9 col-md-6">
-            {{ macros.info_unit("Beschrijving:", project.description) }}
-            {{ macros.info_unit("Doel:", project.purpose) }}
-            {{ macros.info_unit("Doelgroep:", project.target_audience) }}
-            {{ macros.info_unit("Beheerder:", project.owner) }}
-            {{ macros.info_unit("E-mail beheerder:", project.owner_email) }}
-            <b>Initiatiefnemers</b>
-            <br>
-            {% if project.users | list | length > 0 %}
-            <ul>
-                {% for user in project.users %}
-                <li><a href="{{ url_for('profile_user', user_id=user.id) }}">{{ user.first_name }} {{ user.last_name
-                        }}</a>
-                </li>
-                {% endfor %}
-            </ul>
-            {% else %}
-            <i>Dit initiatief heeft nog geen initiatiefnemers.</i>
-            <br>
-            <br>
-            {% endif %}
-            {{ macros.info_unit("Rechtsvorm:", project.legal_entity) }}
-            {{ macros.info_unit("Adres aanvrager:", project.address_applicant) }}
-            {{ macros.info_unit("KvK:", project.registration_kvk) }}
-            {{ macros.info_unit("Locatie initiatief:", project.project_location) }}
-        </div>
-        <div class="col-12 col-sm-3 col-md-6">
-            {% if image %}
-            <div class="attachment-div">
-                <a class="embed-responsive embed-responsive-16by9"
-                    href="{{ url_for('upload', filename='project-attachment/' + image.filename) }}"
-                    data-toggle="lightbox" data-gallery="image-gallery-{{ project.id }}">
-                    <img class="img-fluid embed-responsive-item attachment"
-                        src="{{ url_for('upload', filename='project-attachment/' + image.filename) }}">
-                </a>
-            </div>
-            <button type="button" class="btn btn-danger" data-toggle="modal"
-                data-target="#bijlage-verwijder-{{ image.id }}">
-                Verwijderen
-            </button>
-            {{ macros.remove_attachment_modal(image, edit_attachment_form) }}
-            {% else %}
-            <form method="POST" enctype="multipart/form-data">
-                {{ edit_project_profile_form.csrf_token }}
-                {% for f in edit_project_profile_form %}
-                {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' %}
-                {{ wtf.form_field(f, class="form-control") }}
-                {% endif %}
-                {% endfor %}
-                {{ edit_project_profile_form.submit }}
-            </form>
-            {% endif %}
-            <hr>
-            <b>Lopende activiteiten:</b>
-            {% if project.subprojects | list | length > 0 %}
-            <ul>
-                {% for subproject in project.subprojects %}
-                <li><a href="{{ url_for('subproject', project_id=project.id, subproject_id=subproject.id) }}">{{
-                        subproject.name}}</a></li>
-                {% endfor %}
-            </ul>
-            {% else %}
-            <i>Er zijn geen lopende activiteiten.</i>
-            <br>
-            <br>
-            {% endif %}
-            <b>Afgeronde activiteiten:</b>
-            <!-- TODO -->
-            <br>
-            <br>
-            <b>Verantwoorde activiteiten:</b>
-            <!-- TODO -->
-            <br>
-            <br>
-        </div>
-    </div>
-    <br>
-    <h1>Sponsoren:</h1>
-    <br>
-    <br>
-    <div class="row">
-        {% if project.funders | list | length == 0 %}
-        <p>Dit initiatief heeft nog geen sponsors.</p>
-        {% else %}
-        <div class="table-responsive">
-            <table class="table table-striped profile-table">
-                <thead>
-                    <tr>
-                        <th scope="col">Sponsor(s):</th>
-                        <th scope="col">Subsidieregeling:</th>
-                        <th scope="col">Beschikkingsnummer:</th>
-                        <th scope="col">Budget:</th>
-                        <th scope="col">Activiteiten:</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for funder in project.funders %}
-                    <tr>
-                        <!-- No need to check if the value is None, because it's a required field in the funder form. -->
-                        <td>{{ funder.name }}</td>
-                        <td>{{ funder.subsidy }}</td>
-                        <td>{{ funder.subsidy_number }}</td>
-                        <td>{{ funder.get_formatted_currency() }}</td>
-                        <td>
-                            {% if funder.subprojects | list | length == 0 %}
-                            Geen.
-                            {% else %}
-                            {% for subproject in funder.subprojects %}
-                            <a
-                                href="{{ url_for('subproject', project_id=subproject.project_id, subproject_id=subproject.id) }}">{{
-                                subproject.name }}</a>
-                            <br>
-                            {% endfor %}
-                            {% endif %}
-                        </td>
-                    </tr>
+{% block body %}
+
+<body class="bg-grey projectprofile">
+    {% endblock %}
+
+    {% block content %}
+    <div class="container">
+        <br>
+        <h1>{{ project.name }}</h1>
+        <br>
+        <br>
+        <div class="row">
+            <div class="col-12 col-sm-9 col-md-6">
+                {{ macros.info_unit("Beschrijving:", project.description) }}
+                {{ macros.info_unit("Doel:", project.purpose) }}
+                {{ macros.info_unit("Doelgroep:", project.target_audience) }}
+                {{ macros.info_unit("Beheerder:", project.owner) }}
+                {{ macros.info_unit("E-mail beheerder:", project.owner_email) }}
+                <b>Initiatiefnemers</b>
+                <br>
+                {% if project.users | list | length > 0 %}
+                <ul>
+                    {% for user in project.users %}
+                    <li><a href="{{ url_for('profile_user', user_id=user.id) }}">{{ user.first_name }} {{ user.last_name
+                            }}</a>
+                    </li>
                     {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% endif %}
-    </div>
-    <br>
-    <br>
-    {{ macros.info_unit("Totaal budget:", total_funder_budget) }}
-    <br>
-    <br>
-    <!-- TODO: Begroting bekijken / downloaden. -->
-    <a href="{{ url_for('project', project_id=project.id) }}"><b>Initiatief beheren</b></a>
-    <br>
-    <br>
-    <!-- TODO -->
-    <a href="projectprofile-action" data-toggle="modal" data-target="#concept-justify-project"><b
-            class="projectprofile-action">Tussentijds rapporteren</b></a>
-    <br>
-    <br>
-    <!-- TODO -->
-    <a class="projectprofile-action" data-toggle="modal" data-target="#justify-project"><b>Verantwoorden</b></a>
-
-    <div class="modal fade" id="justify-project" tabindex="-1" role="dialog"
-        aria-labelledby="initiatiefVerantwoordenLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <form method="POST" id="justify-interactive-form" class="interactive-form" novalidate>
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="initiatiefVerantwoordenLabel">Verantwoorden</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="interactive-unit">
-                            {{ justify_project_form.csrf_token }}
-                            {% if eligible_funders | length == 0 %}
-                            <p>Het is op dit moment niet mogelijk om een sponsor voor dit initiatief te verantwoorden,
-                                omdat elke sponsor minstens één onafgeronde activiteit bevat.</p>
-                            <p>Rond alle activiteiten voor een of meerde sponsoren af, om deze vervolgens hier te kunnen
-                                verantwoorden.</p>
-                            {% else %}
-                            <p>U gaat verantwoorden. Selecteer de sponsor die u wilt verantwoorden.</p>
-                            <ul style="list-style: none;">
-                                {% for funder in justify_project_form.funders %}
-                                <li>{{funder}} {{funder.label}}</li>
-                                {% endfor %}
-                            </ul>
-                            {% if ineligible_funders | length > 0 %}
-                            <p>De volgende sponsoren kunt u op dit moment niet verantwoorden, omdat deze nog onafgeronde
-                                activiteiten bevatten.</p>
-                            <ul style="list-style: none;">
-                                {% for ineligible_funder in ineligible_funders %}
-                                <li>{{ ineligible_funder }}</li>
-                                {% endfor %}
-                            </ul>
-                            {% endif %}
-                            {% endif %}
-                        </div>
-                        {% if eligible_funders | length > 0 %}
-                        <div class="interactive-unit">
-                            <p>U gaat verantwoorden:</p>
-                            <ul style="list-style: none;">
-                                {% for funder_id, funder_info in eligible_funders.items() %}
-                                {% if loop.index > 1 %}
-                                {% set style = "display: none" %}
-                                {% endif %}
-                                <li class="funder-info" id="funder-info-{{funder_id}}" style="{{style}}">
-                                    <div class="bng-info-unit">
-                                        <i class="fas fa-check-square fa-lg"></i>
-                                        <p>{{ funder_info["funder"] }}</p>
-                                    </div>
-                                    <ul style="list-style: none;">
-                                        {% for subproject in funder_info["subprojects"] %}
-                                        <li>
-                                            <div class="bng-info-unit">
-                                                <i class="fas fa-check-square fa-lg"></i>
-                                                <p>{{ subproject }}</p>
-                                            </div>
-                                        </li>
-                                        {% endfor %}
-                                    </ul>
-                                </li>
-                                {% endfor %}
-                            </ul>
-                            <!-- TODO: Non editable checkboxes for the selected funder. -->
-                        </div>
-                        <div class="interactive-unit">
-                            <p>U gaat uw initiatief verantwoorden. Let op: verantwoorden is een formele stap binnen het
-                                proces van subsidieverstrekking. Als u uw verantwoording verstuurt naar uw
-                                subsidieverstrekker, kunt u dit niet ongedaan maken.</p>
-                            <p>Wilt u dit nog niet doen en alleen
-                                uw verantwoording bekijken ter controle? Klik dan op de onderstaande knop om de
-                                conceptversie te downloaden.</p>
-                            <div class="form-action">
-                                {{ justify_project_form.concept }}
-                            </div>
-                            <br>
-                            <p>Als u wel uw initiatief definitief wil verantwoorden, klik dan op de onderstaande knop.
-                            </p>
-                            <div class="form-action">
-                                {{ justify_project_form.justify }}
-                            </div>
-                        </div>
-                        {% endif %}
-                        {% if justify_project_form.has_errors %}
-                        <div>
-                            <p style="color: red; margin-bottom: 0px;">Het formulier bevat fout(en).
-                                Doorloop het formulier opnieuw en
-                                volg
-                                de
-                                aanwijzingen op.
-                            </p>
-                        </div>
-                        {% endif %}
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" onclick="justifyWizard.prev()"
-                            class="btn btn-secondary interactive-prev">Vorige</button>
-                        <button type="button" class="btn btn-danger" data-dismiss="modal">Annuleren</button>
-                        <button type="button" onclick="justifyWizard.next()"
-                            class="btn btn-primary interactive-next">Volgende</button>
-                    </div>
+                </ul>
+                {% else %}
+                <i>Dit initiatief heeft nog geen initiatiefnemers.</i>
+                <br>
+                <br>
+                {% endif %}
+                {{ macros.info_unit("Rechtsvorm:", project.legal_entity) }}
+                {{ macros.info_unit("Adres aanvrager:", project.address_applicant) }}
+                {{ macros.info_unit("KvK:", project.registration_kvk) }}
+                {{ macros.info_unit("Locatie initiatief:", project.project_location) }}
+            </div>
+            <div class="col-12 col-sm-3 col-md-6">
+                {% if image %}
+                <div class="attachment-div">
+                    <a class="embed-responsive embed-responsive-16by9"
+                        href="{{ url_for('upload', filename='project-attachment/' + image.filename) }}"
+                        data-toggle="lightbox" data-gallery="image-gallery-{{ project.id }}">
+                        <img class="img-fluid embed-responsive-item attachment"
+                            src="{{ url_for('upload', filename='project-attachment/' + image.filename) }}">
+                    </a>
+                </div>
+                <button type="button" class="btn btn-danger" data-toggle="modal"
+                    data-target="#bijlage-verwijder-{{ image.id }}">
+                    Verwijderen
+                </button>
+                {{ macros.remove_attachment_modal(image, edit_attachment_form) }}
+                {% else %}
+                <form method="POST" enctype="multipart/form-data">
+                    {{ edit_project_profile_form.csrf_token }}
+                    {% for f in edit_project_profile_form %}
+                    {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' %}
+                    {{ wtf.form_field(f, class="form-control") }}
+                    {% endif %}
+                    {% endfor %}
+                    {{ edit_project_profile_form.submit }}
                 </form>
+                {% endif %}
+                <hr>
+                <b>Lopende activiteiten:</b>
+                {% if project.subprojects | list | length > 0 %}
+                <ul>
+                    {% for subproject in project.subprojects %}
+                    <li><a href="{{ url_for('subproject', project_id=project.id, subproject_id=subproject.id) }}">{{
+                            subproject.name}}</a></li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <i>Er zijn geen lopende activiteiten.</i>
+                <br>
+                <br>
+                {% endif %}
+                <b>Afgeronde activiteiten:</b>
+                <!-- TODO -->
+                <br>
+                <br>
+                <b>Verantwoorde activiteiten:</b>
+                <!-- TODO -->
+                <br>
+                <br>
             </div>
         </div>
-    </div>
+        <br>
+        <h1>Sponsoren:</h1>
+        <br>
+        <br>
+        <div class="row">
+            {% if project.funders | list | length == 0 %}
+            <p>Dit initiatief heeft nog geen sponsors.</p>
+            {% else %}
+            <div class="table-responsive">
+                <table class="table table-striped profile-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Sponsor(s):</th>
+                            <th scope="col">Subsidieregeling:</th>
+                            <th scope="col">Beschikkingsnummer:</th>
+                            <th scope="col">Budget:</th>
+                            <th scope="col">Activiteiten:</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for funder in project.funders %}
+                        <tr>
+                            <!-- No need to check if the value is None, because it's a required field in the funder form. -->
+                            <td>{{ funder.name }}</td>
+                            <td>{{ funder.subsidy }}</td>
+                            <td>{{ funder.subsidy_number }}</td>
+                            <td>{{ funder.get_formatted_currency() }}</td>
+                            <td>
+                                {% if funder.subprojects | list | length == 0 %}
+                                Geen.
+                                {% else %}
+                                {% for subproject in funder.subprojects %}
+                                <a
+                                    href="{{ url_for('subproject', project_id=subproject.project_id, subproject_id=subproject.id) }}">{{
+                                    subproject.name }}</a>
+                                <br>
+                                {% endfor %}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+        </div>
+        <br>
+        <br>
+        {{ macros.info_unit("Totaal budget:", total_funder_budget) }}
+        <br>
+        <br>
+        <!-- TODO: Begroting bekijken / downloaden. -->
+        <a href="{{ url_for('project', project_id=project.id) }}"><b>Initiatief beheren</b></a>
+        <br>
+        <br>
+        <!-- TODO -->
+        <a href="projectprofile-action" data-toggle="modal" data-target="#concept-justify-project"><b
+                class="projectprofile-action">Tussentijds rapporteren</b></a>
+        <br>
+        <br>
+        <!-- TODO -->
+        <a class="projectprofile-action" data-toggle="modal" data-target="#justify-project"><b>Verantwoorden</b></a>
 
-    <div class="modal fade" id="concept-justify-project" tabindex="-1" role="dialog"
-        aria-labelledby="initiatiefTussentijdsRapporterenLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <form method="POST" id="concept-justify-interactive-form" class="interactive-form" novalidate>
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="initiatiefTussentijdsRapporterenLabel">Tussentijds Rapporteren
-                        </h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        {{ justify_project_form.csrf_token }}
-                        <div class="interactive-unit">
-
+        <div class="modal fade" id="justify-project" tabindex="-1" role="dialog"
+            aria-labelledby="initiatiefVerantwoordenLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <form method="POST" id="justify-interactive-form" class="interactive-form" novalidate>
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="initiatiefVerantwoordenLabel">Verantwoorden</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
                         </div>
-                        <div class="interactive-unit">
-
-                        </div>
-                        <div class="interactive-unit">
+                        <div class="modal-body">
+                            <div class="interactive-unit">
+                                {% set n_eligible_funders = funder_info.values() | sum(attribute='eligible') %}
+                                {% set n_ineligible_funders = funder_info.values() | length - n_eligible_funders %}
+                                {{ justify_project_form.csrf_token }}
+                                {% if n_eligible_funders == 0 %}
+                                <p>Het is op dit moment niet mogelijk om een sponsor voor dit initiatief te
+                                    verantwoorden,
+                                    omdat elke gekoppelde sponsor voor dit initiatief minstens één onafgeronde
+                                    activiteit
+                                    bevat.</p>
+                                <p>Rond alle activiteiten voor een of meerde (gekoppelde) sponsoren af, om deze
+                                    vervolgens
+                                    hier te kunnen verantwoorden.</p>
+                                {% else %}
+                                <p>U gaat verantwoorden. Selecteer de sponsor die u wilt verantwoorden.</p>
+                                <ul style="list-style: none;">
+                                    {% for funder in justify_project_form.funders %}
+                                    <li>{{funder}} {{funder.label}}</li>
+                                    {% endfor %}
+                                </ul>
+                                {% if n_ineligible_funders > 0 %}
+                                <p>De volgende sponsoren kunt u op dit moment niet verantwoorden, omdat deze nog
+                                    onafgeronde
+                                    activiteiten bevatten.</p>
+                                <ul style="list-style: none;">
+                                    {% for ineligible_funder in funder_info.values() | selectattr("eligible", "false")
+                                    %}
+                                    <li>{{ ineligible_funder["name"] }}</li>
+                                    {% endfor %}
+                                </ul>
+                                {% endif %}
+                                {% endif %}
+                            </div>
+                            {% if n_eligible_funders > 0 %}
+                            <div class="interactive-unit">
+                                <p>U gaat verantwoorden:</p>
+                                <!-- This is selectively shown and hidden with some JS. -->
+                                <ul style="list-style: none;">
+                                    {% for funder_id, funder_info in funder_info.items() %}
+                                    {% if funder_info["eligible"] %}
+                                    <li class="funder-info" id="funder-info-{{funder_id}}">
+                                        <div class="bng-info-unit">
+                                            <i class="fas fa-check-square fa-lg"></i>
+                                            <p>{{ funder_info["name"] }}</p>
+                                        </div>
+                                        <ul style="list-style: none;">
+                                            {% for subproject in funder_info["subprojects"] %}
+                                            <li>
+                                                <div class="bng-info-unit">
+                                                    <i class="fas fa-check-square fa-lg"></i>
+                                                    <p>{{ subproject }}</p>
+                                                </div>
+                                            </li>
+                                            {% endfor %}
+                                        </ul>
+                                    </li>
+                                    {% endif %}
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            <div class="interactive-unit">
+                                <p>U gaat uw initiatief verantwoorden. Let op: verantwoorden is een formele stap binnen
+                                    het
+                                    proces van subsidieverstrekking. Als u uw verantwoording verstuurt naar uw
+                                    subsidieverstrekker, kunt u dit niet ongedaan maken.</p>
+                                <p>Wilt u dit nog niet doen en alleen
+                                    uw verantwoording bekijken ter controle? Klik dan op de onderstaande knop om de
+                                    conceptversie te downloaden.</p>
+                                <div class="form-action">
+                                    {{ justify_project_form.concept }}
+                                </div>
+                                <br>
+                                <p>Als u wel uw initiatief definitief wil verantwoorden, klik dan op de onderstaande
+                                    knop.
+                                </p>
+                                <div class="form-action">
+                                    {{ justify_project_form.send }}
+                                </div>
+                            </div>
+                            {% endif %}
                             {% if justify_project_form.has_errors %}
                             <div>
                                 <p style="color: red; margin-bottom: 0px;">Het formulier bevat fout(en).
@@ -292,27 +262,99 @@
                             {% endif %}
                         </div>
                         <div class="modal-footer">
-                            <button type="button" onclick="conceptJustifyWizard.prev()"
+                            <button type="button" onclick="justifyWizard.prev()"
                                 class="btn btn-secondary interactive-prev">Vorige</button>
                             <button type="button" class="btn btn-danger" data-dismiss="modal">Annuleren</button>
-                            <button type="button" onclick="conceptJustifyWizard.next()"
+                            <button type="button" onclick="justifyWizard.next()"
                                 class="btn btn-primary interactive-next">Volgende</button>
                         </div>
-                </form>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="concept-justify-project" tabindex="-1" role="dialog"
+            aria-labelledby="initiatiefTussentijdsRapporterenLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <form method="POST" id="concept-justify-interactive-form" class="interactive-form" novalidate>
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="initiatiefTussentijdsRapporterenLabel">Tussentijds Rapporteren
+                            </h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="interactive-unit">
+                                {{ justify_project_form.csrf_token }}
+                                <p>U gaat uw initiatief tussentijds rapporteren. Selecteer de sponsor die u tussentijds
+                                    wilt
+                                    rapporteren.</p>
+                                <ul style="list-style: none;">
+                                    {% for funder in concept_justify_project_form.funders %}
+                                    <li>{{funder}} {{funder.label}}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            <div class="interactive-unit">
+                                <!-- This is selectively shown and hidden with some JS. -->
+                                <p>U gaat tussentijds rapporteren:</p>
+                                <ul style="list-style: none;">
+                                    {% for funder_id, funder_info in funder_info.items() %}
+                                    <li class="funder-info" id="funder-info-{{funder_id}}">
+                                        <div class="bng-info-unit">
+                                            <i class="fas fa-check-square fa-lg"></i>
+                                            <p>{{ funder_info["name"] }}</p>
+                                        </div>
+                                        <ul style="list-style: none;">
+                                            {% for subproject in funder_info["subprojects"] %}
+                                            <li>
+                                                <div class="bng-info-unit">
+                                                    <i class="fas fa-check-square fa-lg"></i>
+                                                    <p>{{ subproject }}</p>
+                                                </div>
+                                            </li>
+                                            {% endfor %}
+                                        </ul>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                                <div class="form-action">{{ concept_justify_project_form.concept }}</div>
+                                <div class="form-action">{{ concept_justify_project_form.send }}</div>
+                            </div>
+                            {% if justify_project_form.has_errors %}
+                            <div>
+                                <p style="color: red; margin-bottom: 0px;">Het formulier bevat fout(en).
+                                    Doorloop het formulier opnieuw en
+                                    volg
+                                    de
+                                    aanwijzingen op.
+                                </p>
+                            </div>
+                            {% endif %}
+                            <div class="modal-footer">
+                                <button type="button" onclick="conceptJustifyWizard.prev()"
+                                    class="btn btn-secondary interactive-prev">Vorige</button>
+                                <button type="button" class="btn btn-danger" data-dismiss="modal">Annuleren</button>
+                                <button type="button" onclick="conceptJustifyWizard.next()"
+                                    class="btn btn-primary interactive-next">Volgende</button>
+                            </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
-</div>
-{% endblock %}
-{% block scripts %}
-{% if modal_id is not none %}
-<script>
-    window.modal_id = {{ modal_id | safe }}
-</script>
-{% endif %}
-{{ super() }}
-<script>
-    window.justifyWizard = new FormWizard("#justify-interactive-form")
-    window.conceptJustifyWizard = new FormWizard("#concept-justify-interactive-form")
-</script>
-{% endblock %}
+    {% endblock %}
+    {% block scripts %}
+    {% if modal_id is not none %}
+    <script>
+        window.modal_id = {{ modal_id | safe }}
+    </script>
+    {% endif %}
+    {{ super() }}
+    <script>
+        window.justifyWizard = new FormWizard("#justify-interactive-form")
+        window.conceptJustifyWizard = new FormWizard("#concept-justify-interactive-form")
+    </script>
+    {% endblock %}
