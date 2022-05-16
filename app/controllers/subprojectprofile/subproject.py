@@ -5,10 +5,10 @@ from wtforms import TextAreaField
 from wtforms.validators import DataRequired
 from app.models import Subproject
 from app.controllers.forms import SubprojectBaseForm, FunderForm
-from app.controllers.util import Controller
+from app.controllers.util import Controller, create_redirects_for_response
 from app.util import Clearance, form_in_request
 from app.form_processing import process_form
-from flask import request
+from flask import request, redirect, url_for
 
 
 class FinishSubprojectForm(SubprojectBaseForm):
@@ -34,6 +34,9 @@ class FinishSubprojectController(Controller):
         # self.clearance = clearance
         self.subproject = subproject
         self.form = FinishSubprojectForm(**self.subproject.__dict__)
+        self.redirects = create_redirects_for_response(
+            redirect(url_for("profile_subproject", subproject_id=self.subproject.id))
+        )
         if not form_in_request(self.form, request):
             for funder in self.subproject.funders.all():
                 self.form.funders.append_entry(
@@ -43,7 +46,7 @@ class FinishSubprojectController(Controller):
     def process(self, form):
         # TODO: Handle attachment.
         status = process_form(form, Subproject, alt_update=Subproject.finish)
-        return None
+        return self.redirects[status]
 
     def get_forms(self):
         if len(self.form.errors) > 0:

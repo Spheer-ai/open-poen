@@ -726,7 +726,9 @@ def profile_subproject(subproject_id):
         return redirect(url_for("profile_subproject", subproject_id=subproject.id))
 
     controller = subppc.FinishSubprojectController(subproject)
-    controller.process_forms()
+    controller_redirect = controller.process_forms()
+    if controller_redirect:
+        return controller_redirect
     finish_subproject_form = controller.get_forms()
     modal_id = controller.get_modal_ids(modal_id)
 
