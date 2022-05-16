@@ -1,7 +1,11 @@
 from datetime import date
 from typing import Dict, Type
 
-from app.controllers.util import Controller, Status, create_redirects
+from app.controllers.util import (
+    Controller,
+    Status,
+    create_redirects_for_project_or_subproject,
+)
 from app.form_processing import process_form
 from app.forms import FlexibleDecimalField, NewPaymentForm, NewTopupForm
 from app.models import Payment, Project
@@ -116,7 +120,9 @@ class PaymentController(Controller):
             ManualPaymentOrTopup(),
             ProjectOwnerPayment(),
         ]
-        self.redirects = create_redirects(self.project.id, None)
+        self.redirects = create_redirects_for_project_or_subproject(
+            self.project.id, None
+        )
 
     def add(self, form):
         # TODO: permissions check.

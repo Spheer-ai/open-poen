@@ -2,7 +2,7 @@ from typing import Dict, Type
 
 from flask_login import current_user
 
-from app.controllers.util import Controller, create_redirects
+from app.controllers.util import Controller, create_redirects_for_project_or_subproject
 from app.form_processing import process_form
 from app.forms import NewPaymentForm
 from app.models import Payment, Subproject
@@ -38,7 +38,7 @@ class PaymentController(Controller):
             ManualPaymentOrTopup(),
             ProjectOwnerPayment(),
         ]
-        self.redirects = create_redirects(
+        self.redirects = create_redirects_for_project_or_subproject(
             self.subproject.project.id, self.subproject.id
         )
 

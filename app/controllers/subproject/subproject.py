@@ -1,4 +1,4 @@
-from app.controllers.util import Controller, create_redirects
+from app.controllers.util import Controller, create_redirects_for_project_or_subproject
 from app.form_processing import Status, process_form, return_redirect
 from app.models import Subproject
 from flask_wtf import FlaskForm
@@ -30,7 +30,7 @@ class SubprojectController(Controller):
         # Because we want all actions to refresh the page.
         self.subproject = subproject
         self.form = SubprojectForm(prefix="subproject_form")
-        self.redirects = create_redirects(
+        self.redirects = create_redirects_for_project_or_subproject(
             self.subproject.project_id, self.subproject.id
         )
         # Except for a deletion, because after that the subproject page returns a 404.

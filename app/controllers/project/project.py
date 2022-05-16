@@ -1,6 +1,6 @@
 from typing import Dict, Type
 
-from app.controllers.util import Controller, create_redirects
+from app.controllers.util import Controller, create_redirects_for_project_or_subproject
 from app.form_processing import Status, process_form
 from app.forms import validate_budget
 from app.models import Project
@@ -72,7 +72,9 @@ class ProjectController(Controller):
         self.form = self.form_class(prefix="project_form")
         # Because it's not allowed to change this property after instantiation.
         self.form.contains_subprojects.data = project.contains_subprojects
-        self.redirects = create_redirects(self.project.id, None)
+        self.redirects = create_redirects_for_project_or_subproject(
+            self.project.id, None
+        )
         self.redirects[Status.succesful_delete] = redirect(url_for("index"))
 
     def process(self, form):

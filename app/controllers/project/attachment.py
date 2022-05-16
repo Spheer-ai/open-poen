@@ -1,6 +1,6 @@
 from typing import Dict
 
-from app.controllers.util import Controller, create_redirects
+from app.controllers.util import Controller, create_redirects_for_project_or_subproject
 from app.form_processing import process_form
 from app.forms import (
     EditAttachmentForm,
@@ -16,7 +16,9 @@ class AttachmentController(Controller):
         self.edit_form = EditAttachmentForm(
             prefix=f"edit_attachment_form_{self.get_id_of_submitted_form}"
         )
-        self.redirects = create_redirects(self.project.id, None)
+        self.redirects = create_redirects_for_project_or_subproject(
+            self.project.id, None
+        )
 
     def add(self):
         status = process_form(

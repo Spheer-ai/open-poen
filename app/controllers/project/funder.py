@@ -1,6 +1,6 @@
 from typing import Dict, Type
 
-from app.controllers.util import Controller, create_redirects
+from app.controllers.util import Controller, create_redirects_for_project_or_subproject
 from app.form_processing import process_form
 from app.forms import validate_budget
 from app.models import Funder, Project
@@ -43,7 +43,9 @@ class FunderController(Controller):
         self.edit_form = self.form_class(
             prefix=f"edit_funder_form_{self.get_id_of_submitted_form}"
         )
-        self.redirects = create_redirects(self.project.id, None)
+        self.redirects = create_redirects_for_project_or_subproject(
+            self.project.id, None
+        )
 
     def process(self, form):
         status = process_form(form, Funder)

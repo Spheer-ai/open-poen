@@ -1,6 +1,6 @@
 from typing import Dict, List
 
-from app.controllers.util import Controller, create_redirects
+from app.controllers.util import Controller, create_redirects_for_project_or_subproject
 from app.form_processing import process_form
 from app.forms import CategoryForm
 from app.models import Category, Project
@@ -15,7 +15,9 @@ class CategoryController(Controller):
         self.edit_form = CategoryForm(
             prefix=f"edit_category_form_{self.get_id_of_submitted_form}"
         )
-        self.redirects = create_redirects(self.project.id, None)
+        self.redirects = create_redirects_for_project_or_subproject(
+            self.project.id, None
+        )
         self.names: List[str] = []
 
     def add(self):

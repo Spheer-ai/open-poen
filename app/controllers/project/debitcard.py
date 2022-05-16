@@ -1,7 +1,7 @@
 from typing import List
 
 from app import db
-from app.controllers.util import Controller, create_redirects
+from app.controllers.util import Controller, create_redirects_for_project_or_subproject
 from app.form_processing import process_form
 from app.forms import DebitCardForm, EditDebitCardForm
 from app.models import DebitCard, Payment, Project
@@ -15,7 +15,9 @@ class DebitCardController(Controller):
             prefix="add_debit_card_form", project_id=self.project.id
         )
         self.edit_form = EditDebitCardForm(prefix="edit_debit_card_form")
-        self.redirects = create_redirects(self.project.id, None)
+        self.redirects = create_redirects_for_project_or_subproject(
+            self.project.id, None
+        )
         self.debit_card_numbers: List[str] = []
         self.debit_cards: List[DebitCard] = []
 

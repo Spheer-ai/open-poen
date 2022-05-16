@@ -65,7 +65,7 @@ def redirects_from_keys(
     return redirects
 
 
-def create_redirects(
+def create_redirects_for_project_or_subproject(
     project_id: int, subproject_id: Union[None, int]
 ) -> Dict[Union[None, Status], Union[None, Response]]:
     return redirects_from_keys(return_redirect(project_id, subproject_id))

@@ -1,6 +1,6 @@
 from typing import List
 
-from app.controllers.util import Controller, create_redirects
+from app.controllers.util import Controller, create_redirects_for_project_or_subproject
 from app.form_processing import Status, process_form
 from app.forms import AddUserForm, EditProjectOwnerForm
 from app.models import Project, User
@@ -14,7 +14,9 @@ class ProjectOwnerController(Controller):
         # opinion, there should be only one form to edit the User model...
         self.add_form = AddUserForm(prefix="add_user_form")
         self.edit_form = EditProjectOwnerForm(prefix="edit_project_owner_form")
-        self.redirects = create_redirects(self.project.id, None)
+        self.redirects = create_redirects_for_project_or_subproject(
+            self.project.id, None
+        )
         self.emails: List[str] = []
 
     def add(self):

@@ -99,10 +99,11 @@
         <h1>Sponsoren:</h1>
         <br>
         <br>
+        {% if project.funders | list | length == 0 %}
+        <i>Dit initiatief heeft nog geen sponsors.</i>
+        <br>
+        {% else %}
         <div class="row">
-            {% if project.funders | list | length == 0 %}
-            <p>Dit initiatief heeft nog geen sponsors.</p>
-            {% else %}
             <div class="table-responsive">
                 <table class="table table-striped profile-table">
                     <thead>
@@ -139,8 +140,8 @@
                     </tbody>
                 </table>
             </div>
-            {% endif %}
         </div>
+        {% endif %}
         <br>
         <br>
         {{ macros.info_unit("Totaal budget:", total_funder_budget) }}

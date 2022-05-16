@@ -120,8 +120,9 @@ def index():
             User.add_user(**new_user_data)
             util.formatted_flash(
                 (
-                    f"{new_user_data['email']} is uitgenodigd als admin of initiatiefnemer. "
-                    "(Of zodanig toegevoegd als de gebruiker al bestond.)"
+                    f"{new_user_data['email']} is uitgenodigd als admin of "
+                    "initiatiefnemer. (Of zodanig toegevoegd als de "
+                    "gebruiker al bestond.)"
                 ),
                 color="green",
             )
