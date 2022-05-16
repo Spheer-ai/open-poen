@@ -758,7 +758,7 @@ def profile_user_edit():
         db.session.commit()
         flash('<span class="text-default-green">Media is verwijderd</span>')
 
-        return redirect(url_for("profile", user_id=current_user.id))
+        return redirect(url_for("profile_user", user_id=current_user.id))
 
     edit_attachment_forms = {}
     attachment = File.query.filter_by(id=current_user.image).first()
@@ -789,7 +789,7 @@ def profile_user_edit():
 
             flash('<span class="text-default-green">gebruiker is bijgewerkt</span>')
 
-        return redirect(url_for("profile", user_id=current_user.id))
+        return redirect(url_for("profile_user", user_id=current_user.id))
     else:
         util.flash_form_errors(edit_profile_form, request)
 
