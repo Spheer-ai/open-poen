@@ -79,7 +79,7 @@ def before_request():
                 '<span class="text-default-red">Sommige velden in uw profiel zijn nog '
                 "niet ingevuld. Vul deze in om verder te kunnen gaan.</span>"
             )
-            return redirect(url_for("profile_edit"))
+            return redirect(url_for("profile_user_edit"))
 
 
 @app.route("/", methods=["GET", "POST"])
