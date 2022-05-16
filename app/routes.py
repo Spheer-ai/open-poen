@@ -14,8 +14,8 @@ from sqlalchemy import or_
 import app.controllers.index as ic
 import app.controllers.project as pc
 import app.controllers.subproject as subpc
-from app.controllers.finish import FinishSubprojectController
-from app.controllers.justify import JustifyProjectController
+import app.controllers.projectprofile as ppc
+import app.controllers.subprojectprofile as subppc
 from app import app, db, util
 from app.bng import get_bng_info, process_bng_callback
 from app.email import send_password_reset_email
@@ -654,8 +654,10 @@ def profile_project(project_id):
         util.formatted_flash("Media is toegevoegd.", color="green")
         return redirect(url_for("profile_project", project_id=project.id))
 
-    controller = JustifyProjectController(project)
-    controller.process_forms()
+    controller = ppc.JustifyProjectController(project)
+    controller_redirect = controller.process_forms()
+    if controller_redirect:
+        return controller_redirect
     justify_project_form = controller.get_forms()
     concept_justify_project_form = controller.get_concept_justify_form()
     modal_id = controller.get_modal_ids(modal_id)
@@ -723,7 +725,7 @@ def profile_subproject(subproject_id):
         util.formatted_flash("Media is toegevoegd.", color="green")
         return redirect(url_for("profile_subproject", subproject_id=subproject.id))
 
-    controller = FinishSubprojectController(subproject)
+    controller = subppc.FinishSubprojectController(subproject)
     controller.process_forms()
     finish_subproject_form = controller.get_forms()
     modal_id = controller.get_modal_ids(modal_id)

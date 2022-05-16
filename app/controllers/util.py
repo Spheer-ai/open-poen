@@ -43,8 +43,8 @@ class Controller(metaclass=ABCMeta):
         return check
 
 
-def create_redirects(
-    project_id: int, subproject_id: Union[None, int]
+def redirects_from_keys(
+    response: Response,
 ) -> Dict[Union[None, Status], Union[None, Response]]:
     redirects = dict.fromkeys(
         [
@@ -54,7 +54,7 @@ def create_redirects(
             Status.succesful_create,
             Status.failed_create,
         ],
-        return_redirect(project_id, subproject_id),
+        response,
     )
     redirects[Status.not_found] = render_template(
         "404.html",
@@ -63,3 +63,15 @@ def create_redirects(
     )
     redirects[None] = None
     return redirects
+
+
+def create_redirects(
+    project_id: int, subproject_id: Union[None, int]
+) -> Dict[Union[None, Status], Union[None, Response]]:
+    return redirects_from_keys(return_redirect(project_id, subproject_id))
+
+
+def create_redirects_for_response(
+    response: Response,
+) -> Dict[Union[None, Status], Union[None, Response]]:
+    return redirects_from_keys(response)

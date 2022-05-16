@@ -1,11 +1,12 @@
-from app.controllers.util import Controller
-from app.form_processing import process_form
+from app.controllers.util import Controller, create_redirects_for_response
+from app.form_processing import process_form, Status
 from app.models import Project
 from flask_wtf import FlaskForm
 from wtforms.fields import SubmitField, RadioField, IntegerField
 from wtforms.widgets import HiddenInput
 from app.util import form_in_request
-from flask import request
+from flask import request, redirect, url_for
+from app import app
 
 
 class JustifyProjectForm(FlaskForm):
@@ -37,8 +38,13 @@ class JustifyProjectController(Controller):
         # TODO: Permissions.
         # self.clearance = clearance
         self.project = project
-        self.justify_form = JustifyProjectForm(id=project.id)
-        self.concept_justify_form = ConceptJustifyProjectForm(id=project.id)
+        self.justify_form = JustifyProjectForm(id=project.id, prefix="justify")
+        self.concept_justify_form = ConceptJustifyProjectForm(
+            id=project.id, prefix="concept-justify"
+        )
+        self.redirects = create_redirects_for_response(
+            redirect(url_for("profile_project", project_id=self.project.id))
+        )
         funders = self.project.funders.all()
 
         self.funder_info = {}
@@ -75,7 +81,7 @@ class JustifyProjectController(Controller):
 
     def process(self, form):
         status = process_form(form, Project, alt_update=Project.justify)
-        return None
+        return self.redirects[status]
 
     def get_forms(self):
         if len(self.justify_form.errors) > 0:
@@ -99,4 +105,7 @@ class JustifyProjectController(Controller):
         if len(self.justify_form.errors) > 0:
             assert len(modals) == 0
             modals.append("#justify-project")
+        elif len(self.concept_justify_form.errors) > 0:
+            assert len(modals) == 0
+            modals.append("#concept-justify-project")
         return modals

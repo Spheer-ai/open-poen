@@ -13,7 +13,7 @@ from app import app
 from app import bng as bng
 from app import db, util
 from app.models import BNGAccount
-from app.util import formatted_flash
+from app.util import formatted_flash, form_in_request
 
 
 def filter_fields(form: FlaskForm) -> Dict:
@@ -137,6 +137,11 @@ def process_form(
     alt_create: Optional[Callable] = None,
 ) -> Union[None, Status]:
     # TODO: Type hint for object argument.
+    if not form_in_request(form, request):
+        return None
+
+    app.logger.info(f"Form {str(form)} for object {str(object)} is submitted.")
+
     if hasattr(form, "remove") and form.remove.data:
         instance = object.query.get(form.id.data)
         if instance is None:
@@ -146,12 +151,16 @@ def process_form(
         util.formatted_flash(instance.message_after_delete, color="green")
         return Status.succesful_delete
 
-    if not util.validate_on_submit(form, request):
+    if not form.validate_on_submit():
+        app.logger.info(f"Form is invalid. Data: {form.data}. Errors: {form.errors}.")
         return None
+
+    app.logger.info(f"Form is valid. Data: {form.data}.")
 
     data = filter_fields(form)
 
     if hasattr(form, "id") and form.id.data is not None:
+        app.logger.info("Form is used to edit an existing entity.")
         instance = object.query.get(data["id"])
         if not instance:
             util.formatted_flash(
@@ -173,6 +182,7 @@ def process_form(
             )
             return Status.failed_edit
     else:
+        app.logger.info("Form is used to create a new entity.")
         try:
             if alt_create is not None:
                 instance = alt_create(**data)  # Executes a class method.

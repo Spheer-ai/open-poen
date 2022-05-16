@@ -287,7 +287,7 @@
                         </div>
                         <div class="modal-body">
                             <div class="interactive-unit">
-                                {{ justify_project_form.csrf_token }}
+                                {{ concept_justify_project_form.csrf_token }}
                                 <p>U gaat uw initiatief tussentijds rapporteren. Selecteer de sponsor die u tussentijds
                                     wilt
                                     rapporteren.</p>
@@ -323,7 +323,7 @@
                                 <div class="form-action">{{ concept_justify_project_form.concept }}</div>
                                 <div class="form-action">{{ concept_justify_project_form.send }}</div>
                             </div>
-                            {% if justify_project_form.has_errors %}
+                            {% if concept_justify_project_form.has_errors %}
                             <div>
                                 <p style="color: red; margin-bottom: 0px;">Het formulier bevat fout(en).
                                     Doorloop het formulier opnieuw en
