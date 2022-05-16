@@ -268,17 +268,19 @@
                             <div class="interactive-unit">
                               <h2>Sponsor(s) initiatief</h2>
                               <hr>
-                              {% for funder in project_form.funders %}
-                              <div class="funder" id="funder-{{loop.index - 1}}">
-                                {{ wtf.form_field(funder.form.name) }}
-                                {{ wtf.form_field(funder.form.subsidy) }}
-                                {{ wtf.form_field(funder.form.subsidy_number) }}
-                                {{ wtf.form_field(funder.form.budget) }}
-                                {{ wtf.form_field(funder.form.url) }}
-                                {{ macros.trashbin('#funder-', loop.index - 1) }}
-                                <hr>
+                              <div class="funder_all">
+                                {% for funder in project_form.funders %}
+                                <div class="funder" id="funder-{{loop.index - 1}}">
+                                  {{ wtf.form_field(funder.form.name) }}
+                                  {{ wtf.form_field(funder.form.subsidy) }}
+                                  {{ wtf.form_field(funder.form.subsidy_number) }}
+                                  {{ wtf.form_field(funder.form.budget) }}
+                                  {{ wtf.form_field(funder.form.url) }}
+                                  {{ macros.trashbin('#funder-', loop.index - 1) }}
+                                  <hr>
+                                </div>
+                                {% endfor %}
                               </div>
-                              {% endfor %}
                               {{ macros.plussign("funder", "Sponsor") }}
                               {{ wtf.form_field(project_form.hidden_sponsors) }}
                             </div>
@@ -302,18 +304,20 @@
                             <div class="interactive-unit">
                               <h2>Activiteiten initiatief</h2>
                               <hr>
-                              {% for subproject in project_form.subprojects %}
-                              <div class="subproject" id="subproject-{{loop.index - 1}}">
-                                {{ wtf.form_field(subproject.form.name) }}
-                                {{ wtf.form_field(subproject.form.description) }}
-                                {{ wtf.form_field(subproject.form.purpose) }}
-                                {{ wtf.form_field(subproject.form.target_audience) }}
-                                {{ wtf.form_field(subproject.form.hidden) }}
-                                {{ wtf.form_field(subproject.form.budget) }}
-                                {{ macros.trashbin("#subproject-", loop.index -1) }}
-                                <hr>
+                              <div class="subproject_all">
+                                {% for subproject in project_form.subprojects %}
+                                <div class="subproject" id="subproject-{{loop.index - 1}}">
+                                  {{ wtf.form_field(subproject.form.name) }}
+                                  {{ wtf.form_field(subproject.form.description) }}
+                                  {{ wtf.form_field(subproject.form.purpose) }}
+                                  {{ wtf.form_field(subproject.form.target_audience) }}
+                                  {{ wtf.form_field(subproject.form.hidden) }}
+                                  {{ wtf.form_field(subproject.form.budget) }}
+                                  {{ macros.trashbin("#subproject-", loop.index -1) }}
+                                  <hr>
+                                </div>
+                                {% endfor %}
                               </div>
-                              {% endfor %}
                               {{ macros.plussign("subproject", "activiteit") }}
                             </div>
                             <div class="interactive-unit">
@@ -322,16 +326,18 @@
                               {{ wtf.form_field(project_form.owner) }}
                               {{ wtf.form_field(project_form.owner_email) }}
                               <label class="control-label">Initiatiefnemers</label>
-                              {% for project_owner in project_form.project_owners %}
-                              <div class="project_owner" id="project_owner-{{loop.index - 1}}">
-                                <div style="display: flex">
-                                  {{ wtf.form_field(project_owner.email, class="form-control-sm", placeholder="email",
-                                  form_type="inline") }}
-                                  {{ macros.trashbin("#project_owner-", loop.index - 1, True) }}
+                              <div class="project_owner_all">
+                                {% for project_owner in project_form.project_owners %}
+                                <div class="project_owner" id="project_owner-{{loop.index - 1}}">
+                                  <div style="display: flex">
+                                    {{ wtf.form_field(project_owner.email, class="form-control-sm", placeholder="email",
+                                    form_type="inline") }}
+                                    {{ macros.trashbin("#project_owner-", loop.index - 1, True) }}
+                                  </div>
+                                  {{ macros.render_single_field_field_list_errors(project_owner) }}
                                 </div>
-                                {{ macros.render_single_field_field_list_errors(project_owner) }}
+                                {% endfor %}
                               </div>
-                              {% endfor %}
                               {{ macros.plussign("project_owner", "Activiteitnemer") }}
                               {{ wtf.form_field(project_form.legal_entity) }}
                               {{ wtf.form_field(project_form.address_applicant) }}
