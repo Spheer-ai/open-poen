@@ -57,9 +57,15 @@ class JustifyProjectController(Controller):
             x for x, funder in zip(all_choices, funders) if funder.eligible
         ]
         self.justify_form.funders.choices = eligible_choices
-        self.justify_form.funders.default = eligible_choices[0][0]
+        try:
+            self.justify_form.funders.default = eligible_choices[0][0]
+        except IndexError:
+            pass
         self.concept_justify_form.funders.choices = all_choices
-        self.concept_justify_form.funders.default = all_choices[0][0]
+        try:
+            self.concept_justify_form.funders.default = all_choices[0][0]
+        except IndexError:
+            pass
 
         # Otherwise the CSRF token is removed when this form is submitted.
         if not form_in_request(self.justify_form, request):
