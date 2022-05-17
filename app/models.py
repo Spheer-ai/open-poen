@@ -225,12 +225,6 @@ class User(UserMixin, db.Model, DefaultCRUD):
 
 class Project(db.Model, DefaultCRUD):
     id = db.Column(db.Integer, primary_key=True)
-    bank_name = db.Column(db.String(64), index=True)
-    # This has to become a BNG token.
-    bunq_access_token = db.Column(db.String(64))
-    # This needs to be removed, or needs to become something linked to BNG.
-    iban = db.Column(db.String(34), index=True, unique=True)
-    iban_name = db.Column(db.String(120), index=True)
     name = db.Column(db.String(120), index=True, unique=True)
     description = db.Column(db.Text)
     purpose = db.Column(db.Text)
@@ -261,7 +255,6 @@ class Project(db.Model, DefaultCRUD):
     )
     funders = db.relationship("Funder", backref="project", lazy="dynamic")
     # This has to become passes I guess.
-    ibans = db.relationship("IBAN", backref="project", lazy="dynamic")
     payments = db.relationship(
         "Payment",
         backref="project",
@@ -707,13 +700,6 @@ class Funder(db.Model, DefaultCRUD):
     @classmethod
     def message_after_create_error(cls, error, data):
         return "Aanmaken mislukt vanwege een onbekende fout. De beheerder van Open Poen is op de hoogte gesteld."
-
-
-# Make these BNG accounts?
-class IBAN(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    project_id = db.Column(db.Integer, db.ForeignKey("project.id", ondelete="CASCADE"))
-    iban = db.Column(db.String(34), index=True)
 
 
 class UserStory(db.Model):

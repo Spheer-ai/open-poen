@@ -1,9 +1,9 @@
 from app import app
+from app.util import populate_db_with_test_data
 from app.models import User, Payment
 from flask import url_for
 from pprint import pprint
 import click
-from app import util
 from app.bng import get_bng_payments
 from sqlalchemy.exc import IntegrityError
 
@@ -82,3 +82,11 @@ def create_user_invite_link(email):
         "Password reset URL for %s: %s"
         % (email, url_for("reset_wachtwoord", token=token, _external=True))
     )
+
+
+@database.command()
+def populate():
+    """Populates the database with a couple of "fake" test projects.
+    Useful for testing.
+    """
+    populate_db_with_test_data()
