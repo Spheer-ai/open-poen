@@ -41,7 +41,7 @@ Publish transactions of government subsidized projects
    - Retrieve the IP address of the nginx container `sudo docker inspect --format='{{.NetworkSettings.Networks.poen_internal.IPAddress}}' poen_nginx_1` and add it to your hosts file `/etc/hosts`: `<IP_address> openpoen.nl`
    - You can now visit http://openpoen.nl in your browser
 - Useful commands
-   - Run the tests: `sudo docker exec -it poen_app_1 nosetests`
+   - Run the tests: `sudo docker exec -it poen_app_1 pytest`
    - Remove and rebuild everything (NOTE: this also removes the database volume containing all transaction data (this is required if you want to load the .sql files from `docker/docker-entrypoint-initdb.d` again))
       - Production: `sudo docker-compose down --rmi all && sudo docker volume rm poen_db && sudo docker-compose up -d`
       - Development: `sudo docker-compose -f docker-compose.yml -f docker-compose-dev.yml down --rmi all && sudo docker volume rm poen_db && sudo docker-compose -f docker-compose.yml -f docker-compose-dev.yml up -d`

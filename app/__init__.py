@@ -1,4 +1,4 @@
-#/usr/bin/env python
+# /usr/bin/env python
 # -*- coding: utf-8 -*-
 import locale
 import os
@@ -22,7 +22,7 @@ class SQLAlchemy(_BaseSQLAlchemy):
         options["pool_pre_ping"] = True
 
 
-app = Flask(__name__, static_url_path='/static/dist')
+app = Flask(__name__, static_url_path="/static/dist")
 app.config.from_object(Config)
 
 
@@ -37,47 +37,44 @@ babel = Babel(app)
 
 login_manager = LoginManager()
 login_manager.init_app(app)
-login_manager.login_message = u"Log in om verder te gaan"
+login_manager.login_message = "Log in om verder te gaan"
 login_manager.login_view = "login"
 
-locale.setlocale(locale.LC_ALL, 'nl_NL.UTF-8')
+locale.setlocale(locale.LC_ALL, "nl_NL.UTF-8")
 
 from app import routes, models, errors
 
 if not app.debug:
     # Send email on errors
-    if app.config['MAIL_SERVER']:
+    if app.config["MAIL_SERVER"]:
         auth = None
-        if app.config['MAIL_USERNAME'] or app.config['MAIL_PASSWORD']:
-            auth = (app.config['MAIL_USERNAME'], app.config['MAIL_PASSWORD'])
+        if app.config["MAIL_USERNAME"] or app.config["MAIL_PASSWORD"]:
+            auth = (app.config["MAIL_USERNAME"], app.config["MAIL_PASSWORD"])
         secure = None
-        if app.config['MAIL_USE_TLS']:
+        if app.config["MAIL_USE_TLS"]:
             secure = ()
         mail_handler = SMTPHandler(
-            mailhost=(app.config['MAIL_SERVER'], app.config['MAIL_PORT']),
-            fromaddr=app.config['FROM'],
-            toaddrs=app.config['ADMINS'],
+            mailhost=(app.config["MAIL_SERVER"], app.config["MAIL_PORT"]),
+            fromaddr=app.config["FROM"],
+            toaddrs=app.config["ADMINS"],
             subject=f'[Open Poen {app.config["VERSION"]}] website error',
             credentials=auth,
-            secure=secure
+            secure=secure,
         )
         mail_handler.setLevel(logging.ERROR)
         app.logger.addHandler(mail_handler)
 
 # Log info messages and up to file
-if not os.path.exists('log'):
-    os.mkdir('log')
+if not os.path.exists("log"):
+    os.mkdir("log")
 # Disable this when running tests locally, or fix file permission for the
 # files.
 file_handler = RotatingFileHandler(
-    'log/open_poen.log',
-    maxBytes=1000000,
-    backupCount=10
+    "log/open_poen.log", maxBytes=1000000, backupCount=10
 )
 file_handler.setFormatter(
     logging.Formatter(
-        '%(asctime)s %(levelname)s: %(message)s '
-        '[in %(pathname)s:%(lineno)d]'
+        "%(asctime)s %(levelname)s: %(message)s " "[in %(pathname)s:%(lineno)d]"
     )
 )
 
@@ -90,4 +87,5 @@ if app.debug:
     app.logger.setLevel(logging.DEBUG)
 else:
     app.logger.setLevel(logging.INFO)
-app.logger.info('Open Poen startup')
+
+app.logger.info("Open Poen startup")
