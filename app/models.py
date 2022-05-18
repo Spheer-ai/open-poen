@@ -1,4 +1,3 @@
-from abc import ABCMeta, abstractmethod
 import locale
 import os
 from datetime import datetime
@@ -13,8 +12,52 @@ from werkzeug.utils import secure_filename
 
 from app import app, db, login_manager
 from app.email import send_invite
+import app.exceptions as ex
+from app.better_utils import format_flash
 
-# Association table between Project and User
+
+class DefaultCRUD(object):
+    def update(self, data):
+        for key, value in data.items():
+            setattr(self, key, value)
+        db.session.commit()
+
+    @classmethod
+    def create(cls, data):
+        instance = cls(**data)
+        db.session.add(instance)
+        db.session.commit()
+        return instance
+
+
+class DefaultErrorMessages:
+    @property
+    def on_succesful_edit(self) -> str:
+        return format_flash(f"{self.error_info} is aangepast.", "green")
+
+    @property
+    def on_failed_edit(self) -> str:
+        return format_flash(f"{self.error_info} is niet aangepast.", "red")
+
+    @property
+    def on_succesful_create(self) -> str:
+        return format_flash(f"{self.error_info} is aangemaakt.", "green")
+
+    @property
+    def on_failed_create(self) -> str:
+        return format_flash(f"{self.error_info} is niet aangemaakt.", "red")
+
+    @property
+    def on_succesful_delete(self) -> str:
+        """No need for a "on_failed_delete", because in that case, a 404 page is
+        returned."""
+        return format_flash(f"{self.error_info} is verwijderd.", "green")
+
+    @property
+    def error_info(self):
+        return "Object"
+
+
 project_user = db.Table(
     "project_user",
     db.Column(
@@ -25,7 +68,6 @@ project_user = db.Table(
 )
 
 
-# Association table between Subproject and User
 subproject_user = db.Table(
     "subproject_user",
     db.Column(
@@ -44,7 +86,7 @@ subproject_funder = db.Table(
     db.PrimaryKeyConstraint("subproject_id", "funder_id"),
 )
 
-# Association table between Payment and File for attachments
+
 payment_attachment = db.Table(
     "payment_attachment",
     db.Column(
@@ -55,7 +97,6 @@ payment_attachment = db.Table(
 )
 
 
-# Assocation table between Project and File for images
 project_image = db.Table(
     "project_image",
     db.Column(
@@ -66,7 +107,6 @@ project_image = db.Table(
 )
 
 
-# Assocation table between Subproject and File for images
 subproject_image = db.Table(
     "subproject_image",
     db.Column(
@@ -77,7 +117,6 @@ subproject_image = db.Table(
 )
 
 
-# Assocation table between Funder and File for images
 funder_image = db.Table(
     "funder_image",
     db.Column("funder_id", db.Integer, db.ForeignKey("funder.id", ondelete="CASCADE")),
@@ -86,7 +125,6 @@ funder_image = db.Table(
 )
 
 
-# Assocation table between UserStory and File for images
 user_story_image = db.Table(
     "userstory_image",
     db.Column(
@@ -95,51 +133,6 @@ user_story_image = db.Table(
     db.Column("file_id", db.Integer, db.ForeignKey("file.id", ondelete="CASCADE")),
     db.PrimaryKeyConstraint("user_story_id", "file_id"),
 )
-
-
-class DefaultCRUD(object):
-    def update(self, data):
-        for key, value in data.items():
-            setattr(self, key, value)
-        db.session.commit()
-
-    @classmethod
-    def create(cls, data):
-        instance = cls(**data)
-        db.session.add(instance)
-        db.session.commit()
-        return instance
-
-
-class DefaultErrorMessages:
-    def format(self, text, color):
-        return f"<span class=text-default-{color}>{text}</span>"
-
-    @property
-    def on_succesful_edit(self) -> str:
-        return self.format(f"{self.error_info} is aangepast.", "green")
-
-    @property
-    def on_failed_edit(self):
-        return self.format(f"{self.error_info} is niet aangepast.", "red")
-
-    @property
-    def on_succesful_create(self):
-        return self.format(f"{self.error_info} is aangemaakt.", "green")
-
-    @property
-    def on_failed_create(self):
-        return self.format(f"{self.error_info} is niet aangemaakt.", "red")
-
-    @property
-    def on_succesful_delete(self):
-        """No need for a "on_failed_delete", because in that case, a 404 page is
-        returned."""
-        return self.format(f"{self.error_info} is verwijderd.", "green")
-
-    @property
-    def error_info(self):
-        return "Object"
 
 
 class BNGAccount(db.Model):
@@ -234,7 +227,7 @@ class User(UserMixin, db.Model, DefaultCRUD, DefaultErrorMessages):
 
     @property
     def error_info(self):
-        return f"Gebruiker {self.email}"
+        return f"Gebruiker '{self.email}'"
 
 
 class Project(db.Model, DefaultCRUD, DefaultErrorMessages):
@@ -368,7 +361,7 @@ class Project(db.Model, DefaultCRUD, DefaultErrorMessages):
 
     @property
     def error_info(self):
-        return f"Initiatief {self.name}"
+        return f"Initiatief '{self.name}'"
 
 
 class Subproject(db.Model, DefaultCRUD, DefaultErrorMessages):
@@ -423,13 +416,28 @@ class Subproject(db.Model, DefaultCRUD, DefaultErrorMessages):
             .all()
         )
 
+    def update(self, data):
+        try:
+            super(Subproject, self).update(data)
+        except IntegrityError as e:
+            app.logger.error(repr(e))
+            raise ex.DoubleSubprojectName(data["name"])
+
+    @classmethod
+    def create(cls, data):
+        try:
+            return super(Subproject, cls).create(data)
+        except IntegrityError as e:
+            app.logger.error(repr(e))
+            raise ex.DoubleSubprojectName(data["name"])
+
     def finish(self, budget, funders, **kwargs):
         # TODO: Implement.
         pass
 
     @property
     def error_info(self):
-        return f"Activiteit {self.name}"
+        return f"Activiteit '{self.name}'"
 
 
 def _set_user_role(user, admin=False, financial=False, project_id=0, subproject_id=0):
@@ -466,6 +474,9 @@ class DebitCard(db.Model, DefaultCRUD, DefaultErrorMessages):
 
     @classmethod
     def create(cls, data):
+        """The debit card form already checks that the debit card is not already
+        assigned to a different project.
+        """
         present_debit_card = cls.query.filter_by(
             card_number=data["card_number"]
         ).first()
@@ -484,16 +495,14 @@ class DebitCard(db.Model, DefaultCRUD, DefaultErrorMessages):
                 .all()
             )
             if len(payments) > 0:
-                raise ValueError(
-                    "Payments have already been done with this debit card."
-                )
+                raise ex.CoupledDebitCardHasPayments(self.card_number)
             self.last_used_project_id = self.project_id
             del self.project
             db.session.commit()
 
     @property
     def error_info(self):
-        return f"Betaalpas {self.card_number}"
+        return f"Betaalpas '{self.card_number}'"
 
 
 class Payment(db.Model, DefaultCRUD, DefaultErrorMessages):
@@ -628,7 +637,7 @@ class Funder(db.Model, DefaultCRUD, DefaultErrorMessages):
 
     @property
     def error_info(self):
-        return f"Sponsor {self.name}"
+        return f"Sponsor '{self.name}'"
 
 
 class UserStory(db.Model):
@@ -703,7 +712,7 @@ class Category(db.Model, DefaultCRUD, DefaultErrorMessages):
 
     @property
     def error_info(self):
-        return f"Categorie {self.name}"
+        return f"Categorie '{self.name}'"
 
 
 @login_manager.user_loader

@@ -14,7 +14,9 @@ from app import bng as bng
 from app import db, util
 from app.models import BNGAccount
 from app.util import formatted_flash, form_in_request
+from app.better_utils import format_flash
 from flask import flash
+from app.exceptions import known_exceptions
 
 
 def filter_fields(form: FlaskForm) -> Dict:
@@ -173,9 +175,15 @@ def process_form(
                 instance.update(data)
             flash(instance.on_succesful_edit)
             return Status.succesful_edit
-        except (ValueError, IntegrityError) as e:
+        except known_exceptions as e:
+            app.logger.info(repr(e))
+            db.session().rollback()
+            flash(e.flash)
+            return Status.failed_edit
+        except Exception as e:
             app.logger.error(repr(e))
             db.session().rollback()
+            # TODO: This should explain that the error is unknown.
             flash(instance.on_failed_edit)
             return Status.failed_edit
     else:
@@ -188,8 +196,14 @@ def process_form(
                 instance = object.create(data)
             flash(instance.on_succesful_create)
             return Status.succesful_create
-        except (ValueError, IntegrityError) as e:
+        except known_exceptions as e:
+            app.logger.info(repr(e))
+            db.session().rollback()
+            flash(e.flash)
+            return Status.failed_create
+        except Exception as e:
             app.logger.error(repr(e))
             db.session().rollback()
-            flash(object.on_failed_create)
+            # TODO: This should explain that the error is unknown.
+            flash(instance.on_failed_create)
             return Status.failed_create
