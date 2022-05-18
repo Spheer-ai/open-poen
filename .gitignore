@@ -14,6 +14,8 @@ app/assets/node_modules/*
 app/.cache-loader/*
 
 config.py
+bung-config.py
+bng-config.py
 bunq-*.conf
 
 docker/letsencrypt/
@@ -23,6 +25,7 @@ notes.md
 
 server_backups/*
 get_backups.sh
+notes/
 
 *.key
 *.cer
