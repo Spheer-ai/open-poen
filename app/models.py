@@ -682,6 +682,21 @@ class Funder(db.Model, DefaultCRUD):
             locale.format("%d", self.budget, grouping=True, monetary=True),
         )
 
+    @classmethod
+    def attach(cls, funders, subproject_id, **kwargs):
+        subproject = Subproject.query.get(subproject_id)
+        subproject.funders.extend(funders)
+        db.session.add(subproject)
+        db.session.commit()
+        return subproject
+
+    def detach(self, id, subproject_id, **kwargs):
+        subproject = Subproject.query.get(subproject_id)
+        subproject.funders = [x for x in subproject.funders if x.id != id]
+        db.session.add(subproject)
+        db.session.commit()
+        pass
+
     @property
     def message_after_edit(self):
         return f"Sponsor {self.name} is aangepast."

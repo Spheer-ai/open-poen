@@ -417,6 +417,14 @@ def subproject(project_id, subproject_id):
             footer=app.config["FOOTER"],
         )
 
+    # FUNDER
+    funder_controller = subpc.Funder(subproject, clearance)
+    redirect = funder_controller.process_forms()
+    if redirect:
+        return redirect
+    funder_forms = funder_controller.get_forms()
+    modal_id = funder_controller.get_modal_ids(modal_id)
+
     # SUBPROJECT
     subproject_controller = subpc.Subproject(subproject)
     redirect = subproject_controller.process_forms()
@@ -508,6 +516,9 @@ def subproject(project_id, subproject_id):
         category_form=category_controller.add_form,
         modal_id=json.dumps(modal_id),
         payment_id=json.dumps(payment_id),
+        funder_forms=funder_forms,
+        add_funder_form=funder_controller.add_form,
+        funder_info=funder_controller.funder_info,
     )
 
 
