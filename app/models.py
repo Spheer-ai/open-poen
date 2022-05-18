@@ -1,3 +1,4 @@
+from abc import ABCMeta, abstractmethod
 import locale
 import os
 from datetime import datetime
@@ -110,6 +111,37 @@ class DefaultCRUD(object):
         return instance
 
 
+class DefaultErrorMessages:
+    def format(self, text, color):
+        return f"<span class=text-default-{color}>{text}</span>"
+
+    @property
+    def on_succesful_edit(self) -> str:
+        return self.format(f"{self.error_info} is aangepast.", "green")
+
+    @property
+    def on_failed_edit(self):
+        return self.format(f"{self.error_info} is niet aangepast.", "red")
+
+    @property
+    def on_succesful_create(self):
+        return self.format(f"{self.error_info} is aangemaakt.", "green")
+
+    @property
+    def on_failed_create(self):
+        return self.format(f"{self.error_info} is niet aangemaakt.", "red")
+
+    @property
+    def on_succesful_delete(self):
+        """No need for a "on_failed_delete", because in that case, a 404 page is
+        returned."""
+        return self.format(f"{self.error_info} is verwijderd.", "green")
+
+    @property
+    def error_info(self):
+        return "Object"
+
+
 class BNGAccount(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
@@ -120,7 +152,7 @@ class BNGAccount(db.Model):
     iban = db.Column(db.String(34), unique=True)
 
 
-class User(UserMixin, db.Model, DefaultCRUD):
+class User(UserMixin, db.Model, DefaultCRUD, DefaultErrorMessages):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), index=True, unique=True)
     password_hash = db.Column(db.String(128))
@@ -201,29 +233,11 @@ class User(UserMixin, db.Model, DefaultCRUD):
         return user
 
     @property
-    def message_after_edit(self):
-        return f"Gebruiker {self.email} is aangepast."
-
-    @property
-    def message_after_create(self):
-        return f"Gebruiker {self.email} is aangemaakt."
-
-    @property
-    def message_after_delete(self):
-        return f"Gebruiker {self.email} is verwijderd."
-
-    def message_after_edit_error(self, error, data):
-        return "Aanpassen mislukt vanwege een onbekende fout. De beheerder van Open Poen is op de hoogte gesteld."
-
-    @classmethod
-    def message_after_create_error(cls, error, data):
-        if type(error) == ValueError:
-            return str(error)
-        else:
-            return "Aanmaken mislukt vanwege een onbekende fout. De beheerder van Open Poen is op de hoogte gesteld."
+    def error_info(self):
+        return f"Gebruiker {self.email}"
 
 
-class Project(db.Model, DefaultCRUD):
+class Project(db.Model, DefaultCRUD, DefaultErrorMessages):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), index=True, unique=True)
     description = db.Column(db.Text)
@@ -254,7 +268,6 @@ class Project(db.Model, DefaultCRUD):
         "User", secondary=project_user, backref="projects", lazy="dynamic"
     )
     funders = db.relationship("Funder", backref="project", lazy="dynamic")
-    # This has to become passes I guess.
     payments = db.relationship(
         "Payment",
         backref="project",
@@ -354,32 +367,11 @@ class Project(db.Model, DefaultCRUD):
         pass
 
     @property
-    def message_after_edit(self):
-        return f"Initiatief {self.name} is aangepast."
-
-    @property
-    def message_after_create(self):
-        return f"Initiatief {self.name} is aangemaakt."
-
-    @property
-    def message_after_delete(self):
-        return f"Initiatief {self.name} is verwijderd."
-
-    def message_after_edit_error(self, error, data):
-        if type(error) == IntegrityError:
-            return f"Aanpassen mislukt. De naam {data['name']} is al gebruikt voor een ander initiatief."
-        else:
-            return "Aanpassen mislukt vanwege een onbekende fout. De beheerder van Open Poen is op de hoogte gesteld."
-
-    @classmethod
-    def message_after_create_error(cls, error, data):
-        if type(error) == IntegrityError:
-            return f"Aanmaken mislukt. De naam {data['name']} is al gebruikt voor een ander initiatief."
-        else:
-            return "Aanmaken mislukt vanwege een onbekende fout. De beheerder van Open Poen is op de hoogte gesteld."
+    def error_info(self):
+        return f"Initiatief {self.name}"
 
 
-class Subproject(db.Model, DefaultCRUD):
+class Subproject(db.Model, DefaultCRUD, DefaultErrorMessages):
     id = db.Column(db.Integer, primary_key=True)
     project_id = db.Column(db.Integer, db.ForeignKey("project.id", ondelete="CASCADE"))
     name = db.Column(db.String(120), index=True)
@@ -412,11 +404,9 @@ class Subproject(db.Model, DefaultCRUD):
     # Subproject names must be unique within a project
     __table_args__ = (db.UniqueConstraint("project_id", "name"),)
 
-    # Returns true if the subproject is linked to the given user_id
     def has_user(self, user_id):
         return self.users.filter(subproject_user.c.user_id == user_id).count() > 0
 
-    # Create select options to be shown in a dropdown menu
     def make_category_select_options(self):
         select_options = [("", "Geen")]
         for category in Category.query.filter_by(subproject_id=self.id):
@@ -438,29 +428,8 @@ class Subproject(db.Model, DefaultCRUD):
         pass
 
     @property
-    def message_after_edit(self):
-        return f"Activiteit {self.name} is aangepast."
-
-    @property
-    def message_after_create(self):
-        return f"Activiteit {self.name} is aangemaakt."
-
-    @property
-    def message_after_delete(self):
-        return f"Activiteit {self.name} is verwijderd."
-
-    def message_after_edit_error(self, error, data):
-        if type(error) == IntegrityError:
-            return f"Aanpassen mislukt. De naam {data['name']} is al gebruikt voor een andere activiteit in dit project."
-        else:
-            return "Aanpassen mislukt vanwege een onbekende fout. De beheerder van Open Poen is op de hoogte gesteld."
-
-    @classmethod
-    def message_after_create_error(cls, error, data):
-        if type(error) == IntegrityError:
-            return f"Aanmaken mislukt. De naam {data['name']} is al gebruikt voor een andere activiteit in dit project."
-        else:
-            return "Aanmaken mislukt vanwege een onbekende fout. De beheerder van Open Poen is op de hoogte gesteld."
+    def error_info(self):
+        return f"Activiteit {self.name}"
 
 
 def _set_user_role(user, admin=False, financial=False, project_id=0, subproject_id=0):
@@ -488,21 +457,12 @@ def _set_user_role(user, admin=False, financial=False, project_id=0, subproject_
         db.session.commit()
 
 
-# TODO: Use this for BNG.
-class DebitCard(db.Model, DefaultCRUD):
+class DebitCard(db.Model, DefaultCRUD, DefaultErrorMessages):
     id = db.Column(db.Integer, primary_key=True)
     card_number = db.Column(db.String(22), unique=True, nullable=False)
     payments = db.relationship("Payment", backref="debit_card", lazy="dynamic")
     project_id = db.Column(db.ForeignKey("project.id", ondelete="SET NULL"))
     last_used_project_id = db.Column(db.Integer)
-
-    @property
-    def message_after_edit(self):
-        return f"Betaalpas {self.card_number} is ontkoppeld."
-
-    @property
-    def message_after_create(self):
-        return f"Betaalpas {self.card_number} is toegevoegd."
 
     @classmethod
     def create(cls, data):
@@ -531,28 +491,12 @@ class DebitCard(db.Model, DefaultCRUD):
             del self.project
             db.session.commit()
 
-    def message_after_edit_error(self, error, data):
-        if type(error) == ValueError:
-            return (
-                "Betaalpas verwijderen is mislukt. Een betaalpas mag alleen worden verwijderd, als er "
-                "nog geen betalingen mee zijn gedaan."
-            )
-        else:
-            return "Aanpassen mislukt vanwege een onbekende fout. De beheerder van Open Poen is op de hoogte gesteld."
-
-    @classmethod
-    def message_after_create_error(cls, error, data):
-        if type(error) == ValueError:
-            return (
-                "Betaalpas verwijderen is mislukt. Een betaalpas mag alleen worden verwijderd, als er "
-                "nog geen betalingen mee zijn gedaan."
-            )
-        else:
-            return "Aanmaken mislukt vanwege een onbekende fout. De beheerder van Open Poen is op de hoogte gesteld."
+    @property
+    def error_info(self):
+        return f"Betaalpas {self.card_number}"
 
 
-# TODO: Make this compatible with BNG payments if necessary.
-class Payment(db.Model, DefaultCRUD):
+class Payment(db.Model, DefaultCRUD, DefaultErrorMessages):
     subproject_id = db.Column(
         db.Integer, db.ForeignKey("subproject.id", ondelete="SET NULL")
     )
@@ -641,26 +585,11 @@ class Payment(db.Model, DefaultCRUD):
         return super(Payment, cls).create(kwargs)
 
     @property
-    def message_after_edit(self):
-        return "Betaling is aangepast."
-
-    @property
-    def message_after_create(self):
-        return "Betaling is aangemaakt."
-
-    @property
-    def message_after_delete(self):
-        return "Betaling is verwijderd."
-
-    def message_after_edit_error(self, error, data):
-        return "Aanpassen mislukt vanwege een onbekende fout. De beheerder van Open Poen is op de hoogte gesteld."
-
-    @classmethod
-    def message_after_create_error(cls, error, data):
-        return "Aanmaken mislukt vanwege een onbekende fout. De beheerder van Open Poen is op de hoogte gesteld."
+    def error_info(self):
+        return "Betaling"
 
 
-class Funder(db.Model, DefaultCRUD):
+class Funder(db.Model, DefaultCRUD, DefaultErrorMessages):
     id = db.Column(db.Integer, primary_key=True)
     project_id = db.Column(db.Integer, db.ForeignKey("project.id", ondelete="CASCADE"))
     name = db.Column(db.String(120), index=True)
@@ -698,23 +627,8 @@ class Funder(db.Model, DefaultCRUD):
         pass
 
     @property
-    def message_after_edit(self):
-        return f"Sponsor {self.name} is aangepast."
-
-    @property
-    def message_after_create(self):
-        return f"Sponsor {self.name} is aangemaakt."
-
-    @property
-    def message_after_delete(self):
-        return f"Sponsor {self.name} is verwijderd."
-
-    def message_after_edit_error(self, error, data):
-        return "Aanpassen mislukt vanwege een onbekende fout. De beheerder van Open Poen is op de hoogte gesteld."
-
-    @classmethod
-    def message_after_create_error(cls, error, data):
-        return "Aanmaken mislukt vanwege een onbekende fout. De beheerder van Open Poen is op de hoogte gesteld."
+    def error_info(self):
+        return f"Sponsor {self.name}"
 
 
 class UserStory(db.Model):
@@ -755,7 +669,7 @@ def save_attachment(f, mediatype, db_object, folder):
     return new_file
 
 
-class File(db.Model, DefaultCRUD):
+class File(db.Model, DefaultCRUD, DefaultErrorMessages):
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(255), index=True)
     mimetype = db.Column(db.String(255))
@@ -770,26 +684,11 @@ class File(db.Model, DefaultCRUD):
         return attachment
 
     @property
-    def message_after_edit(self):
-        return "Media/bestand is aangepast."
-
-    @property
-    def message_after_create(self):
-        return "Media/bestand is aangemaakt."
-
-    @property
-    def message_after_delete(self):
-        return "Media/bestand is verwijderd."
-
-    def message_after_edit_error(self, error, data):
-        return "Aanpassen mislukt vanwege een onbekende fout. De beheerder van Open Poen is op de hoogte gesteld."
-
-    @classmethod
-    def message_after_create_error(cls, error, data):
-        return "Aanmaken mislukt vanwege een onbekende fout. De beheerder van Open Poen is op de hoogte gesteld."
+    def error_info(self):
+        return "Bestand"
 
 
-class Category(db.Model, DefaultCRUD):
+class Category(db.Model, DefaultCRUD, DefaultErrorMessages):
     id = db.Column(db.Integer, primary_key=True)
     subproject_id = db.Column(
         db.Integer, db.ForeignKey("subproject.id", ondelete="CASCADE")
@@ -799,27 +698,12 @@ class Category(db.Model, DefaultCRUD):
     payments = db.relationship("Payment", backref="category", lazy="dynamic")
 
     # Category names must be unique within a (sub)project
+    # TODO: Add error for duplicate name. Integrity error.
     __table_args__ = (db.UniqueConstraint("project_id", "subproject_id", "name"),)
 
     @property
-    def message_after_edit(self):
-        return f"Categorie {self.name} is aangepast."
-
-    @property
-    def message_after_create(self):
-        return f"Categorie {self.name} is aangemaakt."
-
-    @property
-    def message_after_delete(self):
-        return f"Categorie {self.name} is verwijderd."
-
-    def message_after_edit_error(self, error, data):
-        return "Aanpassen mislukt vanwege een onbekende fout. De beheerder van Open Poen is op de hoogte gesteld."
-
-    @classmethod
-    def message_after_create_error(cls, error, data):
-        # TODO: Add error for duplicate name. Integrity error.
-        return "Aanmaken mislukt vanwege een onbekende fout. De beheerder van Open Poen is op de hoogte gesteld."
+    def error_info(self):
+        return f"Categorie {self.name}"
 
 
 @login_manager.user_loader

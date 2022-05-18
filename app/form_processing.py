@@ -14,6 +14,7 @@ from app import bng as bng
 from app import db, util
 from app.models import BNGAccount
 from app.util import formatted_flash, form_in_request
+from flask import flash
 
 
 def filter_fields(form: FlaskForm) -> Dict:
@@ -148,7 +149,7 @@ def process_form(
             return Status.not_found
         db.session.delete(instance)
         db.session.commit()
-        util.formatted_flash(instance.message_after_delete, color="green")
+        flash(instance.on_succesful_delete)
         return Status.succesful_delete
 
     if not form.validate_on_submit():
@@ -163,37 +164,32 @@ def process_form(
         app.logger.info("Form is used to edit an existing entity.")
         instance = object.query.get(data["id"])
         if not instance:
-            util.formatted_flash(
-                "Aanpassen mislukt. Dit object bestaat niet.", color="red"
-            )
             return Status.not_found
         try:
             if alt_update is not None:
-                alt_update(instance, **data)  # Executes an instance method.
+                # Executes an instance method.
+                alt_update(instance, **data)
             else:
                 instance.update(data)
-            util.formatted_flash(instance.message_after_edit, color="green")
+            flash(instance.on_succesful_edit)
             return Status.succesful_edit
         except (ValueError, IntegrityError) as e:
             app.logger.error(repr(e))
             db.session().rollback()
-            util.formatted_flash(
-                instance.message_after_edit_error(e, data), color="red"
-            )
+            flash(instance.on_failed_edit)
             return Status.failed_edit
     else:
         app.logger.info("Form is used to create a new entity.")
         try:
             if alt_create is not None:
-                instance = alt_create(**data)  # Executes a class method.
+                # Executes a class method.
+                instance = alt_create(**data)
             else:
                 instance = object.create(data)
-            util.formatted_flash(instance.message_after_create, color="green")
+            flash(instance.on_succesful_create)
             return Status.succesful_create
         except (ValueError, IntegrityError) as e:
             app.logger.error(repr(e))
             db.session().rollback()
-            util.formatted_flash(
-                object.message_after_create_error(e, data), color="red"
-            )
+            flash(object.on_failed_create)
             return Status.failed_create
