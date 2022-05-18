@@ -85,6 +85,10 @@ def calculate_amounts(model, id, payments):
 
 
 def form_in_request(form, request):
+    """Necessary check because Wtforms often erroneously sees a form as valid and
+    submitted, even though this isn't the case. There should be a better way of doing
+    this.
+    """
     if not request.form:
         return False
 

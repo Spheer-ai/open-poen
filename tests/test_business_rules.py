@@ -1,36 +1,14 @@
 #!/usr/bin/env python
 
-import pytest
-from app import db, util, app
-from app.models import User, Project, Payment, Subproject, DebitCard
-
-
-@pytest.fixture()
-def flask_app():
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite://"
-    db.create_all()
-    yield app
-    db.session.remove()
-    db.drop_all()
-
-
-@pytest.fixture()
-def client(app):
-    return flask_app.test_client()
+from app import util
+from app.models import Project, Payment, Subproject
 
 
 def payment(r, av, sad):
     return {"route": r, "transaction_amount": av, "short_user_description": sad}
 
 
-def test_password_hashing():
-    u = User(first_name="testuser")
-    u.set_password("testpassword")
-    assert not u.check_password("notthetestpassword")
-    assert u.check_password("testpassword")
-
-
-def test_business_rules_scenario_1(flask_app):
+def test_business_rules_scenario_1(db):
     project = Project(name="Scenario 1", budget=10000, contains_subprojects=False)
 
     payments = [
@@ -54,7 +32,7 @@ def test_business_rules_scenario_1(flask_app):
     assert project_amounts["left_str"] == "€ 4.854"
 
 
-def test_business_rules_scenario_2(flask_app):
+def test_business_rules_scenario_2(db):
     project = Project(name="Scenario 2", budget=21000, contains_subprojects=True)
     subproject_1, subproject_2 = [
         Subproject(**x)
@@ -109,7 +87,7 @@ def test_business_rules_scenario_2(flask_app):
     assert subproject_2_amounts["left_str"] == "€ 10.867"
 
 
-def test_business_rules_scenario_3(flask_app):
+def test_business_rules_scenario_3(db):
     project = Project(name="Scenario 3", budget=50000, contains_subprojects=False)
 
     payments = [
@@ -134,7 +112,7 @@ def test_business_rules_scenario_3(flask_app):
     project_amounts["left_str"] == "€ 44.854"
 
 
-def test_business_rules_scenario_4(flask_app):
+def test_business_rules_scenario_4(db):
     project = Project(name="Scenario 4", budget=21000, contains_subprojects=True)
     subproject_1, subproject_2 = [
         Subproject(**x)
