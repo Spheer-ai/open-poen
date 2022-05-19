@@ -173,13 +173,7 @@ def index():
             continue
 
         amounts = util.calculate_amounts(
-            Project,
-            project.id,
-            db.session.query(Payment)
-            .join(DebitCard)
-            .join(Project)
-            .filter(Project.id == project.id)
-            .all(),
+            Project, project.id, project.get_all_payments()
         )
         if project.budget:
             total_awarded += project.budget
@@ -485,7 +479,7 @@ def subproject(project_id, subproject_id):
     amounts = util.calculate_amounts(
         Subproject,
         subproject_id,
-        Payment.query.filter(Payment.subproject_id == subproject_id).all(),
+        subproject.payments.all(),
     )
 
     budget = ""

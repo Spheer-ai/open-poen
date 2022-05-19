@@ -1,5 +1,5 @@
 from app import app
-from app.util import populate_db_with_test_data
+from app.populate import populate_db_with_test_data
 from app.models import User, Payment
 from flask import url_for
 from pprint import pprint
