@@ -1,3 +1,4 @@
+from re import S
 from app.better_utils import format_flash
 
 
@@ -30,4 +31,43 @@ class DoubleSubprojectName(BaseException):
         )
 
 
-known_exceptions = CoupledDebitCardHasPayments, DoubleSubprojectName
+class UserIsAlreadyPresentInProject(BaseException):
+    def __init__(self, email: str):
+        self.email = email
+
+    def __str__(self):
+        return (
+            f"Gebruiker '{self.email}' is niet toegevoegd, omdat deze al "
+            "initiatiefnemer was van dit initiatief."
+        )
+
+
+class UserIsAlreadyPresentInSubproject(BaseException):
+    def __init__(self, email: str):
+        self.email = email
+
+    def __str__(self):
+        return (
+            f"Gebruiker '{self.email}' is niet toegevoegd, omdat deze al "
+            "activiteitnemer was van deze activiteit."
+        )
+
+
+class DuplicateCategoryName(BaseException):
+    def __init__(self, name: str):
+        self.name = name
+
+    def __str__(self):
+        return (
+            f"Categorie '{self.name}' is niet goevoegd, omdat er al een "
+            "categorie bestaat met deze naam."
+        )
+
+
+known_exceptions = (
+    CoupledDebitCardHasPayments,
+    DoubleSubprojectName,
+    UserIsAlreadyPresentInProject,
+    UserIsAlreadyPresentInSubproject,
+    DuplicateCategoryName,
+)

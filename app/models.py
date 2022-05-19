@@ -3,6 +3,7 @@ import os
 from datetime import datetime
 from os import urandom
 from time import time
+from typing import Dict
 
 import jwt
 from flask_login import UserMixin
@@ -17,13 +18,13 @@ from app.better_utils import format_flash
 
 
 class DefaultCRUD(object):
-    def update(self, data):
+    def update(self, data: Dict):
         for key, value in data.items():
             setattr(self, key, value)
         db.session.commit()
 
     @classmethod
-    def create(cls, data):
+    def create(cls, data: Dict):
         instance = cls(**data)
         db.session.add(instance)
         db.session.commit()
@@ -214,16 +215,35 @@ class User(UserMixin, db.Model, DefaultCRUD, DefaultErrorMessages):
         user = cls.query.filter_by(email=email).first()
 
         if user:
-            _set_user_role(user, admin, financial, project_id, subproject_id)
+            user._set_user_role(admin, financial, project_id, subproject_id)
+            db.session.commit()
         if not user:
             user = cls(email=email)
             user.set_password(urandom(24))
             db.session.add(user)
+            user._set_user_role(admin, financial, project_id, subproject_id)
             db.session.commit()
-            _set_user_role(user, admin, financial, project_id, subproject_id)
             send_invite(user)
 
         return user
+
+    def _set_user_role(
+        self, admin=False, financial=False, project_id=0, subproject_id=0
+    ):
+        if admin:
+            self.admin = True
+        if financial:
+            self.financial = True
+        if project_id:
+            project = Project.query.get(project_id)
+            if self in project.users:
+                raise ex.UserIsAlreadyPresentInProject(self.email)
+            project.users.append(self)
+        if subproject_id:
+            subproject = Subproject.query.get(subproject_id)
+            if self in subproject.users:
+                raise ex.UserIsAlreadyPresentInSubproject(self.email)
+            subproject.users.append(self)
 
     @property
     def error_info(self):
@@ -276,7 +296,7 @@ class Project(db.Model, DefaultCRUD, DefaultErrorMessages):
 
     def make_category_select_options(self):
         select_options = [("", "Geen")]
-        for category in Category.query.filter_by(project_id=self.id):
+        for category in self.categories.all():
             select_options.append((str(category.id), category.name))
         return select_options
 
@@ -420,7 +440,7 @@ class Subproject(db.Model, DefaultCRUD, DefaultErrorMessages):
         try:
             super(Subproject, self).update(data)
         except IntegrityError as e:
-            app.logger.error(repr(e))
+            app.logger.info(repr(e))
             raise ex.DoubleSubprojectName(data["name"])
 
     @classmethod
@@ -428,7 +448,7 @@ class Subproject(db.Model, DefaultCRUD, DefaultErrorMessages):
         try:
             return super(Subproject, cls).create(data)
         except IntegrityError as e:
-            app.logger.error(repr(e))
+            app.logger.info(repr(e))
             raise ex.DoubleSubprojectName(data["name"])
 
     def finish(self, budget, funders, **kwargs):
@@ -440,31 +460,6 @@ class Subproject(db.Model, DefaultCRUD, DefaultErrorMessages):
         return f"Activiteit '{self.name}'"
 
 
-def _set_user_role(user, admin=False, financial=False, project_id=0, subproject_id=0):
-    if admin:
-        user.admin = True
-        db.session.commit()
-    if financial:
-        user.financial = True
-        db.session.commit()
-    if project_id:
-        project = Project.query.get(project_id)
-        if user in project.users:
-            raise ValueError(
-                "Gebruiker niet toegevoegd: deze gebruiker was al initiatiefnemer van dit initiatief."
-            )
-        project.users.append(user)
-        db.session.commit()
-    if subproject_id:
-        subproject = Subproject.query.get(subproject_id)
-        if user in subproject.users:
-            raise ValueError(
-                "Gebruiker niet toegevoegd: deze gebruiker was al activiteitnemer van deze activiteit."
-            )
-        subproject.users.append(user)
-        db.session.commit()
-
-
 class DebitCard(db.Model, DefaultCRUD, DefaultErrorMessages):
     id = db.Column(db.Integer, primary_key=True)
     card_number = db.Column(db.String(22), unique=True, nullable=False)
@@ -474,9 +469,9 @@ class DebitCard(db.Model, DefaultCRUD, DefaultErrorMessages):
 
     @classmethod
     def create(cls, data):
-        """The debit card form already checks that the debit card is not already
-        assigned to a different project.
-        """
+        # TODO: The debit card form already checks that the debit card is not already
+        # assigned to a different project, but it would be better to check for that
+        # here, because of race conditions.
         present_debit_card = cls.query.filter_by(
             card_number=data["card_number"]
         ).first()
@@ -707,8 +702,25 @@ class Category(db.Model, DefaultCRUD, DefaultErrorMessages):
     payments = db.relationship("Payment", backref="category", lazy="dynamic")
 
     # Category names must be unique within a (sub)project
-    # TODO: Add error for duplicate name. Integrity error.
+    # TODO: How to handle this constraint if we get rid of the possibility to do
+    # projects without subprojects? At the moment, this constraint does nothing,
+    # because a category has either a project, or a subproject, linked to it.
     __table_args__ = (db.UniqueConstraint("project_id", "subproject_id", "name"),)
+
+    def update(self, data):
+        try:
+            super(Category, self).update(data)
+        except IntegrityError as e:
+            app.logger.info(repr(e))
+            raise ex.DuplicateCategoryName(data["name"])
+
+    @classmethod
+    def create(cls, data):
+        try:
+            return super(Category, cls).create(data)
+        except IntegrityError as e:
+            app.logger.info(repr(e))
+            raise ex.DuplicateCategoryName(data["name"])
 
     @property
     def error_info(self):
