@@ -57,17 +57,24 @@ class JustifyProjectController(Controller):
             }
 
         all_choices = [(str(x.id), f"{x.subsidy_number} - {x.name}") for x in funders]
-        eligible_choices = [
+        conceptually_justifiable_choices = [
+            x
+            for x, funder in zip(all_choices, funders)
+            if funder.has_at_least_one_subproject
+        ]
+        justifiable_choices = [
             x for x, funder in zip(all_choices, funders) if funder.can_be_justified
         ]
-        self.justify_form.funder.choices = eligible_choices
+        self.justify_form.funder.choices = justifiable_choices
         try:
-            self.justify_form.funder.default = eligible_choices[0][0]
+            self.justify_form.funder.default = justifiable_choices[0][0]
         except IndexError:
             pass
-        self.concept_justify_form.funder.choices = all_choices
+        self.concept_justify_form.funder.choices = conceptually_justifiable_choices
         try:
-            self.concept_justify_form.funder.default = all_choices[0][0]
+            self.concept_justify_form.funder.default = conceptually_justifiable_choices[
+                0
+            ][0]
         except IndexError:
             pass
 

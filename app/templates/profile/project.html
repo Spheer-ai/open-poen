@@ -204,6 +204,8 @@
                                     <li>Er geen sponsoren zijn waarvan alle activiteiten zijn afgerond.</li>
                                     <li>Alle sponsoren reeds zijn afgerond.</li>
                                     <li>Dit initiatief überhaupt nog geen sponsoren heeft.</li>
+                                    <li>Dit initiatief wel sponsoren heeft, maar dat deze nog geen activiteiten
+                                        bevatten.</li>
                                 </ul>
                                 <p>Zodra het wel mogelijk is om een sponsor te verantwoorden, zult u dat hier kunnen
                                     doen.</p>
@@ -312,6 +314,7 @@
                         </div>
                         <div class="modal-body">
                             <div class="interactive-unit">
+                                {% if concept_justify_project_form.funder.choices | length > 0 %}
                                 {{ concept_justify_project_form.csrf_token }}
                                 <p>U gaat uw initiatief tussentijds rapporteren. Selecteer de sponsor die u tussentijds
                                     wilt
@@ -321,7 +324,12 @@
                                     <li>{{funder}} {{funder.label}}</li>
                                     {% endfor %}
                                 </ul>
+                                {% else %}
+                                <p>U kunt uw initiatief niet rapporteren, omdat er geen enkele sponsor is met een
+                                    gekoppelde activiteit.</p>
+                                {% endif %}
                             </div>
+                            {% if concept_justify_project_form.funder.choices | length > 0 %}
                             <div class="interactive-unit">
                                 <!-- This is selectively shown and hidden with some JS. -->
                                 <p>U gaat tussentijds rapporteren:</p>
@@ -348,6 +356,7 @@
                                 <div class="form-action">{{ concept_justify_project_form.concept }}</div>
                                 <div class="form-action">{{ concept_justify_project_form.send }}</div>
                             </div>
+                            {% endif %}
                             {% if concept_justify_project_form.has_errors %}
                             <div>
                                 <p style="color: red; margin-bottom: 0px;">Het formulier bevat fout(en).

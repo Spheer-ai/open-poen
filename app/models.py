@@ -693,9 +693,18 @@ class Funder(db.Model, DefaultCRUD, DefaultErrorMessages):
         return f"Sponsor '{self.name}'"
 
     @property
+    def has_at_least_one_subproject(self):
+        return len(self.subprojects.all()) > 0
+
+    @property
     def can_be_justified(self):
-        unfinished_subproject = any([not x.finished for x in self.subprojects.all()])
-        return False if unfinished_subproject or self.justified else True
+        subprojects = self.subprojects.all()
+        unfinished_subproject = any([not x.finished for x in subprojects])
+        return (
+            self.has_at_least_one_subproject
+            and not unfinished_subproject
+            and not self.justified
+        )
 
 
 class UserStory(db.Model):
