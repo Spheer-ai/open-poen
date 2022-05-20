@@ -30,7 +30,7 @@ def human_format(num):
 def format_currency(num, currency_symbol="€ "):
     return "%s%s" % (
         currency_symbol,
-        locale.format("%d", round(num), grouping=True, monetary=True),
+        locale.format("%d", num, grouping=True, monetary=True),
     )
 
 

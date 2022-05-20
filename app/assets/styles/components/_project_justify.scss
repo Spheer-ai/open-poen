@@ -15,3 +15,15 @@
 .addproject-action:hover {
     cursor: pointer;
 }
+
+.active-subproject {
+    color: $green;
+}
+
+.finished-subproject {
+    color: $blue;
+}
+
+.justified-subproject {
+    color: $red;
+}

@@ -8,6 +8,17 @@
 {% endblock %}
 
 {% block content %}
+{% if not subproject.finished %}
+{% set title_class = "active-subproject" %}
+{% set title = "Lopende activiteit" %}
+{% elif subproject.finished and not subproject.project.justified %}
+{% set title_class = "finished-subproject" %}
+{% set title = "Afgeronde activiteit" %}
+{% elif subproject.finished and subproject.project.jusitified %}
+{% set title_class = "justified-subproject" %}
+{% set title = "Verantwoorde activiteit" %}
+{% endif %}
+
 <div class="container">
     <br>
     <h1>{{ subproject.name}}</h1>
@@ -15,8 +26,7 @@
     <br>
     <div class="row">
         <div class="col-12 col-sm-9 col-md-6">
-            <!-- TODO: make dynamic. -->
-            <h2 class="active-subproject">Lopende activiteit</h2>
+            <h2 class="{{ title_class }}">{{ title }}</h2>
             <br>
             <br>
             {{ macros.info_unit("Beschrijving:", subproject.description) }}
@@ -71,7 +81,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for funder in subproject.funders %}
+                    {% for funder in funders %}
                     <tr>
                         <!-- No need to check if the value is None, because it's a required field in the funder form. -->
                         <td>{{ funder.name }}</td>
@@ -87,16 +97,39 @@
     {% endif %}
     <br>
     <br>
-    {{ macros.info_unit("Totaal budget:", total_funder_budget) }}
-    <br>
-    <br>
-    <a href="{{ url_for('subproject', project_id=subproject.project.id, subproject_id=subproject.id) }}"><b>Activiteit
-            beheren</b></a>
-    <br>
-    <br>
-    <!-- TODO -->
-    <a class="projectprofile-action" data-toggle="modal" data-target="#finish-subproject"><b>Activiteit afronden</b></a>
+    <div class="row">
+        <div class="col-12 col-md-6">
+            {{ macros.info_unit("Totaal budget:", total_funder_budget) }}
+            {% if subproject.finished %}
+            {{ macros.info_unit("Totaal inkomsten:", financial_info["awarded"]) }}
+            {{ macros.info_unit("Totaal inbesteding:", financial_info["insourcing"]) }}
+            {{ macros.info_unit("Totaal besteed:", financial_info["expenses"]) }}
+            {{ macros.info_unit("Start uitgaven:", financial_info["first_payment_date"]) }}
+            {{ macros.info_unit("Eind uitgaven:", financial_info["last_payment_date"]) }}
+            {% endif %}
+            <a href="{{ url_for('subproject', project_id=subproject.project.id, subproject_id=subproject.id) }}"><b>Activiteit
+                    beheren</b></a>
+            {% if not subproject.finished %}
+            <br>
+            <br>
+            <a class="projectprofile-action" data-toggle="modal" data-target="#finish-subproject"><b>Activiteit
+                    afronden</b></a>
+            {% endif %}
+            <br>
+            <br>
+            {% if subproject.finished and not subproject.project.justified %}
+            <a class="projectprofile-action" data-toggle="modal" data-target="#undo-finish-subproject"><b>Activiteit
+                    openen</b></a>
+            {% endif %}
+        </div>
+        <div class="col-12 col-md-6">
+            {% if subproject.finished %}
+            {{ macros.info_unit("Beschrijving resultaten:", subproject.finished_description) }}
+            {% endif %}
+        </div>
+    </div>
 
+    {% if not subproject.finished %}
     <div class="modal fade" id="finish-subproject" tabindex="-1" role="dialog" aria-labelledby="activiteitAfrondenLabel"
         aria-hidden="true">
         <div class="modal-dialog" role="document">
@@ -117,33 +150,36 @@
                             {{ wtf.form_field(finish_subproject_form.description) }}
                             {{ wtf.form_field(finish_subproject_form.purpose) }}
                             {{ wtf.form_field(finish_subproject_form.target_audience) }}
+                            {{ wtf.form_field(finish_subproject_form.budget) }}
                         </div>
                         <div class="interactive-unit">
                             <p>U gaat deze activiteit afronden. Controleer de sponsor(s) van deze activiteit.</p>
-                            {% if finish_subproject_form.funders | list | length == 0 %}
+                            <p>Ziet u een fout bij deze gegevens? U kunt verbeteringen aanbrengen op de <a
+                                    href="{{ url_for('project', project_id=subproject.project.id) }}">initiatiefpagina</a>
+                                onder "sponsoren beheren". Het koppelen en ontkoppelen van sponsors kan op de <a
+                                    href="{{ url_for('subproject', project_id=subproject.project.id, subproject_id=subproject.id) }}">activiteitspagina</a>.
+                            </p>
+                            {% if funders | length == 0 %}
                             <i>Deze activiteit heeft geen sponsor(s).</i>
-                            <br>
-                            <br>
                             {% else %}
-                            {% for funder in finish_subproject_form.funders %}
-                            <h2>Sponsor {{loop.index}}</h2>
-                            {{ funder.form.id }}
-                            {{ wtf.form_field(funder.form.name) }}
-                            {{ wtf.form_field(funder.form.subsidy) }}
-                            {{ wtf.form_field(funder.form.subsidy_number) }}
-                            {{ wtf.form_field(funder.form.url) }}
-                            {{ wtf.form_field(funder.form.budget) }}
+                            {% for funder in funders %}
+                            <!-- No need to check if the value is None, because it's a required field in the funder form. -->
+                            <p>{{ funder.name }}</p>
+                            <ul>
+                                <li>{{ funder.subsidy }}</li>
+                                <li>{{ funder.subsidy_number }}</li>
+                                <li>{{ funder.get_formatted_currency() }}</li>
+                            </ul>
                             {% endfor %}
                             {% endif %}
-                            <hr>
-                            {{ wtf.form_field(finish_subproject_form.budget) }}
                         </div>
                         <div class="interactive-unit">
                             <p>U gaat deze activiteit afronden.</p>
                             <br>
                             <p>Beschrijf hieronder kort wat u heeft gedaan tijdens deze activiteit en welk resultaat
                                 deze activiteit heeft opgeleverd.</p>
-                            {{ wtf.form_field(finish_subproject_form.ending_description) }}
+                            {{ wtf.form_field(finish_subproject_form.finished_description) }}
+                            {{ finish_subproject_form.finished }}
                         </div>
                         {% if finish_subproject_form.has_errors %}
                         <div>
@@ -168,6 +204,36 @@
             </div>
         </div>
     </div>
+    {% endif %}
+
+    {% if subproject.finished and not subproject.project.justified %}
+    <div class="modal fade" id="undo-finish-subproject" tabindex="-1" role="dialog"
+        aria-labelledby="activiteitOpenenLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <form method="POST">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="activiteitOpenenLabel">Activiteit Openen</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Zolang het initiatief van deze activiteit niet is verantwoord, is het mogelijk om deze
+                            activiteit opnieuw te openen.</p>
+                        <p>Hier moet komen te staan wat daar de gevolgen van zijn.</p>
+                        {{ undo_finish_subproject_form.csrf_token }}
+                        {{ undo_finish_subproject_form.finished }}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-danger" data-dismiss="modal">Annuleren</button>
+                        {{ undo_finish_subproject_form.submit }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
 {% block scripts %}

@@ -52,6 +52,7 @@ class FunderController(Controller):
         self.funder_info: Dict[int, Dict] = {}
 
     def add(self):
+        # TODO: Fix error message here.
         status = process_form(self.add_form, Funder, alt_create=Funder.attach)
         return self.redirects[status]
 

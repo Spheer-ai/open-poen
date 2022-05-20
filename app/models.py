@@ -394,6 +394,7 @@ class Subproject(db.Model, DefaultCRUD, DefaultErrorMessages):
     hidden = db.Column(db.Boolean, default=False)
     budget = db.Column(db.Integer)
     image = db.Column(db.Integer, db.ForeignKey("file.id", ondelete="SET NULL"))
+    finished_description = db.Column(db.Text)
     finished = db.Column(db.Boolean, default=False)
 
     users = db.relationship(
@@ -451,9 +452,10 @@ class Subproject(db.Model, DefaultCRUD, DefaultErrorMessages):
             app.logger.info(repr(e))
             raise ex.DoubleSubprojectName(data["name"])
 
-    def finish(self, budget, funders, **kwargs):
+    def finish(self, data):
         # TODO: Implement.
         pass
+        # super(Subproject, self).update()
 
     @property
     def error_info(self):
@@ -625,7 +627,7 @@ class Funder(db.Model, DefaultCRUD, DefaultErrorMessages):
 
     def detach(self, id, subproject_id, **kwargs):
         subproject = Subproject.query.get(subproject_id)
-        subproject.funders = [x for x in subproject.funders if x.id != id]
+        subproject.funders.remove(Funder.query.get(id))
         db.session.add(subproject)
         db.session.commit()
         pass

@@ -738,6 +738,32 @@ def profile_subproject(subproject_id):
     finish_subproject_form = controller.get_forms()
     modal_id = controller.get_modal_ids(modal_id)
 
+    payments = sorted(subproject.payments.all(), key=lambda x: x.booking_date)
+
+    financial_info = {
+        "awarded": util.format_currency(
+            sum([x.transaction_amount for x in payments if x.route == "inkomsten"])
+        ),
+        "insourcing": util.format_currency(
+            sum([x.transaction_amount for x in payments if x.route == "inbesteding"])
+        ),
+        "expenses": util.format_currency(
+            sum(
+                [
+                    x.transaction_amount
+                    for x in payments
+                    if x.route in ("uitgaven", "inbesteding")
+                ]
+            )
+        ),
+        "first_payment_date": payments[0].booking_date.strftime("%d-%m-%Y")
+        if len(payments) != 0
+        else None,
+        "last_payment_date": payments[-1].booking_date.strftime("%d-%m-%Y")
+        if len(payments) != 0
+        else None,
+    }
+
     if len(modal_id) == 0:
         modal_id = None
 
@@ -753,7 +779,10 @@ def profile_subproject(subproject_id):
             sum([x.budget for x in subproject.funders])
         ),
         finish_subproject_form=finish_subproject_form,
+        undo_finish_subproject_form=controller.undo_form,
         modal_id=modal_id,
+        funders=controller.funders,
+        financial_info=financial_info,
     )
 
 
