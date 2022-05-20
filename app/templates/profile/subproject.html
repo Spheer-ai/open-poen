@@ -11,10 +11,10 @@
 {% if not subproject.finished %}
 {% set title_class = "active-subproject" %}
 {% set title = "Lopende activiteit" %}
-{% elif subproject.finished and not subproject.project.justified %}
+{% elif subproject.finished and not subproject.justified %}
 {% set title_class = "finished-subproject" %}
 {% set title = "Afgeronde activiteit" %}
-{% elif subproject.finished and subproject.project.jusitified %}
+{% elif subproject.finished and subproject.justified %}
 {% set title_class = "justified-subproject" %}
 {% set title = "Verantwoorde activiteit" %}
 {% endif %}
@@ -78,6 +78,7 @@
                         <th scope="col">Subsidieregeling:</th>
                         <th scope="col">Beschikkingsnummer:</th>
                         <th scope="col">Budget:</th>
+                        <th scope="col">Verantwoord:</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -88,6 +89,7 @@
                         <td>{{ funder.subsidy }}</td>
                         <td>{{ funder.subsidy_number }}</td>
                         <td>{{ funder.get_formatted_currency() }}</td>
+                        <td>{{ "ja" if funder.justified else "nee" }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -117,7 +119,7 @@
             {% endif %}
             <br>
             <br>
-            {% if subproject.finished and not subproject.project.justified %}
+            {% if subproject.finished and not subproject.justified %}
             <a class="projectprofile-action" data-toggle="modal" data-target="#undo-finish-subproject"><b>Activiteit
                     openen</b></a>
             {% endif %}
@@ -206,7 +208,7 @@
     </div>
     {% endif %}
 
-    {% if subproject.finished and not subproject.project.justified %}
+    {% if subproject.finished and not subproject.justified %}
     <div class="modal fade" id="undo-finish-subproject" tabindex="-1" role="dialog"
         aria-labelledby="activiteitOpenenLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
@@ -219,9 +221,8 @@
                         </button>
                     </div>
                     <div class="modal-body">
-                        <p>Zolang het initiatief van deze activiteit niet is verantwoord, is het mogelijk om deze
+                        <p>Zolang geen sponsoren van deze activiteit zijn verantwoord, is het mogelijk om deze
                             activiteit opnieuw te openen.</p>
-                        <p>Hier moet komen te staan wat daar de gevolgen van zijn.</p>
                         {{ undo_finish_subproject_form.csrf_token }}
                         {{ undo_finish_subproject_form.finished }}
                     </div>

@@ -11,7 +11,7 @@ from app import app
 
 class JustifyProjectForm(FlaskForm):
     id = IntegerField(widget=HiddenInput())
-    funders = RadioField(choices=[])
+    funder = RadioField(choices=[])
     concept = SubmitField(
         "Conceptversie downloaden", render_kw={"class": "btn btn-danger"}
     )
@@ -22,7 +22,7 @@ class JustifyProjectForm(FlaskForm):
 
 class ConceptJustifyProjectForm(FlaskForm):
     id = IntegerField(widget=HiddenInput())
-    funders = RadioField(choices=[])
+    funder = RadioField(choices=[])
     concept = SubmitField(
         "Conceptversie downloaden", render_kw={"class": "btn btn-danger"}
     )
@@ -50,26 +50,24 @@ class JustifyProjectController(Controller):
         self.funder_info = {}
         for funder in funders:
             subprojects = funder.subprojects.all()
-            unfinished_subproject = any([not x.finished for x in subprojects])
-            funder.eligible = False if unfinished_subproject else True
             self.funder_info[funder.id] = {
                 "name": f"{funder.subsidy_number} - {funder.name}",
                 "subprojects": [x.name for x in subprojects],
-                "eligible": funder.eligible,
+                "can_be_justified": funder.can_be_justified,
             }
 
         all_choices = [(str(x.id), f"{x.subsidy_number} - {x.name}") for x in funders]
         eligible_choices = [
-            x for x, funder in zip(all_choices, funders) if funder.eligible
+            x for x, funder in zip(all_choices, funders) if funder.can_be_justified
         ]
-        self.justify_form.funders.choices = eligible_choices
+        self.justify_form.funder.choices = eligible_choices
         try:
-            self.justify_form.funders.default = eligible_choices[0][0]
+            self.justify_form.funder.default = eligible_choices[0][0]
         except IndexError:
             pass
-        self.concept_justify_form.funders.choices = all_choices
+        self.concept_justify_form.funder.choices = all_choices
         try:
-            self.concept_justify_form.funders.default = all_choices[0][0]
+            self.concept_justify_form.funder.default = all_choices[0][0]
         except IndexError:
             pass
 
@@ -79,8 +77,8 @@ class JustifyProjectController(Controller):
         if not form_in_request(self.concept_justify_form, request):
             self.concept_justify_form.process()
 
-    def process(self, form):
-        status = process_form(form, Project, alt_update=Project.justify)
+    def process(self, form, alt_update):
+        status = process_form(form, Project, alt_update=alt_update)
         return self.redirects[status]
 
     def get_forms(self):
@@ -94,10 +92,12 @@ class JustifyProjectController(Controller):
         return self.concept_justify_form
 
     def process_forms(self):
-        redirect = self.process(self.justify_form)
+        redirect = self.process(self.justify_form, alt_update=Project.justify)
         if redirect:
             return redirect
-        redirect = self.process(self.concept_justify_form)
+        redirect = self.process(
+            self.concept_justify_form, alt_update=Project.concept_justify
+        )
         if redirect:
             return redirect
 

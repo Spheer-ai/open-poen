@@ -19,13 +19,12 @@ from flask import flash
 from app.exceptions import known_exceptions
 
 
-def filter_fields(form: FlaskForm) -> Dict:
+def filter_fields(form: FlaskForm, extra_filter: bool) -> Dict:
     # Filter out these field names, because they are never saved in the DB.
-    fields = {
-        x.short_name: x.data
-        for x in form
-        if x.type not in ["SubmitField", "CSRFTokenField"]
-    }
+    fields_to_filter = []
+    if extra_filter:
+        fields_to_filter.extend(["SubmitField", "CSRFTokenField"])
+    fields = {x.short_name: x.data for x in form if x.type not in fields_to_filter}
     # Set empty strings to None to keep everything consistent. Also because column like
     # foreign keys can't handle empty strings.
     for key, value in fields.items():
@@ -160,7 +159,8 @@ def process_form(
 
     app.logger.info(f"Form is valid. Data: {form.data}.")
 
-    data = filter_fields(form)
+    extra_filter = True if (alt_update is None and alt_create is None) else False
+    data = filter_fields(form, extra_filter)
 
     if hasattr(form, "id") and form.id.data is not None:
         app.logger.info("Form is used to edit an existing entity.")

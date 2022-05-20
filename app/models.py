@@ -11,10 +11,10 @@ from sqlalchemy.exc import IntegrityError
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 
-from app import app, db, login_manager
-from app.email import send_invite
 import app.exceptions as ex
+from app import app, db, login_manager
 from app.better_utils import format_flash
+from app.email import send_invite
 
 
 class DefaultCRUD(object):
@@ -210,7 +210,13 @@ class User(UserMixin, db.Model, DefaultCRUD, DefaultErrorMessages):
 
     @classmethod
     def add_user(
-        cls, email, admin=False, financial=False, project_id=0, subproject_id=0
+        cls,
+        email,
+        admin=False,
+        financial=False,
+        project_id=0,
+        subproject_id=0,
+        **kwargs,
     ):
         user = cls.query.filter_by(email=email).first()
 
@@ -268,7 +274,6 @@ class Project(db.Model, DefaultCRUD, DefaultErrorMessages):
     # TODO: budget_file
     budget = db.Column(db.Integer)
     image = db.Column(db.Integer, db.ForeignKey("file.id", ondelete="SET NULL"))
-    justified = db.Column(db.Boolean, default=False)
 
     subprojects = db.relationship(
         "Subproject",
@@ -290,6 +295,9 @@ class Project(db.Model, DefaultCRUD, DefaultErrorMessages):
     images = db.relationship("File", secondary=project_image, lazy="dynamic")
     categories = db.relationship("Category", backref="project", lazy="dynamic")
     debit_cards = db.relationship("DebitCard", backref="project", lazy="dynamic")
+
+    def __repr__(self):
+        return "<Project {}>".format(self.name)
 
     def has_user(self, user_id):
         return self.users.filter(project_user.c.user_id == user_id).count() > 0
@@ -375,13 +383,43 @@ class Project(db.Model, DefaultCRUD, DefaultErrorMessages):
 
         return project
 
-    def justify(self, **kwargs):
-        # TODO: Implement.
-        pass
+    def justify(self, funder, concept, send, **kwargs):
+        funder = Funder.query.get(funder)
+        if concept:
+            # TODO: Download the PDF-rapport.
+            pass
+        elif send:
+            funder.justified = True
+            db.session.add(funder)
+            db.session.commit()
+            # TODO: Send the PDF-rapport.
+        return self
+
+    def concept_justify(self, funder, concept, send, **kwargs):
+        funder = Funder.query.get(funder)
+        if concept:
+            # TODO: Download the PDF-rapport.
+            pass
+        elif send:
+            # TODO: Send the PDf-rapport.
+            pass
+        return self
 
     @property
     def error_info(self):
         return f"Initiatief '{self.name}'"
+
+    @property
+    def unfinished_subprojects(self):
+        return [x for x in self.subprojects.all() if not x.finished]
+
+    @property
+    def finished_subprojects(self):
+        return [x for x in self.subprojects.all() if x.finished and not x.justified]
+
+    @property
+    def justified_subprojects(self):
+        return [x for x in self.subprojects.all() if x.finished and x.justified]
 
 
 class Subproject(db.Model, DefaultCRUD, DefaultErrorMessages):
@@ -460,6 +498,23 @@ class Subproject(db.Model, DefaultCRUD, DefaultErrorMessages):
     @property
     def error_info(self):
         return f"Activiteit '{self.name}'"
+
+    @property
+    def justified(self):
+        return any([x.justified for x in self.funders.all()])
+
+    @property
+    def state(self):
+        if not self.finished and not self.justified:
+            return "in_progress"
+        if self.finished and not self.justified:
+            return "finished"
+        elif self.finished and self.justified:
+            return "justified"
+        else:
+            raise AssertionError(
+                "Unaccounted for edge case in determining subproject status."
+            )
 
 
 class DebitCard(db.Model, DefaultCRUD, DefaultErrorMessages):
@@ -603,6 +658,7 @@ class Funder(db.Model, DefaultCRUD, DefaultErrorMessages):
     subsidy = db.Column(db.String(120))
     subsidy_number = db.Column(db.String(120))
     budget = db.Column(db.Integer)
+    justified = db.Column(db.Boolean, default=False)
     images = db.relationship("File", secondary=funder_image, lazy="dynamic")
     subprojects = db.relationship(
         "Subproject",
@@ -635,6 +691,11 @@ class Funder(db.Model, DefaultCRUD, DefaultErrorMessages):
     @property
     def error_info(self):
         return f"Sponsor '{self.name}'"
+
+    @property
+    def can_be_justified(self):
+        unfinished_subproject = any([not x.finished for x in self.subprojects.all()])
+        return False if unfinished_subproject or self.justified else True
 
 
 class UserStory(db.Model):

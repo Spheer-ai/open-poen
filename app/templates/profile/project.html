@@ -73,26 +73,47 @@
                 {% endif %}
                 <hr>
                 <b>Lopende activiteiten:</b>
-                {% if project.subprojects | list | length > 0 %}
+                {% if project.unfinished_subprojects | length > 0 %}
                 <ul>
-                    {% for subproject in project.subprojects %}
+                    {% for subproject in project.unfinished_subprojects %}
                     <li><a href="{{ url_for('subproject', project_id=project.id, subproject_id=subproject.id) }}">{{
                             subproject.name}}</a></li>
                     {% endfor %}
                 </ul>
                 {% else %}
+                <br>
                 <i>Er zijn geen lopende activiteiten.</i>
                 <br>
                 <br>
                 {% endif %}
                 <b>Afgeronde activiteiten:</b>
-                <!-- TODO -->
+                {% if project.finished_subprojects | length > 0 %}
+                <ul>
+                    {% for subproject in project.finished_subprojects %}
+                    <li><a href="{{ url_for('subproject', project_id=project.id, subproject_id=subproject.id) }}">{{
+                            subproject.name}}</a></li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <br>
+                <i>Er zijn geen afgeronde activiteiten.</i>
                 <br>
                 <br>
+                {% endif %}
                 <b>Verantwoorde activiteiten:</b>
-                <!-- TODO -->
+                {% if project.justified_subprojects | length > 0 %}
+                <ul>
+                    {% for subproject in project.justified_subprojects %}
+                    <li><a href="{{ url_for('subproject', project_id=project.id, subproject_id=subproject.id) }}">{{
+                            subproject.name}}</a></li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <br>
+                <i>Er zijn geen verantwoorde activiteiten.</i>
                 <br>
                 <br>
+                {% endif %}
             </div>
         </div>
         <br>
@@ -112,6 +133,7 @@
                             <th scope="col">Subsidieregeling:</th>
                             <th scope="col">Beschikkingsnummer:</th>
                             <th scope="col">Budget:</th>
+                            <th scope="col">Verantwoord:</th>
                             <th scope="col">Activiteiten:</th>
                         </tr>
                     </thead>
@@ -123,13 +145,13 @@
                             <td>{{ funder.subsidy }}</td>
                             <td>{{ funder.subsidy_number }}</td>
                             <td>{{ funder.get_formatted_currency() }}</td>
+                            <td>{{ "ja" if funder.justified else "nee" }}</td>
                             <td>
                                 {% if funder.subprojects | list | length == 0 %}
                                 Geen.
                                 {% else %}
                                 {% for subproject in funder.subprojects %}
-                                <a
-                                    href="{{ url_for('subproject', project_id=subproject.project_id, subproject_id=subproject.id) }}">{{
+                                <a href="{{ url_for('profile_subproject', subproject_id=subproject.id) }}">{{
                                     subproject.name }}</a>
                                 <br>
                                 {% endfor %}
@@ -172,22 +194,23 @@
                         </div>
                         <div class="modal-body">
                             <div class="interactive-unit">
-                                {% set n_eligible_funders = funder_info.values() | sum(attribute='eligible') %}
+                                {% set n_eligible_funders = funder_info.values() | sum(attribute='can_be_justified') %}
                                 {% set n_ineligible_funders = funder_info.values() | length - n_eligible_funders %}
                                 {{ justify_project_form.csrf_token }}
                                 {% if n_eligible_funders == 0 %}
                                 <p>Het is op dit moment niet mogelijk om een sponsor voor dit initiatief te
-                                    verantwoorden,
-                                    omdat elke gekoppelde sponsor voor dit initiatief minstens één onafgeronde
-                                    activiteit
-                                    bevat.</p>
-                                <p>Rond alle activiteiten voor een of meerde (gekoppelde) sponsoren af, om deze
-                                    vervolgens
-                                    hier te kunnen verantwoorden.</p>
+                                    verantwoorden. Dit kan zijn omdat:</p>
+                                <ul>
+                                    <li>Er geen sponsoren zijn waarvan alle activiteiten zijn afgerond.</li>
+                                    <li>Alle sponsoren reeds zijn afgerond.</li>
+                                    <li>Dit initiatief überhaupt nog geen sponsoren heeft.</li>
+                                </ul>
+                                <p>Zodra het wel mogelijk is om een sponsor te verantwoorden, zult u dat hier kunnen
+                                    doen.</p>
                                 {% else %}
                                 <p>U gaat verantwoorden. Selecteer de sponsor die u wilt verantwoorden.</p>
                                 <ul style="list-style: none;">
-                                    {% for funder in justify_project_form.funders %}
+                                    {% for funder in justify_project_form.funder %}
                                     <li>{{funder}} {{funder.label}}</li>
                                     {% endfor %}
                                 </ul>
@@ -196,7 +219,8 @@
                                     onafgeronde
                                     activiteiten bevatten.</p>
                                 <ul style="list-style: none;">
-                                    {% for ineligible_funder in funder_info.values() | selectattr("eligible", "false")
+                                    {% for ineligible_funder in funder_info.values() | selectattr("can_be_justified",
+                                    "false")
                                     %}
                                     <li>{{ ineligible_funder["name"] }}</li>
                                     {% endfor %}
@@ -210,7 +234,7 @@
                                 <!-- This is selectively shown and hidden with some JS. -->
                                 <ul style="list-style: none;">
                                     {% for funder_id, funder_info in funder_info.items() %}
-                                    {% if funder_info["eligible"] %}
+                                    {% if funder_info["can_be_justified"] %}
                                     <li class="funder-info" id="funder-info-{{funder_id}}">
                                         <div class="bng-info-unit">
                                             <i class="fas fa-check-square fa-lg"></i>
@@ -293,7 +317,7 @@
                                     wilt
                                     rapporteren.</p>
                                 <ul style="list-style: none;">
-                                    {% for funder in concept_justify_project_form.funders %}
+                                    {% for funder in concept_justify_project_form.funder %}
                                     <li>{{funder}} {{funder.label}}</li>
                                     {% endfor %}
                                 </ul>
