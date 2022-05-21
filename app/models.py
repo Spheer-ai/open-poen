@@ -421,6 +421,10 @@ class Project(db.Model, DefaultCRUD, DefaultErrorMessages):
     def justified_subprojects(self):
         return [x for x in self.subprojects.all() if x.finished and x.justified]
 
+    @property
+    def coupleable_funders(self):
+        return [x for x in self.funders if not x.justified]
+
 
 class Subproject(db.Model, DefaultCRUD, DefaultErrorMessages):
     id = db.Column(db.Integer, primary_key=True)

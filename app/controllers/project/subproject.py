@@ -11,9 +11,7 @@ class SubprojectController(Controller):
     def __init__(self, project: Project):
         self.project = project
         self.form = SubprojectForm(prefix="subproject_form")
-        self.form.funders.query = Funder.query.filter_by(
-            project_id=self.project.id
-        ).all()
+        self.form.funders.query = self.project.coupleable_funders
         self.redirects = create_redirects_for_project_or_subproject(
             self.project.id, None
         )
@@ -30,9 +28,7 @@ class SubprojectController(Controller):
             form = SubprojectForm(
                 prefix="subproject_form", **{"project_id": self.project.id}
             )
-            form.funders.query = Funder.query.filter_by(
-                project_id=self.project.id
-            ).all()
+            form.funders.query = self.project.coupleable_funders
             return form
 
     def process_forms(self):

@@ -498,7 +498,7 @@
               </ul>
             </div>
 
-            {% if permissions.PROJECT_OWNER %}
+            {% if permissions.PROJECT_OWNER and subproject_form.funders.query | length > 0 %}
             <!-- Button trigger modal -->
             <button type="button" class="btn button-poen-small bg-grey-blue mx-auto" data-toggle="modal"
               data-target="#subproject-toevoegen">
@@ -533,14 +533,12 @@
                       <div class="interactive-unit">
                         <h2>Sponsor(s) activiteit</h2>
                         <hr>
-                        {% if subproject_form.funders.query | length > 0 %}
                         {% for f in subproject_form.funders %}
                         {{ wtf.form_field(f) }}
                         {% endfor %}
-                        {% else %}
-                        <p>Het is niet mogelijk om sponsoren te selecteren, omdat er nog geen sponsoren zijn gekoppeld
-                          aan dit initiatief.</p>
-                        {% endif %}
+                        {% for error in subproject_form.funders.errors %}
+                        <p style="color: red">{{ error }}</p>
+                        {% endfor %}
                       </div>
                       {% if subproject_form.has_errors %}
                       <div>

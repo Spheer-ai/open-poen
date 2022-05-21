@@ -206,6 +206,7 @@ class SubprojectForm(FlaskForm):
         "Funder",
         option_widget=CheckboxInput(),
         get_label="name",
+        validators=[DataRequired()],
     )
     submit = SubmitField(
         "Opslaan", render_kw={"class": "btn btn-info interactive-submit"}

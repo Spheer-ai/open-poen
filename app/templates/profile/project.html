@@ -219,7 +219,8 @@
                                 {% if n_ineligible_funders > 0 %}
                                 <p>De volgende sponsoren kunt u op dit moment niet verantwoorden, omdat deze nog
                                     onafgeronde
-                                    activiteiten bevatten.</p>
+                                    activiteiten bevatten, überhaupt geen activiteiten bevatten, of reeds verantwoord
+                                    zijn.</p>
                                 <ul style="list-style: none;">
                                     {% for ineligible_funder in funder_info.values() | selectattr("can_be_justified",
                                     "false")
@@ -261,7 +262,10 @@
                                 <p>U gaat uw initiatief verantwoorden. Let op: verantwoorden is een formele stap binnen
                                     het
                                     proces van subsidieverstrekking. Als u uw verantwoording verstuurt naar uw
-                                    subsidieverstrekker, kunt u dit niet ongedaan maken.</p>
+                                    subsidieverstrekker, kunt u dit niet ongedaan maken. Daarnaast komen alle
+                                    activiteiten die gekoppeld zijn aan deze sponsor daarmee definitief op verantwoord
+                                    te staan. Deze activiteiten zijn daarna nooit meer aan te passen en worden
+                                    gearchiveerd.</p>
                                 <p>Wilt u dit nog niet doen en alleen
                                     uw verantwoording bekijken ter controle? Klik dan op de onderstaande knop om de
                                     conceptversie te downloaden.</p>
