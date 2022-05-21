@@ -1,4 +1,4 @@
-from typing import Dict, Type
+from typing import Dict, Type, Union
 
 from app.controllers.util import Controller, create_redirects_for_project_or_subproject
 from app.form_processing import process_form
@@ -52,17 +52,21 @@ class FunderController(Controller):
         return self.redirects[status]
 
     def get_forms(self):
-        forms: Dict[int, self.form_class] = {}
+        forms: Dict[int, Dict[str, Union[self.form_class, Funder]]] = {}
         for funder in self.project.funders:
             data = funder.__dict__
             id = data["id"]
-            forms[id] = self.form_class(prefix=f"edit_funder_form_{id}", **data)
+            form = self.form_class(prefix=f"edit_funder_form_{id}", **data)
+            forms[id] = (
+                form,
+                funder,
+            )
 
         # If a funder has previously been edited with an error, we have to insert it.
         if len(self.edit_form.errors) > 0:
             forms[self.get_id_of_submitted_form] = self.edit_form
 
-        return list(forms.values())
+        return forms.values()
 
     def process_forms(self):
         redirect = self.process(self.add_form)

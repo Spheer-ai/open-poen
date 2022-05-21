@@ -95,7 +95,7 @@
 
                     <hr>
 
-                    {% for funder_form in funder_forms %}
+                    {% for funder_form, funder_object in funder_forms %}
                     <div>
                       <!-- Button trigger modal -->
                       <button type="button" class="btn button-poen-small bg-grey-blue mx-auto" data-toggle="modal"
@@ -103,41 +103,6 @@
                         beheren
                       </button>
                       {{ funder_form.name.data }}
-
-                      <!-- Modal -->
-                      <div class="modal fade" id="sponsor-beheren-{{ funder_form.id.data }}" tabindex="-1" role="dialog"
-                        aria-labelledby="sponsorbeherenLabel" aria-hidden="true">
-                        <div class="modal-dialog" role="document">
-                          <div class="modal-content">
-                            <form method="POST">
-                              <div class="modal-header">
-                                <h5 class="modal-title" id="sponsorbeherenLabel">Sponsor Beheren</h5>
-                                <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
-                                  <span aria-hidden="true">&times;</span>
-                                </button>
-                              </div>
-                              <div class="modal-body">
-                                <div>
-                                  {{ funder_form.csrf_token }}
-
-                                  {% for f in funder_form %}
-                                  {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' %}
-                                  {{ wtf.form_field(f, class="form-control")}}
-                                  {% endif %}
-                                  {% endfor %}
-                                  {{ funder_form.id }}
-                                  {{ funder_form.project_id }}
-                                </div>
-                              </div>
-                              <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
-                                {{ funder_form.remove }}
-                                {{ funder_form.submit }}
-                              </div>
-                            </form>
-                          </div>
-                        </div>
-                      </div>
                     </div>
                     <br>
                     {% endfor %}
@@ -1306,6 +1271,57 @@
   </div>
   {% endfor %}
   {% endif %}
+
+  {% for funder_form, funder_object in funder_forms %}
+  <!-- Modal voor sponsor beheren -->
+  <div class="modal fade" id="sponsor-beheren-{{ funder_form.id.data }}" tabindex="-1" role="dialog"
+    aria-labelledby="sponsorbeherenLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <form method="POST">
+          <div class="modal-header">
+            <h5 class="modal-title" id="sponsorbeherenLabel">Sponsor Beheren</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div>
+              {% if not funder_object.justified %}
+              {{ funder_form.csrf_token }}
+
+              {% for f in funder_form %}
+              {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' %}
+              {{ wtf.form_field(f, class="form-control")}}
+              {% endif %}
+              {% endfor %}
+              {% if funder_object.has_at_least_one_subproject %}
+              <p>Het is niet mogelijk om deze sponsor te verwijderen, omdat deze gekoppeld is aan minstens één
+                activiteit. Ontkoppel de sponsor indien mogelijk, om deze te kunnen verwijderen.</p>
+              {% endif %}
+              {{ funder_form.id }}
+              {{ funder_form.project_id }}
+              {% else %}
+              <p>Het is niet mogelijk om aanpassingen te doen aan deze sponsor, of om deze te
+                verwijderen, omdat deze sponsor is verantwoord.</p>
+              {% endif %}
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
+            {% if not funder_object.justified %}
+            {% if not funder_object.has_at_least_one_subproject %}
+            {{ funder_form.remove }}
+            {% endif %}
+            {{ funder_form.submit }}
+            {% endif %}
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+
   {% endif %}
   {% endblock %}
 
