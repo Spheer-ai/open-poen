@@ -511,17 +511,8 @@ class Subproject(db.Model, DefaultCRUD, DefaultErrorMessages):
         return any([x.justified for x in self.funders.all()])
 
     @property
-    def state(self):
-        if not self.finished and not self.justified:
-            return "in_progress"
-        if self.finished and not self.justified:
-            return "finished"
-        elif self.finished and self.justified:
-            return "justified"
-        else:
-            raise AssertionError(
-                "Unaccounted for edge case in determining subproject status."
-            )
+    def has_at_least_one_payment(self):
+        return len(self.payments.all()) > 0
 
 
 class DebitCard(db.Model, DefaultCRUD, DefaultErrorMessages):

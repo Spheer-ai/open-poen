@@ -115,7 +115,7 @@
             {% endif %}
             <a href="{{ url_for('subproject', project_id=subproject.project.id, subproject_id=subproject.id) }}"><b>Activiteit
                     beheren</b></a>
-            {% if not subproject.finished and permissions.PROJECT_OWNER %}
+            {% if not subproject.finished and permissions.PROJECT_OWNER and subproject.has_at_least_one_payment %}
             <br>
             <br>
             <a class="projectprofile-action" data-toggle="modal" data-target="#finish-subproject"><b>Activiteit
@@ -135,7 +135,7 @@
         </div>
     </div>
 
-    {% if not subproject.finished and permissions.PROJECT_OWNER %}
+    {% if not subproject.finished and permissions.PROJECT_OWNER and subproject.has_at_least_one_payment %}
     <div class="modal fade" id="finish-subproject" tabindex="-1" role="dialog" aria-labelledby="activiteitAfrondenLabel"
         aria-hidden="true">
         <div class="modal-dialog" role="document">
