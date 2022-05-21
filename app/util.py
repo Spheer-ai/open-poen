@@ -1,7 +1,7 @@
 import enum
 import locale
 from datetime import datetime, timedelta
-from typing import Dict
+from typing import Dict, Optional
 
 from babel.numbers import format_percent
 from flask import flash
@@ -148,47 +148,74 @@ def get_permissions(clearance: Clearance) -> Dict[str, bool]:
     return {k: v <= clearance.value for k, v in permissions.items()}
 
 
-def get_index_clearance() -> Clearance:
+def get_clearance(
+    project: Optional[Project] = None, subproject: Optional[Subproject] = None
+) -> Clearance:
     if not current_user.is_authenticated:
         return Clearance.ANONYMOUS
     elif current_user.admin:
         return Clearance.ADMIN
     elif current_user.financial:
         return Clearance.FINANCIAL
-    else:
-        # Default to anonymous, because that's the lowest level of clearance.
-        return Clearance.ANONYMOUS
-
-
-def get_project_clearance(project: Project) -> Clearance:
-    if not current_user.is_authenticated:
-        return Clearance.ANONYMOUS
-    elif current_user.admin:
-        return Clearance.ADMIN
-    elif current_user.financial:
-        return Clearance.FINANCIAL
-    elif project.has_user(current_user.id):
-        return Clearance.PROJECT_OWNER
-    elif project.contains_subprojects and any(
-        [subproject.has_user(current_user.id) for subproject in project.subprojects]
+    elif (project is not None and project.has_user(current_user.id)) or (
+        subproject is not None and subproject.project.has_user(current_user.id)
     ):
-        return Clearance.SUBPROJECT_OWNER
-    else:
-        # Default to anonymous, because that's the lowest level of clearance.
-        return Clearance.ANONYMOUS
-
-
-def get_subproject_clearance(subproject: Subproject) -> Clearance:
-    if not current_user.is_authenticated:
-        return Clearance.ANONYMOUS
-    elif current_user.admin:
-        return Clearance.ADMIN
-    elif current_user.financial:
-        return Clearance.FINANCIAL
-    elif subproject.project.has_user(current_user.id):
         return Clearance.PROJECT_OWNER
-    elif subproject.has_user(current_user.id):
+    elif (
+        project is not None
+        and any(
+            [
+                subproject.has_user(current_user.id)
+                for subproject in project.subprojects.all()
+            ]
+        )
+    ) or (subproject is not None and subproject.project.has_user(current_user.id)):
         return Clearance.SUBPROJECT_OWNER
     else:
-        # Default to anonymous, because that's the lowest level of clearance.
         return Clearance.ANONYMOUS
+
+
+# def get_index_clearance() -> Clearance:
+#     if not current_user.is_authenticated:
+#         return Clearance.ANONYMOUS
+#     elif current_user.admin:
+#         return Clearance.ADMIN
+#     elif current_user.financial:
+#         return Clearance.FINANCIAL
+#     else:
+#         # Default to anonymous, because that's the lowest level of clearance.
+#         return Clearance.ANONYMOUS
+
+
+# def get_project_clearance(project: Project) -> Clearance:
+#     if not current_user.is_authenticated:
+#         return Clearance.ANONYMOUS
+#     elif current_user.admin:
+#         return Clearance.ADMIN
+#     elif current_user.financial:
+#         return Clearance.FINANCIAL
+#     elif project.has_user(current_user.id):
+#         return Clearance.PROJECT_OWNER
+#     elif project.contains_subprojects and any(
+#         [subproject.has_user(current_user.id) for subproject in project.subprojects]
+#     ):
+#         return Clearance.SUBPROJECT_OWNER
+#     else:
+#         # Default to anonymous, because that's the lowest level of clearance.
+#         return Clearance.ANONYMOUS
+
+
+# def get_subproject_clearance(subproject: Subproject) -> Clearance:
+#     if not current_user.is_authenticated:
+#         return Clearance.ANONYMOUS
+#     elif current_user.admin:
+#         return Clearance.ADMIN
+#     elif current_user.financial:
+#         return Clearance.FINANCIAL
+#     elif subproject.project.has_user(current_user.id):
+#         return Clearance.PROJECT_OWNER
+#     elif subproject.has_user(current_user.id):
+#         return Clearance.SUBPROJECT_OWNER
+#     else:
+#         # Default to anonymous, because that's the lowest level of clearance.
+#         return Clearance.ANONYMOUS

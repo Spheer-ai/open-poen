@@ -314,6 +314,8 @@ class Project(db.Model, DefaultCRUD, DefaultErrorMessages):
         for subproject in self.subprojects.all():
             if user_id is not None and not subproject.has_user(user_id):
                 continue
+            if subproject.finished:
+                continue
             select_options.append((str(subproject.id), subproject.name))
         return select_options
 

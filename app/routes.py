@@ -88,7 +88,7 @@ def index():
     # form errors.
     bng_info = {}
 
-    clearance = util.get_index_clearance()
+    clearance = util.get_clearance()
 
     # ADMIN
     edit_admin_form = EditAdminForm(prefix="edit_admin_form")
@@ -226,7 +226,7 @@ def project(project_id):
 
     project = Project.query.get(project_id)
 
-    clearance = util.get_project_clearance(project)
+    clearance = util.get_clearance(project=project)
 
     if clearance > util.Clearance.ANONYMOUS:
         bng_info = get_bng_info(BNGAccount.query.all())
@@ -328,6 +328,9 @@ def project(project_id):
 
     payments = project.get_all_payments()
     for payment in payments:
+        if payment.subproject is not None and payment.subproject.finished:
+            payment.editable = False
+            continue
         if clearance >= util.Clearance.PROJECT_OWNER:
             payment.editable = True
         elif clearance >= util.Clearance.SUBPROJECT_OWNER and (
@@ -400,7 +403,7 @@ def subproject(project_id, subproject_id):
 
     subproject = Subproject.query.get(subproject_id)
 
-    clearance = util.get_subproject_clearance(subproject)
+    clearance = util.get_clearance(subproject=subproject)
 
     if (not subproject) or (
         subproject.hidden and clearance < util.Clearance.SUBPROJECT_OWNER
@@ -469,6 +472,9 @@ def subproject(project_id, subproject_id):
 
     payments = subproject.payments.all()
     for payment in payments:
+        if subproject.finished:
+            payment.editable = False
+            continue
         if clearance >= util.Clearance.PROJECT_OWNER:
             payment.editable = True
         elif clearance >= util.Clearance.SUBPROJECT_OWNER:
