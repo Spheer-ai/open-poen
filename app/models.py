@@ -15,6 +15,7 @@ import app.exceptions as ex
 from app import app, db, login_manager
 from app.better_utils import format_flash
 from app.email import send_invite
+from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 
 
 class DefaultCRUD(object):

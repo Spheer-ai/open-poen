@@ -35,13 +35,9 @@ class FunderController(Controller):
         self.add_form = AddFunderForm(
             prefix="add_funder_form", subproject_id=self.subproject.id
         )
-        linkable = db.session.query(Funder).filter(
-            Funder.project_id == self.subproject.project.id
-        )
+        linkable = self.subproject.project.coupleable_funders
         already_linked = [x.id for x in self.subproject.funders.all()]
-        self.add_form.funders.query = linkable.filter(
-            Funder.id.notin_(already_linked)
-        ).all()
+        self.add_form.funders.query = [x for x in linkable if x not in already_linked]
 
         self.edit_form = EditFunderForm(
             prefix=f"edit_funder_form_{self.get_id_of_submitted_form}"
