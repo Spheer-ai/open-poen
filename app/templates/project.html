@@ -148,6 +148,14 @@
               {% else %}
               <h3 class="text-center totaal">ontvangen inkomsten {{ amounts.awarded_str }}</h3>
               {% endif %}
+              <div class="project-modals-card">
+              <div class="text-center">
+              <a href="{{ url_for('profile_project', project_id=project.id) }}"><button type="button"
+                    class="btn btn-danger modal-button">
+                    initiatief bekijken
+              </button></a>
+              </div>
+              </div>
             </div>
 
             {% if permissions.SUBPROJECT_OWNER %}
@@ -414,11 +422,6 @@
                 </div>
 
                 {% endif %}
-
-                <a href="{{ url_for('profile_project', project_id=project.id) }}"><button type="button"
-                    class="btn btn-danger modal-button">
-                    initiatief bekijken
-                  </button></a>
 
               </div>
 

@@ -43,12 +43,14 @@
                         src="{{ url_for('upload', filename='subproject-attachment/' + image.filename) }}">
                 </a>
             </div>
+            {% if permissions.SUBPROJECT_OWNER %}
             <button type="button" class="btn btn-danger" data-toggle="modal"
                 data-target="#bijlage-verwijder-{{ image.id }}">
                 Verwijderen
             </button>
             {{ macros.remove_attachment_modal(image, edit_attachment_form) }}
-            {% else %}
+            {% endif %}
+            {% elif not image and permissions.SUBPROJECT_OWNER %}
             <form method="POST" enctype="multipart/form-data">
                 {{ edit_project_profile_form.csrf_token }}
                 {% for f in edit_project_profile_form %}
@@ -58,6 +60,8 @@
                 {% endfor %}
                 {{ edit_project_profile_form.submit }}
             </form>
+            {% else %}
+            <i>Profielfoto ontbreekt.</i>
             {% endif %}
         </div>
     </div>
@@ -111,7 +115,7 @@
             {% endif %}
             <a href="{{ url_for('subproject', project_id=subproject.project.id, subproject_id=subproject.id) }}"><b>Activiteit
                     beheren</b></a>
-            {% if not subproject.finished %}
+            {% if not subproject.finished and permissions.PROJECT_OWNER %}
             <br>
             <br>
             <a class="projectprofile-action" data-toggle="modal" data-target="#finish-subproject"><b>Activiteit
@@ -119,7 +123,7 @@
             {% endif %}
             <br>
             <br>
-            {% if subproject.finished and not subproject.justified %}
+            {% if subproject.finished and not subproject.justified and permissions.PROJECT_OWNER %}
             <a class="projectprofile-action" data-toggle="modal" data-target="#undo-finish-subproject"><b>Activiteit
                     openen</b></a>
             {% endif %}
@@ -131,7 +135,7 @@
         </div>
     </div>
 
-    {% if not subproject.finished %}
+    {% if not subproject.finished and permissions.PROJECT_OWNER %}
     <div class="modal fade" id="finish-subproject" tabindex="-1" role="dialog" aria-labelledby="activiteitAfrondenLabel"
         aria-hidden="true">
         <div class="modal-dialog" role="document">
@@ -208,7 +212,7 @@
     </div>
     {% endif %}
 
-    {% if subproject.finished and not subproject.justified %}
+    {% if subproject.finished and not subproject.justified and permissions.PROJECT_OWNER %}
     <div class="modal fade" id="undo-finish-subproject" tabindex="-1" role="dialog"
         aria-labelledby="activiteitOpenenLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">

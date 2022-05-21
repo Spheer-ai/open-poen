@@ -629,9 +629,12 @@ def profile_user(user_id):
 
 @app.route("/profiel/project/<project_id>", methods=["GET", "POST"])
 def profile_project(project_id):
+
     modal_id = []
 
     project = Project.query.filter_by(id=project_id).first()
+
+    clearance = util.get_clearance(project=project)
 
     if not project:
         return render_template(
@@ -692,6 +695,7 @@ def profile_project(project_id):
         concept_justify_project_form=concept_justify_project_form,
         funder_info=controller.funder_info,
         modal_id=modal_id,
+        permissions=util.get_permissions(clearance),
     )
 
 
@@ -700,6 +704,8 @@ def profile_subproject(subproject_id):
     modal_id = []
 
     subproject = Subproject.query.filter_by(id=subproject_id).first()
+
+    clearance = util.get_clearance(subproject=subproject)
 
     if not subproject:
         return render_template(
@@ -789,6 +795,7 @@ def profile_subproject(subproject_id):
         modal_id=modal_id,
         funders=controller.funders,
         financial_info=financial_info,
+        permissions=util.get_permissions(clearance),
     )
 
 

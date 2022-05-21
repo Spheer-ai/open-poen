@@ -55,12 +55,14 @@
                             src="{{ url_for('upload', filename='project-attachment/' + image.filename) }}">
                     </a>
                 </div>
+                {% if permissions.PROJECT_OWNER %}
                 <button type="button" class="btn btn-danger" data-toggle="modal"
                     data-target="#bijlage-verwijder-{{ image.id }}">
                     Verwijderen
                 </button>
                 {{ macros.remove_attachment_modal(image, edit_attachment_form) }}
-                {% else %}
+                {% endif %}
+                {% elif not image and permissions.PROJECT_OWNER %}
                 <form method="POST" enctype="multipart/form-data">
                     {{ edit_project_profile_form.csrf_token }}
                     {% for f in edit_project_profile_form %}
@@ -70,6 +72,8 @@
                     {% endfor %}
                     {{ edit_project_profile_form.submit }}
                 </form>
+                {% else %}
+                <i>Profielfoto ontbreekt.</i>
                 {% endif %}
                 <hr>
                 <b>Lopende activiteiten:</b>
@@ -174,13 +178,18 @@
         <br>
         <br>
         <!-- TODO -->
+        {% if permissions.PROJECT_OWNER %}
         <a href="projectprofile-action" data-toggle="modal" data-target="#concept-justify-project"><b
                 class="projectprofile-action">Tussentijds rapporteren</b></a>
         <br>
         <br>
+        {% endif %}
         <!-- TODO -->
+        {% if permissions.PROJECT_OWNER %}
         <a class="projectprofile-action" data-toggle="modal" data-target="#justify-project"><b>Verantwoorden</b></a>
+        {% endif %}
 
+        {% if permissions.PROJECT_OWNER %}
         <div class="modal fade" id="justify-project" tabindex="-1" role="dialog"
             aria-labelledby="initiatiefVerantwoordenLabel" aria-hidden="true">
             <div class="modal-dialog" role="document">
@@ -303,7 +312,9 @@
                 </div>
             </div>
         </div>
+        {% endif %}
 
+        {% if permissions.PROJECT_OWNER %}
         <div class="modal fade" id="concept-justify-project" tabindex="-1" role="dialog"
             aria-labelledby="initiatiefTussentijdsRapporterenLabel" aria-hidden="true">
             <div class="modal-dialog" role="document">
@@ -382,6 +393,7 @@
                 </div>
             </div>
         </div>
+        {% endif %}
     </div>
     {% endblock %}
     {% block scripts %}
