@@ -430,11 +430,6 @@ def subproject(project_id, subproject_id):
     subproject_form = subproject_controller.get_forms()
     modal_id = subproject_controller.get_modal_ids(modal_id)
 
-    # Retrieve the subproject id a normal logged in user is part of
-    user_subproject_ids = []
-    if clearance >= util.Clearance.SUBPROJECT_OWNER:
-        user_subproject_ids.append(subproject.id)
-
     # PAYMENT
     payment_controller = subpc.Payment(subproject, clearance)
     controller_redirect = payment_controller.process_forms()

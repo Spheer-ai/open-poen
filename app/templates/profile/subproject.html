@@ -29,6 +29,12 @@
             <h2 class="{{ title_class }}">{{ title }}</h2>
             <br>
             <br>
+            <b>Initiatief:</b>
+            <br>
+            <a href="{{ url_for('profile_project', project_id=subproject.project.id) }}">{{ subproject.project.name
+                }}</a>
+            <br>
+            <br>
             {{ macros.info_unit("Beschrijving:", subproject.description) }}
             {{ macros.info_unit("Doel:", subproject.purpose) }}
             {{ macros.info_unit("Doelgroep:", subproject.target_audience) }}

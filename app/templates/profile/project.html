@@ -80,7 +80,7 @@
                 {% if project.unfinished_subprojects | length > 0 %}
                 <ul>
                     {% for subproject in project.unfinished_subprojects %}
-                    <li><a href="{{ url_for('subproject', project_id=project.id, subproject_id=subproject.id) }}">{{
+                    <li><a href="{{ url_for('profile_subproject', subproject_id=subproject.id) }}">{{
                             subproject.name}}</a></li>
                     {% endfor %}
                 </ul>
@@ -94,7 +94,7 @@
                 {% if project.finished_subprojects | length > 0 %}
                 <ul>
                     {% for subproject in project.finished_subprojects %}
-                    <li><a href="{{ url_for('subproject', project_id=project.id, subproject_id=subproject.id) }}">{{
+                    <li><a href="{{ url_for('profile_subproject', subproject_id=subproject.id) }}">{{
                             subproject.name}}</a></li>
                     {% endfor %}
                 </ul>
@@ -108,7 +108,7 @@
                 {% if project.justified_subprojects | length > 0 %}
                 <ul>
                     {% for subproject in project.justified_subprojects %}
-                    <li><a href="{{ url_for('subproject', project_id=project.id, subproject_id=subproject.id) }}">{{
+                    <li><a href="{{ url_for('profile_subproject', subproject_id=subproject.id) }}">{{
                             subproject.name}}</a></li>
                     {% endfor %}
                 </ul>
@@ -177,14 +177,12 @@
         <a href="{{ url_for('project', project_id=project.id) }}"><b>Initiatief beheren</b></a>
         <br>
         <br>
-        <!-- TODO -->
         {% if permissions.PROJECT_OWNER %}
         <a href="projectprofile-action" data-toggle="modal" data-target="#concept-justify-project"><b
                 class="projectprofile-action">Tussentijds rapporteren</b></a>
         <br>
         <br>
         {% endif %}
-        <!-- TODO -->
         {% if permissions.PROJECT_OWNER %}
         <a class="projectprofile-action" data-toggle="modal" data-target="#justify-project"><b>Verantwoorden</b></a>
         {% endif %}
