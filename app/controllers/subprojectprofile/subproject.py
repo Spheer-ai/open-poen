@@ -49,7 +49,7 @@ class FinishSubprojectController(Controller):
 
     def process(self, form):
         # TODO: Handle attachment.
-        status = process_form(form, Subproject)
+        status = process_form(form, Subproject, extra_filter=False)
         return self.redirects[status]
 
     def get_forms(self):

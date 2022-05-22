@@ -137,8 +137,10 @@ def process_form(
     object,
     alt_update: Optional[Callable] = None,
     alt_create: Optional[Callable] = None,
+    extra_filter: bool = True,
 ) -> Union[None, Status]:
     # TODO: Type hint for object argument.
+    # TODO: This definitely needs to be refactored.
     if not form_in_request(form, request):
         return None
 
@@ -159,7 +161,6 @@ def process_form(
 
     app.logger.info(f"Form is valid. Data: {form.data}.")
 
-    extra_filter = True if (alt_update is None and alt_create is None) else False
     data = filter_fields(form, extra_filter)
 
     if hasattr(form, "id") and form.id.data is not None:

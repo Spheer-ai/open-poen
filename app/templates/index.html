@@ -245,7 +245,7 @@
                   aria-labelledby="projectToevoegenLabel" aria-hidden="true">
                   <div class="modal-dialog" role="document">
                     <div class="modal-content">
-                      <form method="POST" class="interactive-form" novalidate>
+                      <form method="POST" class="interactive-form" enctype="multipart/form-data" novalidate>
                         <div class="modal-header">
                           <h5 class="modal-title" id="projectToevoegenLabel">Initiatief Toevoegen</h5>
                           <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
@@ -302,25 +302,6 @@
                               {{ macros.plussign("card_number", "betaalpas") }}
                             </div>
                             <div class="interactive-unit">
-                              <h2>Activiteiten initiatief</h2>
-                              <hr>
-                              <div class="subproject_all">
-                                {% for subproject in project_form.subprojects %}
-                                <div class="subproject" id="subproject-{{loop.index - 1}}">
-                                  {{ wtf.form_field(subproject.form.name) }}
-                                  {{ wtf.form_field(subproject.form.description) }}
-                                  {{ wtf.form_field(subproject.form.purpose) }}
-                                  {{ wtf.form_field(subproject.form.target_audience) }}
-                                  {{ wtf.form_field(subproject.form.hidden) }}
-                                  {{ wtf.form_field(subproject.form.budget) }}
-                                  {{ macros.trashbin("#subproject-", loop.index -1) }}
-                                  <hr>
-                                </div>
-                                {% endfor %}
-                              </div>
-                              {{ macros.plussign("subproject", "activiteit") }}
-                            </div>
-                            <div class="interactive-unit">
                               <h2>Gegevens initiatief</h2>
                               <hr>
                               {{ wtf.form_field(project_form.owner) }}
@@ -346,8 +327,9 @@
                             </div>
                             <div class="interactive-unit">
                               <h2>Financiën initiatief</h2>
-
                               {{ wtf.form_field(project_form.budget) }}
+                              {{ wtf.form_field(project_form.budget_file, class="form-control") }}
+                              <p>Alleen begrotingen met de .pdf, .xls en .xlsx extensies zijn toegestaan.</p>
                             </div>
                           </div>
 

@@ -85,7 +85,7 @@ class JustifyProjectController(Controller):
             self.concept_justify_form.process()
 
     def process(self, form, alt_update):
-        status = process_form(form, Project, alt_update=alt_update)
+        status = process_form(form, Project, alt_update=alt_update, extra_filter=False)
         return self.redirects[status]
 
     def get_forms(self):

@@ -352,7 +352,7 @@ class Project(db.Model, DefaultCRUD, DefaultErrorMessages):
         )
 
     @classmethod
-    def add_project(cls, card_numbers, funders, subprojects, project_owners, **kwargs):
+    def add_project(cls, card_numbers, funders, project_owners, budget_file, **kwargs):
 
         project = cls(**kwargs)
 
@@ -371,12 +371,6 @@ class Project(db.Model, DefaultCRUD, DefaultErrorMessages):
         project.debit_cards = existing + new
 
         project.funders = [Funder(**x) for x in funders]
-
-        if len(subprojects) != len(set([x["name"] for x in subprojects])):
-            raise ValueError("Subproject names are not unique.")
-        # TODO: Raise an errors if we're adding subprojects to a project that doesn't
-        # have the contains_subprojects flag.
-        project.subprojects = [Subproject(**x) for x in subprojects]
 
         db.session.add(project)
         db.session.commit()
@@ -404,7 +398,7 @@ class Project(db.Model, DefaultCRUD, DefaultErrorMessages):
             # TODO: Download the PDF-rapport.
             pass
         elif send:
-            # TODO: Send the PDf-rapport.
+            # TODO: Send the PDF-rapport.
             pass
         return self
 
@@ -496,11 +490,6 @@ class Subproject(db.Model, DefaultCRUD, DefaultErrorMessages):
         except IntegrityError as e:
             app.logger.info(repr(e))
             raise ex.DoubleSubprojectName(data["name"])
-
-    def finish(self, data):
-        # TODO: Implement.
-        pass
-        # super(Subproject, self).update()
 
     @property
     def error_info(self):

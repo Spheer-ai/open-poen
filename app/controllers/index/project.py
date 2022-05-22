@@ -24,7 +24,7 @@ from wtforms.fields.core import FieldList, FormField
 from wtforms.validators import URL, DataRequired, Email, Length, Optional
 from wtforms.widgets import HiddenInput
 
-ALLOWED_EXTENSIONS = [".pdf", ".xls", ".xlsx"]
+ALLOWED_EXTENSIONS = ["pdf", "xls", "xlsx"]
 
 
 class DebitCard(FlaskForm):
@@ -41,13 +41,6 @@ class DebitCard(FlaskForm):
         filters=[trim_whitespace],
     )
     # TODO: check all card numbers are unique.
-
-
-class Subproject(SubprojectBaseForm):
-    class Meta:
-        csrf = False
-
-    hidden = BooleanField("Activiteit verbergen")
 
 
 class ProjectOwner(FlaskForm):
@@ -70,30 +63,18 @@ class ProjectForm(FlaskForm):
         "Uitgaven van dit initiatief worden geregistreerd op activiteiten",
         default="checked",
     )
-
     funders = FieldList(
         FormField(FunderForm), min_entries=0, max_entries=None, validators=[]
     )
     hidden_sponsors = BooleanField("Sponsoren verbergen")
 
-    # TODO: No card numbers anymore in design?
     card_numbers = FieldList(
         FormField(DebitCard), min_entries=0, max_entries=None, validators=[]
     )
-
-    # TODO: No subprojects anymore in design?
-    subprojects = FieldList(
-        FormField(Subproject),
-        min_entries=0,
-        max_entries=None,
-        validators=[],
-    )
-
     owner = StringField("Beheerder", validators=[DataRequired(), Length(max=120)])
     owner_email = StringField(
         "E-mailadres", validators=[DataRequired(), Email(), Length(max=120)]
     )
-    # TODO: Can project owners fill in their own names?
     project_owners = FieldList(
         FormField(ProjectOwner),
         min_entries=0,
@@ -144,13 +125,12 @@ class ProjectController(Controller):
         if not form_in_request(self.form, request):
             self.form.card_numbers.append_entry()
             self.form.funders.append_entry()
-            self.form.subprojects.append_entry()
             for _ in range(0, 3):
                 self.form.project_owners.append_entry()
 
     def process(self, form):
         # TODO: Handle attachment.
-        del form["budget_file"]
+        # del form["budget_file"]
         status = process_form(form, Project, alt_create=Project.add_project)
         if status is not None:
             return redirect(url_for("index"))
