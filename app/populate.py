@@ -1,4 +1,4 @@
-from app.models import Project, Subproject, Funder, Payment, DebitCard
+from app.models import Project, Funder, Payment, DebitCard
 from datetime import datetime
 from datetime import timedelta
 from app import app, db
@@ -20,32 +20,6 @@ def populate_db_with_test_data():
         "budget": 300,
     }
     project = Project(**project)
-
-    subprojects = [
-        {
-            "name": "Eten",
-            "description": "Vlees en vegaproducten voor de BBQ.",
-            "purpose": "Ervoor zorgen dat niemand honger krijgt.",
-            "target_audience": "Alle bezoekers.",
-            "budget": 150,
-        },
-        {
-            "name": "Drinken",
-            "description": "Zowel alcoholisch, als niet alcoholisch.",
-            "purpose": "Ervoor zorgen dat niemand dorst krijgt.",
-            "target_audience": "Alle bezoekers.",
-            "budget": 50,
-        },
-        {
-            "name": "Muziek",
-            "description": "Voor het inkopen van live muziek.",
-            "purpose": "Ervoor zorgen dat er gedanst kan worden.",
-            "target_audience": "Alle bezoekers.",
-            "budget": 100,
-        },
-    ]
-    subprojects = [Subproject(**x) for x in subprojects]
-    project.subprojects.extend(subprojects)
 
     funders = [
         {

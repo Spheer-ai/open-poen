@@ -38,7 +38,7 @@
               </ul>
             </div>
 
-            {% if not subproject.finished %}
+            {% if not subproject.finished and permissions.PROJECT_OWNER %}
             <button type="button" class="btn button-poen-small bg-grey-blue mx-auto" data-toggle="modal"
               data-target="#sponsoren-beheren">
               sponsoren beheren >
@@ -60,39 +60,6 @@
                       sponsor koppelen
                     </button>
 
-                    <!-- Modal -->
-                    <div class="modal fade" id="sponsor-koppelen" tabindex="-1" role="dialog"
-                      aria-labelledby="sponsorKoppelenLabel" aria-hidden="true">
-                      <div class="modal-dialog" role="document">
-                        <div class="modal-content">
-                          <form method="POST">
-                            <div class="modal-header">
-                              <h5 class="modal-title" id="sponsorKoppelenLabel">Sponsor Koppelen</h5>
-                              <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
-                                <span aria-hidden="true">&times;</span>
-                              </button>
-                            </div>
-                            <div class="modal-body">
-                              {{ add_funder_form.csrf_token }}
-                              {% if add_funder_form.funders.query | length > 0 %}
-                              {% for f in add_funder_form.funders %}
-                              {{ wtf.form_field(f) }}
-                              {% endfor %}
-                              {% else %}
-                              <p>Het is niet mogelijk om sponsoren te selecteren, omdat er geen beschikbare sponsoren
-                                zijn gekoppeld aan het initiatief van deze activiteit.</p>
-                              {% endif %}
-                              {{ add_funder_form.subproject_id }}
-                            </div>
-                            <div class="modal-footer">
-                              <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
-                              {{ add_funder_form.submit }}
-                            </div>
-                          </form>
-                        </div>
-                      </div>
-                    </div>
-
                     <hr>
 
                     {% for funder_form in funder_forms %}
@@ -103,34 +70,6 @@
                         ontkoppelen
                       </button>
                       {{ funder_info[funder_form.id.data]["name"] }}
-
-                      <!-- Modal -->
-                      <div class="modal fade" id="sponsor-ontkoppelen-{{ funder_form.id.data }}" tabindex="-1"
-                        role="dialog" aria-labelledby="sponsorontkoppelenLabel" aria-hidden="true">
-                        <div class="modal-dialog" role="document">
-                          <div class="modal-content">
-                            <form method="POST">
-                              <div class="modal-header">
-                                <h5 class="modal-title" id="sponsorontkoppelenLabel">Sponsor Ontkoppelen</h5>
-                                <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
-                                  <span aria-hidden="true">&times;</span>
-                                </button>
-                              </div>
-                              <div class="modal-body">
-                                <p>Klik rechtsonder op ontkoppelen, om deze sponsor los te koppelen van deze activiteit.
-                                </p>
-                                {{ funder_form.csrf_token }}
-                                {{ funder_form.id }}
-                                {{ funder_form.subproject_id }}
-                              </div>
-                              <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
-                                {{ funder_form.submit }}
-                              </div>
-                            </form>
-                          </div>
-                        </div>
-                      </div>
                     </div>
                     <br>
                     {% endfor %}
@@ -970,6 +909,78 @@
     </div>
   </div>
   {% endif %}
+  {% endfor %}
+  {% endif %}
+
+  {% if not subproject.finished and permissions.PROJECT_OWNER %}
+  <!-- Modal -->
+  <div class="modal fade" id="sponsor-koppelen" tabindex="-1" role="dialog" aria-labelledby="sponsorKoppelenLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <form method="POST">
+          <div class="modal-header">
+            <h5 class="modal-title" id="sponsorKoppelenLabel">Sponsor Koppelen</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            {{ add_funder_form.csrf_token }}
+            {% if add_funder_form.funders.query | length > 0 %}
+            {% for f in add_funder_form.funders %}
+            {{ wtf.form_field(f) }}
+            {% endfor %}
+            {% else %}
+            <p>Het is niet mogelijk om sponsoren te selecteren, omdat er geen beschikbare sponsoren
+              zijn gekoppeld aan het initiatief van deze activiteit.</p>
+            {% endif %}
+            {{ add_funder_form.subproject_id }}
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
+            {{ add_funder_form.submit }}
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  {% for funder_form in funder_forms %}
+  <!-- Modal -->
+  <div class="modal fade" id="sponsor-ontkoppelen-{{ funder_form.id.data }}" tabindex="-1" role="dialog"
+    aria-labelledby="sponsorontkoppelenLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <form method="POST">
+          <div class="modal-header">
+            <h5 class="modal-title" id="sponsorontkoppelenLabel">Sponsor Ontkoppelen</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            {% if funder_forms | length > 1 %}
+            <p>Klik rechtsonder op ontkoppelen, om deze sponsor los te koppelen van deze activiteit.
+            </p>
+            {{ funder_form.csrf_token }}
+            {{ funder_form.id }}
+            {{ funder_form.subproject_id }}
+            {% else %}
+            <p>Het is niet mogelijk deze sponsor te ontkoppelen, omdat een activiteit altijd minstens één sponsor moet
+              hebben.</p>
+            {% endif %}
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
+            {% if funder_forms | length > 1 %}
+            {{ funder_form.submit }}
+            {% endif %}
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
   {% endfor %}
   {% endif %}
 
