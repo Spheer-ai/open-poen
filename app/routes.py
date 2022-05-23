@@ -19,7 +19,7 @@ import app.controllers.subprojectprofile as subppc
 from app import app, db, util
 from app.bng import get_bng_info, process_bng_callback
 from app.email import send_password_reset_email
-from app.form_processing import process_bng_link_form, process_form
+from app.form_processing import process_bng_link_form, process_form, BaseHandler
 from app.forms import (
     AddUserForm,
     BNGLinkForm,
@@ -33,9 +33,7 @@ from app.forms import (
 )
 from app.models import (
     BNGAccount,
-    DebitCard,
     File,
-    Payment,
     Project,
     Subproject,
     User,
@@ -92,7 +90,7 @@ def index():
 
     # ADMIN
     edit_admin_form = EditAdminForm(prefix="edit_admin_form")
-    form_redirect = process_form(edit_admin_form, User)
+    form_redirect = process_form(BaseHandler(edit_admin_form, User))
     if form_redirect:
         return redirect(url_for("index"))
 

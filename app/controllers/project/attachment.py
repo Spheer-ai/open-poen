@@ -1,12 +1,20 @@
 from typing import Dict
 
 from app.controllers.util import Controller, create_redirects_for_project_or_subproject
-from app.form_processing import process_form
+from app.form_processing import process_form, BaseHandler, Status
 from app.forms import (
     EditAttachmentForm,
     TransactionAttachmentForm,
 )
 from app.models import Project, File
+from flask import flash
+
+
+class AttachmentFormHandler(BaseHandler):
+    def on_create(self) -> Status:
+        instance = File.add_attachment(**self.data)
+        flash(instance.on_succesful_create)
+        return Status.succesful_create
 
 
 class AttachmentController(Controller):
@@ -21,15 +29,11 @@ class AttachmentController(Controller):
         )
 
     def add(self):
-        status = process_form(
-            self.add_form,
-            File,
-            alt_create=File.add_attachment,
-        )
+        status = process_form(AttachmentFormHandler(self.add_form, File))
         return self.redirects[status]
 
     def edit(self):
-        status = process_form(self.edit_form, File)
+        status = process_form(AttachmentFormHandler(self.edit_form, File))
         return self.redirects[status]
 
     def get_forms(self):

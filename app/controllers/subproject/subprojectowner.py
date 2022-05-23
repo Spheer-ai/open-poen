@@ -1,10 +1,31 @@
 from typing import List
 
 from app.controllers.util import Controller, create_redirects_for_project_or_subproject
-from app.form_processing import Status, process_form
+from app.form_processing import Status, process_form, BaseHandler
 from app.forms import AddUserForm, EditUserForm
 from app.models import Subproject, User
 from app.util import formatted_flash
+
+
+class SubprojectOwnerFormHandler(BaseHandler):
+    def on_delete(self):
+        raise NotImplementedError
+
+    def on_update(self):
+        instance = self.object.query.get(self.form.id.data)
+        if instance is None:
+            return Status.not_found
+        instance.edit_subproject_owner(**self.data)
+        formatted_flash(f"Gebruiker {instance.email} is aangepast.", color="green")
+        return Status.succesful_edit
+
+    def on_create(self) -> Status:
+        instance = User.add_user(**self.data)
+        formatted_flash(
+            f"Gebruiker '{instance.email}' is toegevoegd als activiteitnemer.",
+            color="green",
+        )
+        return Status.succesful_create
 
 
 class SubprojectOwnerController(Controller):
@@ -20,17 +41,11 @@ class SubprojectOwnerController(Controller):
         self.emails: List[str] = []
 
     def add(self):
-        status = process_form(self.add_form, User, alt_create=User.add_user)
-        if status == Status.succesful_create:
-            formatted_flash(
-                "Gebruiker is succesvol toegevoegd als activiteitnemer.", color="green"
-            )
+        status = process_form(SubprojectOwnerFormHandler(self.add_form, User))
         return self.redirects[status]
 
     def edit(self):
-        status = process_form(
-            self.edit_form, User, alt_update=User.edit_subproject_owner
-        )
+        status = process_form(SubprojectOwnerFormHandler(self.edit_form, User))
         return self.redirects[status]
 
     def get_forms(self):

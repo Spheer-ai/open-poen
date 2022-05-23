@@ -12,6 +12,7 @@ from app.controllers.project.payment import (
     ImportedBNGPayment,
     ManualPaymentOrTopup,
     ProjectOwnerPayment,
+    PaymentHandler,
 )
 from app.util import Clearance, form_in_request
 from flask import request
@@ -47,11 +48,7 @@ class PaymentController(Controller):
         # TODO: Handle attachment.
         del self.add_payment_form["mediatype"]
         del self.add_payment_form["data_file"]
-        status = process_form(
-            self.add_payment_form,
-            Payment,
-            alt_create=Payment.add_manual_topup_or_payment,
-        )
+        status = process_form(PaymentHandler(self.add_payment_form, Payment))
         return self.redirects[status]
 
     def edit(self, form):
@@ -66,7 +63,7 @@ class PaymentController(Controller):
                 self.subproject_owner_id
             )
 
-        status = process_form(form, Payment)
+        status = process_form(PaymentHandler(form, Payment))
         return self.redirects[status]
 
     def get_forms(self):

@@ -1,10 +1,7 @@
-from xmlrpc.client import Boolean
 from app.controllers.util import Controller, create_redirects_for_project_or_subproject
-from app.form_processing import process_form
+from app.form_processing import process_form, BaseHandler
 from app.forms import SubprojectForm
 from app.models import Project, Subproject
-from wtforms import BooleanField
-from app.models import Funder
 
 
 class SubprojectController(Controller):
@@ -17,7 +14,7 @@ class SubprojectController(Controller):
         )
 
     def process(self):
-        status = process_form(self.form, Subproject)
+        status = process_form(BaseHandler(self.form, Subproject))
         return self.redirects[status]
 
     def get_forms(self):

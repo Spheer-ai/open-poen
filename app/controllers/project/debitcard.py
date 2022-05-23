@@ -2,10 +2,24 @@ from typing import List
 
 from app import db
 from app.controllers.util import Controller, create_redirects_for_project_or_subproject
-from app.form_processing import process_form
+from app.form_processing import process_form, BaseHandler, Status
 from app.forms import DebitCardForm, EditDebitCardForm
 from app.models import DebitCard, Payment, Project
 from app.util import calculate_amounts
+from flask import flash
+
+
+class DebitCardHandler(BaseHandler):
+    def on_delete(self):
+        raise NotImplementedError
+
+    def on_update(self):
+        instance = self.object.query.get(self.form.id.data)
+        if instance is None:
+            return Status.not_found
+        instance.remove_from_project(**self.data)
+        flash(instance.on_succesful_edit)
+        return Status.succesful_edit
 
 
 class DebitCardController(Controller):
@@ -22,13 +36,11 @@ class DebitCardController(Controller):
         self.debit_cards: List[DebitCard] = []
 
     def add(self):
-        status = process_form(self.add_form, DebitCard)
+        status = process_form(BaseHandler(self.add_form, DebitCard))
         return self.redirects[status]
 
     def edit(self):
-        status = process_form(
-            self.edit_form, DebitCard, alt_update=DebitCard.remove_from_project
-        )
+        status = process_form(BaseHandler(self.edit_form, DebitCard))
         return self.redirects[status]
 
     def get_forms(self):

@@ -1,5 +1,5 @@
 from app.controllers.util import Controller, create_redirects_for_project_or_subproject
-from app.form_processing import Status, process_form, return_redirect
+from app.form_processing import Status, process_form, return_redirect, BaseHandler
 from app.models import Subproject
 from flask_wtf import FlaskForm
 import wtforms.validators as v
@@ -39,7 +39,7 @@ class SubprojectController(Controller):
         )
 
     def process(self):
-        status = process_form(self.form, Subproject)
+        status = process_form(BaseHandler(self.form, Subproject))
         return self.redirects[status]
 
     def get_forms(self):

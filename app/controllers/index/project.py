@@ -1,6 +1,6 @@
 from app.controllers.util import Controller
 from app.controllers.forms import FunderForm, SubprojectBaseForm
-from app.form_processing import process_form
+from app.form_processing import process_form, BaseHandler, Status
 from app.forms import (
     trim_whitespace,
     validate_budget,
@@ -8,7 +8,7 @@ from app.forms import (
     validate_card_number_to_project,
 )
 from app.models import Project
-from app.util import Clearance, form_in_request
+from app.util import Clearance, form_in_request, formatted_flash
 from flask import redirect, request, url_for
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileAllowed, FileField
@@ -118,6 +118,19 @@ class ProjectForm(FlaskForm):
     has_errors = False
 
 
+class ProjectFormHandler(BaseHandler):
+    def on_delete(self):
+        raise NotImplementedError
+
+    def on_update(self):
+        raise NotImplementedError
+
+    def on_create(self) -> Status:
+        Project.add_project(**self.data)
+        formatted_flash("Initiatief is succesvol toegevoegd!", color="green")
+        return Status.succesful_create
+
+
 class ProjectController(Controller):
     def __init__(self, clearance: Clearance):
         self.clearance = clearance
@@ -131,7 +144,7 @@ class ProjectController(Controller):
     def process(self, form):
         # TODO: Handle attachment.
         # del form["budget_file"]
-        status = process_form(form, Project, alt_create=Project.add_project)
+        status = process_form(ProjectFormHandler(form, Project))
         if status is not None:
             return redirect(url_for("index"))
 

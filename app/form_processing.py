@@ -1,43 +1,19 @@
 from enum import Enum
 from time import time
-from typing import Callable, Dict, Optional, Union
+from typing import Dict, List, Union
 
 import jwt
-from flask import redirect, request, url_for, Response
+from flask import Response, flash, redirect, request, url_for
 from flask_login import current_user
 from flask_wtf import FlaskForm
 from requests import ConnectionError
-from sqlalchemy.exc import IntegrityError
 
 from app import app
 from app import bng as bng
 from app import db, util
-from app.models import BNGAccount
-from app.util import formatted_flash, form_in_request
-from app.better_utils import format_flash
-from flask import flash
 from app.exceptions import known_exceptions
-
-
-def filter_fields(form: FlaskForm, extra_filter: bool) -> Dict:
-    # Filter out these field names, because they are never saved in the DB.
-    fields_to_filter = []
-    if extra_filter:
-        fields_to_filter.extend(["SubmitField", "CSRFTokenField"])
-    fields = {x.short_name: x.data for x in form if x.type not in fields_to_filter}
-    # Set empty strings to None to keep everything consistent. Also because column like
-    # foreign keys can't handle empty strings.
-    for key, value in fields.items():
-        # In case of FieldLists. Extra check so that we skip data from
-        # QuerySelectMultipleField.
-        if type(value) == list and not any([isinstance(i, db.Model) for i in value]):
-            fields[key] = [
-                {k: (v if v != "" else None) for k, v in x.items()} for x in value
-            ]
-        # In case of single fields.
-        else:
-            fields[key] = value if value != "" else None
-    return fields
+from app.models import BNGAccount
+from app.util import form_in_request, formatted_flash
 
 
 def return_redirect(project_id: int, subproject_id: Union[None, int]):
@@ -132,22 +108,49 @@ class Status(Enum):
     not_found = 6
 
 
-def process_form(
-    form: FlaskForm,
-    object,
-    alt_update: Optional[Callable] = None,
-    alt_create: Optional[Callable] = None,
-    extra_filter: bool = True,
-) -> Union[None, Status]:
-    # TODO: Type hint for object argument.
-    # TODO: This definitely needs to be refactored.
-    if not form_in_request(form, request):
-        return None
+def filter_fields(form: FlaskForm, fields_to_filter: List[str]) -> Dict:
+    # Filter out these field names, because they are never saved in the DB.
+    fields = {x.short_name: x.data for x in form if x.type not in fields_to_filter}
+    # Set empty strings to None to keep everything consistent. Also because column like
+    # foreign keys can't handle empty strings.
+    for key, value in fields.items():
+        # In case of FieldLists. Extra check so that we skip data from
+        # QuerySelectMultipleField.
+        if type(value) == list and not any([isinstance(i, db.Model) for i in value]):
+            fields[key] = [
+                {k: (v if v != "" else None) for k, v in x.items()} for x in value
+            ]
+        # In case of single fields.
+        else:
+            fields[key] = value if value != "" else None
+    return fields
 
-    app.logger.info(f"Form {str(form)} for object {str(object)} is submitted.")
 
-    if hasattr(form, "remove") and form.remove.data:
-        instance = object.query.get(form.id.data)
+class BaseHandler:
+    fields_to_filter = ["SubmitField", "CSRFTokenField"]
+
+    def __init__(self, form, object):
+        self.form = form
+        self.object = object
+        self.form_in_request = form_in_request(self.form, request)
+
+    def filter_fields(self):
+        self.data = filter_fields(self.form, self.fields_to_filter)
+
+    @property
+    def delete(self) -> bool:
+        return hasattr(self.form, "remove") and self.form.remove.data
+
+    @property
+    def update(self) -> bool:
+        return hasattr(self.form, "id") and self.form.id.data
+
+    @property
+    def create(self) -> bool:
+        return not hasattr(self.form, "id") or not self.form.id.data
+
+    def on_delete(self) -> Status:
+        instance = self.object.query.get(self.form.id.data)
         if instance is None:
             return Status.not_found
         db.session.delete(instance)
@@ -155,27 +158,48 @@ def process_form(
         flash(instance.on_succesful_delete)
         return Status.succesful_delete
 
-    if not form.validate_on_submit():
-        app.logger.info(f"Form is invalid. Data: {form.data}. Errors: {form.errors}.")
+    def on_update(self) -> Status:
+        instance = self.object.query.get(self.form.id.data)
+        if instance is None:
+            return Status.not_found
+        instance.update(self.data)
+        flash(instance.on_succesful_edit)
+        return Status.succesful_edit
+
+    def on_create(self) -> Status:
+        instance = self.object.create(self.data)
+        flash(instance.on_succesful_create)
+        return Status.succesful_create
+
+
+def process_form(handler: BaseHandler) -> Union[None, Status]:
+    if not handler.form_in_request:
         return None
 
-    app.logger.info(f"Form is valid. Data: {form.data}.")
+    app.logger.info(f"Form {str(handler.form)} for object {str(object)} is submitted.")
 
-    data = filter_fields(form, extra_filter)
-
-    if hasattr(form, "id") and form.id.data is not None:
-        app.logger.info("Form is used to edit an existing entity.")
-        instance = object.query.get(data["id"])
-        if not instance:
-            return Status.not_found
+    if handler.delete:
         try:
-            if alt_update is not None:
-                # Executes an instance method.
-                alt_update(instance, **data)
-            else:
-                instance.update(data)
-            flash(instance.on_succesful_edit)
-            return Status.succesful_edit
+            return handler.on_delete()
+        except Exception as e:
+            app.logger.error(repr(e))
+            db.session.rollback()
+            raise
+
+    if not handler.form.validate_on_submit():
+        app.logger.info(
+            f"Invalid form. Data: {handler.form.data}. Errors: {handler.form.errors}."
+        )
+        return None
+
+    app.logger.info(f"Form is valid. Data: {handler.form.data}.")
+
+    handler.filter_fields()
+
+    if handler.update:
+        app.logger.info("Form is used to edit an existing entity.")
+        try:
+            return handler.on_update()
         except known_exceptions as e:
             app.logger.info(repr(e))
             db.session().rollback()
@@ -184,19 +208,11 @@ def process_form(
         except Exception as e:
             app.logger.error(repr(e))
             db.session().rollback()
-            # TODO: This should explain that the error is unknown.
-            flash(instance.on_failed_edit)
-            return Status.failed_edit
-    else:
+            raise
+    elif handler.create:
         app.logger.info("Form is used to create a new entity.")
         try:
-            if alt_create is not None:
-                # Executes a class method.
-                instance = alt_create(**data)
-            else:
-                instance = object.create(data)
-            flash(instance.on_succesful_create)
-            return Status.succesful_create
+            return handler.on_create()
         except known_exceptions as e:
             app.logger.info(repr(e))
             db.session().rollback()
@@ -205,6 +221,6 @@ def process_form(
         except Exception as e:
             app.logger.error(repr(e))
             db.session().rollback()
-            # TODO: This should explain that the error is unknown.
-            flash(instance.on_failed_create)
-            return Status.failed_create
+            raise
+    else:
+        raise AssertionError("Unaccounted for edge case in form handling.")

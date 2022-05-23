@@ -1,7 +1,7 @@
 from typing import Dict, List
 
 from app.controllers.util import Controller, create_redirects_for_project_or_subproject
-from app.form_processing import process_form
+from app.form_processing import process_form, BaseHandler
 from app.forms import CategoryForm
 from app.models import Category, Project
 
@@ -21,11 +21,11 @@ class CategoryController(Controller):
         self.names: List[str] = []
 
     def add(self):
-        status = process_form(self.add_form, Category)
+        status = process_form(BaseHandler(self.add_form, Category))
         return self.redirects[status]
 
     def edit(self):
-        status = process_form(self.edit_form, Category)
+        status = process_form(BaseHandler(self.edit_form, Category))
         return self.redirects[status]
 
     def get_forms(self):

@@ -1,10 +1,9 @@
 from typing import Dict
 
-from app import db
 from app.controllers.util import Controller, create_redirects_for_project_or_subproject
-from app.form_processing import process_form
+from app.form_processing import BaseHandler, Status, process_form
 from app.models import Funder, Subproject
-from app.util import Clearance
+from app.util import Clearance, formatted_flash
 from flask_wtf import FlaskForm
 from wtforms import IntegerField, SubmitField
 from wtforms.ext.sqlalchemy.fields import QuerySelectMultipleField
@@ -25,6 +24,21 @@ class AddFunderForm(FlaskForm):
     )
     subproject_id = IntegerField(widget=HiddenInput())
     submit = SubmitField("Opslaan", render_kw={"class": "btn btn-info"})
+
+
+class FunderFormHandler(BaseHandler):
+    def on_update(self) -> Status:
+        instance = self.object.query.get(self.form.id.data)
+        if instance is None:
+            return Status.not_found
+        instance.detach(**self.data)
+        formatted_flash(f"Sponsor '{instance.name}' is ontkoppeld.", color="green")
+        return Status.succesful_create
+
+    def on_create(self) -> Status:
+        instance = Funder.attach(**self.data)
+        formatted_flash(f"Sponsor '{instance.name}' is gekoppeld.", color="green")
+        return Status.succesful_create
 
 
 class FunderController(Controller):
@@ -48,12 +62,11 @@ class FunderController(Controller):
         self.funder_info: Dict[int, Dict] = {}
 
     def add(self):
-        # TODO: Fix error message here.
-        status = process_form(self.add_form, Funder, alt_create=Funder.attach)
+        status = process_form(FunderFormHandler(self.add_form, Funder))
         return self.redirects[status]
 
     def edit(self):
-        status = process_form(self.edit_form, Funder, alt_update=Funder.detach)
+        status = process_form(FunderFormHandler(self.edit_form, Funder))
         return self.redirects[status]
 
     def get_forms(self):

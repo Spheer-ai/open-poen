@@ -1,7 +1,7 @@
 from typing import Dict, Type, Union
 
 from app.controllers.util import Controller, create_redirects_for_project_or_subproject
-from app.form_processing import process_form
+from app.form_processing import process_form, BaseHandler
 from app.forms import validate_budget
 from app.models import Funder, Project
 from app.util import Clearance
@@ -48,7 +48,7 @@ class FunderController(Controller):
         )
 
     def process(self, form):
-        status = process_form(form, Funder)
+        status = process_form(BaseHandler(form, Funder))
         return self.redirects[status]
 
     def get_forms(self):

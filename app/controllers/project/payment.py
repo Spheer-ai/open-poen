@@ -6,11 +6,11 @@ from app.controllers.util import (
     Status,
     create_redirects_for_project_or_subproject,
 )
-from app.form_processing import process_form
+from app.form_processing import process_form, BaseHandler, Status
 from app.forms import FlexibleDecimalField, NewPaymentForm, NewTopupForm
 from app.models import Payment, Project
 from app.util import Clearance, form_in_request
-from flask import request
+from flask import request, flash
 from flask_login import current_user
 from flask_wtf import FlaskForm
 from wtforms import (
@@ -92,6 +92,13 @@ class ProjectOwnerPayment(ManualPaymentOrTopup):
         super(ImportedBNGPayment, self).__init__(*args, **kwargs)
 
 
+class PaymentHandler(BaseHandler):
+    def on_create(self) -> Status:
+        instance = Payment.add_manual_topup_or_payment(**self.data)
+        flash(instance.on_succesful_create)
+        return Status.succesful_create
+
+
 class PaymentController(Controller):
     def __init__(self, project: Project, clearance: Clearance):
         self.project = project
@@ -129,11 +136,7 @@ class PaymentController(Controller):
         # TODO: Handle attachment.
         del form["mediatype"]
         del form["data_file"]
-        status = process_form(
-            form,
-            Payment,
-            alt_create=Payment.add_manual_topup_or_payment,
-        )
+        status = process_form(PaymentHandler(form, Payment))
         return self.redirects[status]
 
     def edit(self, form):
@@ -148,7 +151,7 @@ class PaymentController(Controller):
                 self.subproject_owner_id
             )
 
-        status = process_form(form, Payment)
+        status = process_form(PaymentHandler(form, Payment))
         return self.redirects[status]
 
     def get_forms(self):

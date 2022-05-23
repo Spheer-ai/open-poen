@@ -1,7 +1,7 @@
 from typing import Dict, Type
 
 from app.controllers.util import Controller, create_redirects_for_project_or_subproject
-from app.form_processing import Status, process_form
+from app.form_processing import Status, process_form, BaseHandler
 from app.forms import validate_budget
 from app.models import Project
 from app.util import Clearance
@@ -78,7 +78,7 @@ class ProjectController(Controller):
         self.redirects[Status.succesful_delete] = redirect(url_for("index"))
 
     def process(self, form):
-        status = process_form(form, Project)
+        status = process_form(BaseHandler(form, Project))
         return self.redirects[status]
 
     def get_forms(self):

@@ -1,12 +1,11 @@
 from app.controllers.util import Controller, create_redirects_for_response
-from app.form_processing import process_form, Status
+from app.form_processing import process_form, Status, BaseHandler
 from app.models import Project
 from flask_wtf import FlaskForm
 from wtforms.fields import SubmitField, RadioField, IntegerField
 from wtforms.widgets import HiddenInput
-from app.util import form_in_request
+from app.util import form_in_request, formatted_flash
 from flask import request, redirect, url_for
-from app import app
 
 
 class JustifyProjectForm(FlaskForm):
@@ -33,10 +32,52 @@ class ConceptJustifyProjectForm(FlaskForm):
     has_errors = False
 
 
+class JustifyProjectFormHandler(BaseHandler):
+    # Not filtering submit fields because we use those for programming logic.
+    fields_to_filter = ["CSRFTokenField"]
+
+    def on_delete(self):
+        raise NotImplementedError
+
+    def on_update(self):
+        instance = self.object.query.get(self.form.id.data)
+        if instance is None:
+            return Status.not_found
+        instance.justify(**self.data)
+        if self.data["send"]:
+            formatted_flash(
+                "Gefeliciteerd! De verantwoording is verstuurd.", color="green"
+            )
+        return Status.succesful_edit
+
+    def on_create(self) -> Status:
+        raise NotImplementedError
+
+
+class ConceptJustifyProjectFormHandler(BaseHandler):
+    # Not filtering submit fields because we use those for programming logic.
+    fields_to_filter = ["CSRFTokenField"]
+
+    def on_delete(self):
+        raise NotImplementedError
+
+    def on_update(self):
+        instance = self.object.query.get(self.form.id.data)
+        if instance is None:
+            return Status.not_found
+        instance.concept_justify(**self.data)
+        if self.data["send"]:
+            formatted_flash(
+                "Gefeliciteerd! De tussentijdse rapportage is verstuurd.", color="green"
+            )
+        return Status.succesful_edit
+
+    def on_create(self) -> Status:
+        raise NotImplementedError
+
+
 class JustifyProjectController(Controller):
     def __init__(self, project: Project):
-        # TODO: Permissions.
-        # self.clearance = clearance
         self.project = project
         self.justify_form = JustifyProjectForm(id=project.id, prefix="justify")
         self.concept_justify_form = ConceptJustifyProjectForm(
@@ -84,8 +125,14 @@ class JustifyProjectController(Controller):
         if not form_in_request(self.concept_justify_form, request):
             self.concept_justify_form.process()
 
-    def process(self, form, alt_update):
-        status = process_form(form, Project, alt_update=alt_update, extra_filter=False)
+    def justify(self):
+        status = process_form(JustifyProjectFormHandler(self.justify_form, Project))
+        return self.redirects[status]
+
+    def concept_justify(self):
+        status = process_form(
+            ConceptJustifyProjectFormHandler(self.concept_justify_form, Project)
+        )
         return self.redirects[status]
 
     def get_forms(self):
@@ -99,12 +146,10 @@ class JustifyProjectController(Controller):
         return self.concept_justify_form
 
     def process_forms(self):
-        redirect = self.process(self.justify_form, alt_update=Project.justify)
+        redirect = self.justify()
         if redirect:
             return redirect
-        redirect = self.process(
-            self.concept_justify_form, alt_update=Project.concept_justify
-        )
+        redirect = self.concept_justify()
         if redirect:
             return redirect
 

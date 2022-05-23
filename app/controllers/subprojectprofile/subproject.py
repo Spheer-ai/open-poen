@@ -6,8 +6,9 @@ from wtforms.widgets import HiddenInput
 from app.models import Subproject
 from app.controllers.forms import SubprojectBaseForm
 from app.controllers.util import Controller, create_redirects_for_response
-from app.form_processing import process_form
+from app.form_processing import process_form, BaseHandler, Status
 from flask import redirect, url_for
+from app.util import formatted_flash
 
 
 class FinishSubprojectForm(SubprojectBaseForm):
@@ -31,6 +32,36 @@ class UndoFinishSubprojectForm(FlaskForm):
     submit = SubmitField("Openen", render_kw={"class": "btn btn-info"})
 
 
+class FinishSubprojectFormHandler(BaseHandler):
+    # Not filtering submit fields because we use those for programming logic.
+    fields_to_filter = ["CSRFTokenField"]
+
+    def on_update(self) -> Status:
+        instance = self.object.query.get(self.form.id.data)
+        if instance is None:
+            return Status.not_found
+        instance.update(self.data)
+        formatted_flash(
+            f"Gefeliciteerd! Activiteit '{instance.name}' is afgerond.", color="green"
+        )
+        return Status.succesful_edit
+
+
+class UndoFinishSubprojectFormHandler(BaseHandler):
+    # Not filtering submit fields because we use those for programming logic.
+    fields_to_filter = ["CSRFTokenField"]
+
+    def on_update(self) -> Status:
+        instance = self.object.query.get(self.form.id.data)
+        if instance is None:
+            return Status.not_found
+        instance.update(self.data)
+        formatted_flash(
+            f"Activiteit '{instance.name}' is opnieuw geopend.", color="green"
+        )
+        return Status.succesful_edit
+
+
 class FinishSubprojectController(Controller):
     def __init__(self, subproject: Subproject):
         # TODO: Permissions.
@@ -47,9 +78,14 @@ class FinishSubprojectController(Controller):
         )
         self.funders = self.subproject.funders.all()
 
-    def process(self, form):
-        # TODO: Handle attachment.
-        status = process_form(form, Subproject, extra_filter=False)
+    def finish(self):
+        status = process_form(FinishSubprojectFormHandler(self.finish_form, Subproject))
+        return self.redirects[status]
+
+    def undo_finish(self):
+        status = process_form(
+            UndoFinishSubprojectFormHandler(self.undo_form, Subproject)
+        )
         return self.redirects[status]
 
     def get_forms(self):
@@ -58,10 +94,10 @@ class FinishSubprojectController(Controller):
         return self.finish_form
 
     def process_forms(self):
-        redirect = self.process(self.finish_form)
+        redirect = self.finish()
         if redirect:
             return redirect
-        redirect = self.process(self.undo_form)
+        redirect = self.undo_finish()
         if redirect:
             return redirect
 
