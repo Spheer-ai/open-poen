@@ -270,7 +270,7 @@ class Project(db.Model, DefaultCRUD, DefaultErrorMessages):
     owner_email = db.Column(db.String(120))
     legal_entity = db.Column(db.String(20))
     address_applicant = db.Column(db.String(120))
-    registration_kvk = db.Column(db.String(120), unique=True)
+    registration_kvk = db.Column(db.String(120))
     project_location = db.Column(db.String(120))
     # TODO: budget_file
     budget = db.Column(db.Integer)

@@ -126,8 +126,10 @@ class ProjectFormHandler(BaseHandler):
         raise NotImplementedError
 
     def on_create(self) -> Status:
-        Project.add_project(**self.data)
-        formatted_flash("Initiatief is succesvol toegevoegd!", color="green")
+        instance = Project.add_project(**self.data)
+        formatted_flash(
+            f"Initiatief '{instance.name}' is succesvol toegevoegd!", color="green"
+        )
         return Status.succesful_create
 
 
