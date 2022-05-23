@@ -64,10 +64,22 @@ class DuplicateCategoryName(BaseException):
         )
 
 
+class DuplicateProjectName(BaseException):
+    def __init__(self, name: str):
+        self.name = name
+
+    def __str__(self):
+        return (
+            f"Project '{self.name}' is niet goevoegd, omdat er al een "
+            "project bestaat met deze naam."
+        )
+
+
 known_exceptions = (
     CoupledDebitCardHasPayments,
     DoubleSubprojectName,
     UserIsAlreadyPresentInProject,
     UserIsAlreadyPresentInSubproject,
     DuplicateCategoryName,
+    DuplicateProjectName,
 )

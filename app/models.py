@@ -15,7 +15,7 @@ import app.exceptions as ex
 from app import app, db, login_manager
 from app.better_utils import format_flash
 from app.email import send_invite
-from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
+from psycopg2.errors import UniqueViolation
 
 
 class DefaultCRUD(object):
@@ -373,7 +373,11 @@ class Project(db.Model, DefaultCRUD, DefaultErrorMessages):
         project.funders = [Funder(**x) for x in funders]
 
         db.session.add(project)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except IntegrityError as e:
+            app.logger.info(repr(e))
+            raise ex.DuplicateProjectName(kwargs["name"])
 
         for project_owner in project_owners:
             User.add_user(project_owner["email"], project_id=project.id)
@@ -764,7 +768,7 @@ class Category(db.Model, DefaultCRUD, DefaultErrorMessages):
     # TODO: How to handle this constraint if we get rid of the possibility to do
     # projects without subprojects? At the moment, this constraint does nothing,
     # because a category has either a project, or a subproject, linked to it.
-    __table_args__ = (db.UniqueConstraint("project_id", "subproject_id", "name"),)
+    __table_args__ = (db.UniqueConstraint("subproject_id", "name"),)
 
     def update(self, data):
         try:
