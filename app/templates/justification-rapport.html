@@ -1,0 +1,139 @@
+<div>
+    <div style="display: inline-block">
+        <h1>{{ title }}</h1>
+        <div class="blue-bar"></div>
+        <h3>{{ subtitle }}</h3>
+    </div>
+</div>
+<div class="new-page">
+    <div class="style=display: inline-block">
+        <h3>Over initiatief</h3>
+        <div class="blue-bar"></div>
+    </div>
+    <b>Beschrijving:</b>
+    <p>{{ project.description }}</p>
+    <b>Doel:</b>
+    <p>{{ project.purpose }}</p>
+    <b>Doelgroep:</b>
+    <p>{{ project.target_audience }}</p>
+    <!-- Subsidieregeling and beschikkingsnummer are not on project level. -->
+    <b>Sponsoren:</b>
+    <ul>
+        <!-- TODO: Make this a table with all funder info. -->
+        {% for funder in project.funders %}
+        <li>{{ funder.name }}, {{ funder.subsidy }}, {{ funder.subsidy_number }}</li>
+        {% endfor %}
+    </ul>
+    <!-- No results on project level. -->
+</div>
+<div class="new-page">
+    <div class="style=display: inline-block">
+        <h3>Gegevens initiatief</h3>
+        <div class="blue-bar"></div>
+    </div>
+    <b>Beheerder initiatief:</b>
+    <p>{{ project.owner }}</p>
+    <b>Initiatiefnemer(s):</b>
+    {% if project.users | list | length == 0 %}
+    <i>Dit initiatief heeft geen initiatiefnemers.</i>
+    {% else %}
+    <ul>
+        {% for project_owner in project.users %}
+        <li>{{ project_owner.first_name + " " + project_owner.last_name }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    <b>Contactpersoon: </b>
+    <p>{{ project.owner }}</p>
+    <!-- There is no field for contactpersoon telefoonnummer -->
+    <b>Contactpersoon e-mail:</b>
+    <p>{{ project.owner_email }}</p>
+    <b>Adres aanvrager:</b>
+    <p>{{ project.address_applicant }}</p>
+    <b>Rechtsvorm:</b>
+    <p>{{ project.legal_entity }}</p>
+    <b>Inschrijving KvK:</b>
+    <p>{{ project.registration_kvk }}</p>
+    <b>Activiteiten van dit initiatief:</b>
+    {% if project.subprojects | list | length == 0 %}
+    <p>Dit initiatief heeft geen activiteiten.</p>
+    {% else %}
+    <ul>
+        {% for subproject in project.subprojects %}
+        <li>{{ subproject.name }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+</div>
+<div class="new-page">
+    <div class="style=display: inline-block">
+        <h3>Financiën initiatief</h3>
+        <div class="blue-bar"></div>
+    </div>
+    <b>Totaal budget:</b>
+    <!-- TOOD: Format currency -->
+    <p>{{ project.budget }}</p>
+    <b>Totaal inkomsten:</b>
+    <!-- TODO -->
+    <p>TODO</p>
+    <b>Totaal inbesteding:</b>
+    <!-- TODO -->
+    <p>TODO</p>
+    <b>Totaal besteed:</b>
+    <!-- TODO -->
+    <p>TODO</p>
+    <b>Budget per activiteit:</b>
+    {% if project.subprojects | list | length == 0 %}
+    <p>Dit initiatief heeft geen activiteiten.</p>
+    {% else %}
+    <ul>
+        {% for subproject in project.subprojects %}
+        <!-- TODO: Format currency -->
+        <li>{{ subproject.name }}: {{ subproject.budget }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    <b>Start uitgaven:</b>
+    <!-- TODO -->
+    <p>TODO</p>
+    <b>Eind uitgaven:</b>
+    <!-- TODO  -->
+    <p>TODO</p>
+</div>
+{% for subproject in project.subprojects %}
+<div class="new-page">
+    <div class="style=display: inline-block">
+        <h3>Over activiteit {{ subproject.name }}</h3>
+        <div class="blue-bar"></div>
+    </div>
+    <b>Status activiteit:</b>
+    <!-- TODO -->
+    <p>TODO: lopend/afgerond/verantwoord</p>
+    <b>Beschrijving:</b>
+    <p>{{ subproject.description }}</p>
+    <b>Doel:</b>
+    <p>{{ subproject.purpose }}</p>
+    <b>Doelgroep:</b>
+    <p>{{ subproject.target_audience }}</p>
+    <b>Sponsoren:</b>
+    <ul>
+        <!-- TODO: Make this a table with all funder info. -->
+        {% for funder in subproject.funders %}
+        <li>{{ funder.name }}, {{ funder.subsidy }}, {{ funder.subsidy_number }}</li>
+        {% endfor %}
+    </ul>
+    <b>Resultaten {{ subproject.name }}:</b>
+    {% if subproject.finished_description %}
+    <p>{{ subproject.finished_description }}</p>
+    {% else %}
+    <i>Deze activiteit is nog niet afgerond. Om deze reden zijn de resultaten nog niet omschreven.</i>
+    {% endif %}
+</div>
+<div class="new-page">
+    <div class="style=display: inline-block">
+        <h3>Financiën activiteit {{ subproject.name }}</h3>
+        <div class="blue-bar"></div>
+    </div>
+    <b></b>
+</div>
+{% endfor %}

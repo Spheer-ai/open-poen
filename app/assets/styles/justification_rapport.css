@@ -1,0 +1,12 @@
+* {
+    font-family: "Lexend Deca", sans-serif;
+}
+
+.new-page {
+    page-break-before: always
+}
+
+.blue-bar {
+    background-color: #0889d2;
+    height: 3px;
+}
