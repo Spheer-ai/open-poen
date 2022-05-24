@@ -1,12 +1,16 @@
+@import "~@openfonts/lexend-deca_latin/index.css";
+
 * {
     font-family: "Lexend Deca", sans-serif;
 }
+
+$blue: #265ed4;
 
 .new-page {
     page-break-before: always
 }
 
 .blue-bar {
-    background-color: #0889d2;
+    background-color: $blue;
     height: 3px;
 }
