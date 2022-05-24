@@ -1,23 +1,17 @@
-<div>
-    <div style="display: inline-block">
-        <h1>{{ title }}</h1>
-        <div class="blue-bar"></div>
-        <h3>{{ subtitle }}</h3>
-    </div>
+<div class="title-container">
+    <h1>{{ project.name }}</h1>
+    <img class="logo img-fluid" src="static/dist/images/logo-og.png" alt="Open Poen logo">
 </div>
 <div class="new-page">
-    <div class="style=display: inline-block">
-        <h3>Over initiatief</h3>
-        <div class="blue-bar"></div>
-    </div>
-    <b>Beschrijving:</b>
+    <h1>Over initiatief</h1>
+    <h4>Beschrijving:</h4>
     <p>{{ project.description }}</p>
-    <b>Doel:</b>
+    <h4>Doel:</h4>
     <p>{{ project.purpose }}</p>
-    <b>Doelgroep:</b>
+    <h4>Doelgroep:</h4>
     <p>{{ project.target_audience }}</p>
     <!-- Subsidieregeling and beschikkingsnummer are not on project level. -->
-    <b>Sponsoren:</b>
+    <h4>Sponsoren:</h4>
     <ul>
         <!-- TODO: Make this a table with all funder info. -->
         {% for funder in project.funders %}
@@ -27,13 +21,10 @@
     <!-- No results on project level. -->
 </div>
 <div class="new-page">
-    <div class="style=display: inline-block">
-        <h3>Gegevens initiatief</h3>
-        <div class="blue-bar"></div>
-    </div>
-    <b>Beheerder initiatief:</b>
+    <h1>Gegevens initiatief</h1>
+    <h4>Beheerder initiatief:</h4>
     <p>{{ project.owner }}</p>
-    <b>Initiatiefnemer(s):</b>
+    <h4>Initiatiefnemer(s):</h4>
     {% if project.users | list | length == 0 %}
     <i>Dit initiatief heeft geen initiatiefnemers.</i>
     {% else %}
@@ -43,18 +34,18 @@
         {% endfor %}
     </ul>
     {% endif %}
-    <b>Contactpersoon: </b>
+    <h4>Contactpersoon: </h4>
     <p>{{ project.owner }}</p>
     <!-- There is no field for contactpersoon telefoonnummer -->
-    <b>Contactpersoon e-mail:</b>
+    <h4>Contactpersoon e-mail:</h4>
     <p>{{ project.owner_email }}</p>
-    <b>Adres aanvrager:</b>
+    <h4>Adres aanvrager:</h4>
     <p>{{ project.address_applicant }}</p>
-    <b>Rechtsvorm:</b>
+    <h4>Rechtsvorm:</h4>
     <p>{{ project.legal_entity }}</p>
-    <b>Inschrijving KvK:</b>
+    <h4>Inschrijving KvK:</h4>
     <p>{{ project.registration_kvk }}</p>
-    <b>Activiteiten van dit initiatief:</b>
+    <h4>Activiteiten van dit initiatief:</h4>
     {% if project.subprojects | list | length == 0 %}
     <p>Dit initiatief heeft geen activiteiten.</p>
     {% else %}
@@ -66,23 +57,20 @@
     {% endif %}
 </div>
 <div class="new-page">
-    <div class="style=display: inline-block">
-        <h3>Financiën initiatief</h3>
-        <div class="blue-bar"></div>
-    </div>
-    <b>Totaal budget:</b>
+    <h1>Financiën initiatief</h1>
+    <h4>Totaal budget:</h4>
     <!-- TOOD: Format currency -->
     <p>{{ project.budget }}</p>
-    <b>Totaal inkomsten:</b>
+    <h4>Totaal inkomsten:</h4>
     <!-- TODO -->
     <p>TODO</p>
-    <b>Totaal inbesteding:</b>
+    <h4>Totaal inbesteding:</h4>
     <!-- TODO -->
     <p>TODO</p>
-    <b>Totaal besteed:</b>
+    <h4>Totaal besteed:</h4>
     <!-- TODO -->
     <p>TODO</p>
-    <b>Budget per activiteit:</b>
+    <h4>Budget per activiteit:</h4>
     {% if project.subprojects | list | length == 0 %}
     <p>Dit initiatief heeft geen activiteiten.</p>
     {% else %}
@@ -93,36 +81,33 @@
         {% endfor %}
     </ul>
     {% endif %}
-    <b>Start uitgaven:</b>
+    <h4>Start uitgaven:</h4>
     <!-- TODO -->
     <p>TODO</p>
-    <b>Eind uitgaven:</b>
+    <h4>Eind uitgaven:</h4>
     <!-- TODO  -->
     <p>TODO</p>
 </div>
 {% for subproject in project.subprojects %}
 <div class="new-page">
-    <div class="style=display: inline-block">
-        <h3>Over activiteit {{ subproject.name }}</h3>
-        <div class="blue-bar"></div>
-    </div>
-    <b>Status activiteit:</b>
+    <h1>Over activiteit {{ subproject.name }}</h1>
+    <h4>Status activiteit:</h4>
     <!-- TODO -->
     <p>TODO: lopend/afgerond/verantwoord</p>
-    <b>Beschrijving:</b>
+    <h4>Beschrijving:</h4>
     <p>{{ subproject.description }}</p>
-    <b>Doel:</b>
+    <h4>Doel:</h4>
     <p>{{ subproject.purpose }}</p>
-    <b>Doelgroep:</b>
+    <h4>Doelgroep:</h4>
     <p>{{ subproject.target_audience }}</p>
-    <b>Sponsoren:</b>
+    <h4>Sponsoren:</h4>
     <ul>
         <!-- TODO: Make this a table with all funder info. -->
         {% for funder in subproject.funders %}
         <li>{{ funder.name }}, {{ funder.subsidy }}, {{ funder.subsidy_number }}</li>
         {% endfor %}
     </ul>
-    <b>Resultaten {{ subproject.name }}:</b>
+    <h4>Resultaten {{ subproject.name }}:</h4>
     {% if subproject.finished_description %}
     <p>{{ subproject.finished_description }}</p>
     {% else %}
@@ -130,10 +115,6 @@
     {% endif %}
 </div>
 <div class="new-page">
-    <div class="style=display: inline-block">
-        <h3>Financiën activiteit {{ subproject.name }}</h3>
-        <div class="blue-bar"></div>
-    </div>
-    <b></b>
+    <h1>Financiën activiteit {{ subproject.name }}</h1>
 </div>
 {% endfor %}

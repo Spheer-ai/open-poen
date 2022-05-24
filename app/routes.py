@@ -43,6 +43,7 @@ from app.models import (
     save_attachment,
 )
 from flask_weasyprint import HTML, render_pdf, CSS
+import os
 
 
 # Add 'Cache-Control': 'private' header if users are logged in
@@ -83,7 +84,6 @@ def before_request():
             return redirect(url_for("profile_user_edit"))
 
 
-@app.route("/nene")
 @app.route("/", methods=["GET", "POST"])
 def index():
     modal_id = []  # This is used to pop open a modal on page load in case of
@@ -700,17 +700,20 @@ def profile_project(project_id):
 
 @app.route("/report/project/<project_id>", methods=["GET"])
 def justification_report(project_id):
+    # https://github.com/Kozea/WeasyPrint/issues/1381
     project = Project.query.get(project_id)
-
     rendered_template = render_template(
         "justification-rapport.html",
-        title="Titel",
-        subtitle="Subtitel",
         project=project,
     )
-
-    x = HTML(string=rendered_template)
-    y = CSS(filename="./app/static/dist/styles/justification_report.css")
+    base_url = os.path.dirname(os.path.realpath(__file__))
+    x = HTML(
+        string=rendered_template,
+        base_url=base_url,
+    )
+    y = CSS(
+        filename="./app/static/dist/styles/justification_report.css", base_url=base_url
+    )
     return render_pdf(x, stylesheets=[y])
 
 
