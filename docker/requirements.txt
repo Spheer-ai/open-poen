@@ -42,7 +42,8 @@ pytest==7.1.2
 python-dateutil==2.8.0
 python-editor==1.0.4
 pytz==2019.2
-pdfkit==1.0.0
+weasyprint==52.5
+Flask-WeasyPrint==0.6
 requests==2.26.0
 simplejson==3.17.2
 six==1.12.0

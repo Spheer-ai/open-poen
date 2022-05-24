@@ -31,6 +31,8 @@ from app.forms import (
     ResetPasswordForm,
     ResetPasswordRequestForm,
 )
+
+# from app.justification_report import test
 from app.models import (
     BNGAccount,
     File,
@@ -40,6 +42,7 @@ from app.models import (
     UserStory,
     save_attachment,
 )
+from flask_weasyprint import HTML, render_pdf, CSS
 
 
 # Add 'Cache-Control': 'private' header if users are logged in
@@ -80,6 +83,7 @@ def before_request():
             return redirect(url_for("profile_user_edit"))
 
 
+@app.route("/nene")
 @app.route("/", methods=["GET", "POST"])
 def index():
     modal_id = []  # This is used to pop open a modal on page load in case of
@@ -87,6 +91,8 @@ def index():
     bng_info = {}
 
     clearance = util.get_clearance()
+
+    # test()
 
     # ADMIN
     edit_admin_form = EditAdminForm(prefix="edit_admin_form")
@@ -690,6 +696,22 @@ def profile_project(project_id):
         modal_id=modal_id,
         permissions=util.get_permissions(clearance),
     )
+
+
+@app.route("/report/project/<project_id>", methods=["GET"])
+def justification_report(project_id):
+    project = Project.query.get(project_id)
+
+    rendered_template = render_template(
+        "justification-rapport.html",
+        title="Titel",
+        subtitle="Subtitel",
+        project=project,
+    )
+
+    x = HTML(string=rendered_template)
+    y = CSS(filename="./app/static/dist/styles/justification_report.css")
+    return render_pdf(x, stylesheets=[y])
 
 
 @app.route("/profiel/subproject/<subproject_id>", methods=["GET", "POST"])
