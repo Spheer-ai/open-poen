@@ -3,7 +3,7 @@ import os
 from datetime import datetime
 from os import urandom
 from time import time
-from typing import Dict
+from typing import Dict, List, Tuple
 
 import jwt
 from flask_login import UserMixin
@@ -16,6 +16,10 @@ from app import app, db, login_manager
 from app.better_utils import format_flash
 from app.email import send_invite
 from psycopg2.errors import UniqueViolation
+
+
+def format_currency_with_cents(amount):
+    return locale.format("%.2f", amount, grouping=True, monetary=True)
 
 
 class DefaultCRUD(object):
@@ -426,6 +430,17 @@ class Project(db.Model, DefaultCRUD, DefaultErrorMessages):
     def coupleable_funders(self):
         return [x for x in self.funders if not x.justified]
 
+    @property
+    def formatted_budget(self):
+        return "%s%s" % (
+            "€ ",
+            locale.format("%d", self.budget, grouping=True, monetary=True),
+        )
+
+    @property
+    def financial_summary(self):
+        return financial_summary(self.get_all_payments())
+
 
 class Subproject(db.Model, DefaultCRUD, DefaultErrorMessages):
     id = db.Column(db.Integer, primary_key=True)
@@ -517,11 +532,15 @@ class Subproject(db.Model, DefaultCRUD, DefaultErrorMessages):
             return "lopend"
 
     @property
-    def format_budget(self):
+    def formatted_budget(self):
         return "%s%s" % (
             "€ ",
             locale.format("%d", self.budget, grouping=True, monetary=True),
         )
+
+    @property
+    def financial_summary(self):
+        return financial_summary(self.payments.all())
 
 
 class DebitCard(db.Model, DefaultCRUD, DefaultErrorMessages):
@@ -614,9 +633,7 @@ class Payment(db.Model, DefaultCRUD, DefaultErrorMessages):
     attachments = db.relationship("File", secondary=payment_attachment, lazy="dynamic")
 
     def get_formatted_currency(self):
-        return locale.format(
-            "%.2f", self.transaction_amount, grouping=True, monetary=True
-        )
+        return format_currency_with_cents(self.transaction_amount)
 
     def get_export_currency(self):
         return self.get_formatted_currency().replace("\u202f", "")
@@ -657,6 +674,31 @@ class Payment(db.Model, DefaultCRUD, DefaultErrorMessages):
         return "Betaling"
 
 
+def get_total_route_amount(payments: List[Payment], routes: Tuple[str, ...]):
+    return sum([x.transaction_amount for x in payments if x.route in routes])
+
+
+def financial_summary(payments: List[Payment]):
+    payments = sorted(payments, key=lambda x: x.booking_date)
+    return {
+        "awarded": format_currency_with_cents(
+            get_total_route_amount(payments, ("inkomsten",))
+        ),
+        "insourcing": format_currency_with_cents(
+            get_total_route_amount(payments, ("inbesteding",))
+        ),
+        "expenses": format_currency_with_cents(
+            get_total_route_amount(payments, ("uitgaven", "inbesteding"))
+        ),
+        "first_payment_date": payments[0].booking_date.strftime("%d-%m-%Y")
+        if len(payments) != 0
+        else "geen",
+        "last_payment_date": payments[-1].booking_date.strftime("%d-%m-%Y")
+        if len(payments) != 0
+        else "geen",
+    }
+
+
 class Funder(db.Model, DefaultCRUD, DefaultErrorMessages):
     id = db.Column(db.Integer, primary_key=True)
     project_id = db.Column(db.Integer, db.ForeignKey("project.id", ondelete="CASCADE"))
@@ -674,7 +716,8 @@ class Funder(db.Model, DefaultCRUD, DefaultErrorMessages):
         back_populates="funders",
     )
 
-    def get_formatted_currency(self):
+    @property
+    def formatted_budget(self):
         return "%s%s" % (
             "€ ",
             locale.format("%d", self.budget, grouping=True, monetary=True),
@@ -714,7 +757,7 @@ class Funder(db.Model, DefaultCRUD, DefaultErrorMessages):
         )
 
     @property
-    def format_funder(self):
+    def formatted_name(self):
         return f"{self.name}, {self.subsidy} - {self.subsidy_number}"
 
 
@@ -785,9 +828,6 @@ class Category(db.Model, DefaultCRUD, DefaultErrorMessages):
     payments = db.relationship("Payment", backref="category", lazy="dynamic")
 
     # Category names must be unique within a (sub)project
-    # TODO: How to handle this constraint if we get rid of the possibility to do
-    # projects without subprojects? At the moment, this constraint does nothing,
-    # because a category has either a project, or a subproject, linked to it.
     __table_args__ = (db.UniqueConstraint("subproject_id", "name"),)
 
     def update(self, data):

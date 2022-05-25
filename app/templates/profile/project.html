@@ -149,7 +149,7 @@
                             <td>{{ funder.name }}</td>
                             <td>{{ funder.subsidy }}</td>
                             <td>{{ funder.subsidy_number }}</td>
-                            <td>{{ funder.get_formatted_currency() }}</td>
+                            <td>{{ funder.formatted_budget }}</td>
                             <td>{{ "ja" if funder.justified else "nee" }}</td>
                             {% if funder.justified %}
                             <td><a href="{{ url_for('justification_report', project_id=funder.project.id) }}"

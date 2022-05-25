@@ -12,7 +12,9 @@
     <h4>Doelgroep:</h4>
     <p>{{ project.target_audience }}</p>
     <h4>Sponsoren:</h4>
-
+    {% if project.funders | list | length == 0 %}
+    <p>Dit initiatief heeft geen sponsoren.</p>
+    {% else %}
     <table class="table table-striped">
         <thead>
             <tr>
@@ -31,7 +33,7 @@
                 <td>{{ funder.name }}</td>
                 <td>{{ funder.subsidy }}</td>
                 <td>{{ funder.subsidy_number }}</td>
-                <td>{{ funder.get_formatted_currency() }}</td>
+                <td>{{ funder.formatted_budget }}</td>
                 <td>{{ "ja" if funder.justified else "nee" }}</td>
                 <td>
                     {% if funder.subprojects | list | length == 0 %}
@@ -46,6 +48,7 @@
             {% endfor %}
         </tbody>
     </table>
+    {% endif %}
 </div>
 
 <div class="new-page">
@@ -104,14 +107,14 @@
             {% for subproject in project.subprojects %}
             <tr>
                 <td>{{ subproject.name }}</td>
-                <td>{{ "niet ingevuld" if not subproject.budget else subproject.format_budget }}</td>
+                <td>{{ "niet ingevuld" if not subproject.budget else subproject.formatted_budget }}</td>
                 <td>{{ subproject.format_status }}</td>
                 <td>
                     {% if subproject.funders | list | length == 0 %}
                     geen
                     {% else %}
                     {% for funder in subproject.funders %}
-                    <p>{{ funder.format_funder }}</p>
+                    <p>{{ funder.formatted_name }}</p>
                     {% endfor %}
                     {% endif %}
                 </td>
@@ -125,62 +128,102 @@
 <div class="new-page">
     <h1>Financiën initiatief</h1>
     <h4>Totaal budget:</h4>
-    <!-- TOOD: Format currency -->
-    <p>{{ project.budget }}</p>
+    <p>{{ project.formatted_budget }}</p>
     <h4>Totaal inkomsten:</h4>
-    <!-- TODO -->
-    <p>TODO</p>
+    <p>{{ project.financial_summary["awarded"] }}</p>
     <h4>Totaal inbesteding:</h4>
-    <!-- TODO -->
-    <p>TODO</p>
+    <p>{{ project.financial_summary["insourcing"] }}</p>
     <h4>Totaal besteed:</h4>
-    <!-- TODO -->
-    <p>TODO</p>
-    <h4>Budget per activiteit:</h4>
-    {% if project.subprojects | list | length == 0 %}
-    <p>Dit initiatief heeft geen activiteiten.</p>
-    {% else %}
-    <ul>
-        {% for subproject in project.subprojects %}
-        <!-- TODO: Format currency -->
-        <li>{{ subproject.name }}: {{ subproject.budget }}</li>
-        {% endfor %}
-    </ul>
-    {% endif %}
+    <p>{{ project.financial_summary["expenses"] }}</p>
     <h4>Start uitgaven:</h4>
-    <!-- TODO -->
-    <p>TODO</p>
+    <p>{{ project.financial_summary["first_payment_date"] }}</p>
     <h4>Eind uitgaven:</h4>
-    <!-- TODO  -->
-    <p>TODO</p>
+    <p>{{ project.financial_summary["last_payment_date"] }}</p>
 </div>
 {% for subproject in project.subprojects %}
 <div class="new-page">
     <h1>Over activiteit {{ subproject.name }}</h1>
     <h4>Status activiteit:</h4>
-    <!-- TODO -->
-    <p>TODO: lopend/afgerond/verantwoord</p>
+    <p>{{ subproject.format_status }}</p>
     <h4>Beschrijving:</h4>
     <p>{{ subproject.description }}</p>
     <h4>Doel:</h4>
     <p>{{ subproject.purpose }}</p>
     <h4>Doelgroep:</h4>
     <p>{{ subproject.target_audience }}</p>
+    <h4>Activiteitnemer(s):</h4>
+    {% if subproject.users | list | length == 0 %}
+    <p>Deze activiteit heeft geen activiteitnemers.</p>
+    {% else %}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th scope="col">Voornaam:</th>
+                <th scope="col">Achternaam:</th>
+                <th scope="col">Biografie:</th>
+                <th scope="col">E-mailadres:</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in subproject.users %}
+            <tr>
+                <td>{{ "niet ingevuld" if not user.first_name else user.first_name }}</td>
+                <td>{{ "niet ingevuld" if not user.last_name else user.last_name }}</td>
+                <td>{{ "niet ingevuld" if not user.biography else user.biography }}</td>
+                <td>{{ user.email }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
     <h4>Sponsoren:</h4>
-    <ul>
-        <!-- TODO: Make this a table with all funder info. -->
-        {% for funder in subproject.funders %}
-        <li>{{ funder.name }}, {{ funder.subsidy }}, {{ funder.subsidy_number }}</li>
-        {% endfor %}
-    </ul>
+    {% if subproject.funders | list | length == 0 %}
+    <p>Deze activiteit heeft geen sponsoren.</p>
+    {% else %}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th scope="col">Sponsor(s):</th>
+                <th scope="col">Subsidieregeling:</th>
+                <th scope="col">Beschikkingsnummer:</th>
+                <th scope="col">Budget:</th>
+                <th scope="col">Verantwoord:</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for funder in subproject.funders %}
+            <tr>
+                <!-- No need to check if the value is None, because it's a required field in the funder form. -->
+                <td>{{ funder.name }}</td>
+                <td>{{ funder.subsidy }}</td>
+                <td>{{ funder.subsidy_number }}</td>
+                <td>{{ funder.formatted_budget }}</td>
+                <td>{{ "ja" if funder.justified else "nee" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
     <h4>Resultaten {{ subproject.name }}:</h4>
     {% if subproject.finished_description %}
     <p>{{ subproject.finished_description }}</p>
     {% else %}
-    <i>Deze activiteit is nog niet afgerond. Om deze reden zijn de resultaten nog niet omschreven.</i>
+    <p>Deze activiteit is nog niet afgerond. Om deze reden zijn de resultaten nog niet omschreven.</p>
     {% endif %}
 </div>
 <div class="new-page">
     <h1>Financiën activiteit {{ subproject.name }}</h1>
+    <h4>Totaal budget:</h4>
+    <p>{{ subproject.formatted_budget }}</p>
+    <h4>Totaal inkomsten:</h4>
+    <p>{{ subproject.financial_summary["awarded"] }}</p>
+    <h4>Totaal inbesteding:</h4>
+    <p>{{ subproject.financial_summary["insourcing"] }}</p>
+    <h4>Totaal besteed:</h4>
+    <p>{{ subproject.financial_summary["expenses"] }}</p>
+    <h4>Start uitgaven:</h4>
+    <p>{{ subproject.financial_summary["first_payment_date"] }}</p>
+    <h4>Eind uitgaven:</h4>
+    <p>{{ subproject.financial_summary["last_payment_date"] }}</p>
 </div>
 {% endfor %}
