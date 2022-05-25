@@ -700,7 +700,6 @@ def profile_project(project_id):
 
 @app.route("/report/project/<project_id>", methods=["GET"])
 def justification_report(project_id):
-    # https://github.com/Kozea/WeasyPrint/issues/1381
     project = Project.query.get(project_id)
     rendered_template = render_template(
         "justification-rapport.html",

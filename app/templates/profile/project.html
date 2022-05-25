@@ -138,6 +138,7 @@
                             <th scope="col">Beschikkingsnummer:</th>
                             <th scope="col">Budget:</th>
                             <th scope="col">Verantwoord:</th>
+                            <th scope="col">Verantwoording:</th>
                             <th scope="col">Activiteiten:</th>
                         </tr>
                     </thead>
@@ -150,12 +151,19 @@
                             <td>{{ funder.subsidy_number }}</td>
                             <td>{{ funder.get_formatted_currency() }}</td>
                             <td>{{ "ja" if funder.justified else "nee" }}</td>
+                            {% if funder.justified %}
+                            <td><a href="{{ url_for('justification_report', project_id=funder.project.id) }}"
+                                    target="_blank"">verantwoording</a>
+                            </td>
+                            {% else %}
+                            <td>geen</td>
+                            {% endif %}
                             <td>
                                 {% if funder.subprojects | list | length == 0 %}
-                                Geen.
+                                geen
                                 {% else %}
                                 {% for subproject in funder.subprojects %}
-                                <a href="{{ url_for('profile_subproject', subproject_id=subproject.id) }}">{{
+                                <a href=" {{ url_for('profile_subproject', subproject_id=subproject.id) }}">{{
                                     subproject.name }}</a>
                                 <br>
                                 {% endfor %}
