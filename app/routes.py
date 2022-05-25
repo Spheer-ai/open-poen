@@ -703,7 +703,7 @@ def justification_report(project_id):
         "justification-rapport.html",
         project=project,
     )
-    base_url = os.path.dirname(os.path.realpath(__file__))
+    base_url = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
     x = HTML(
         string=rendered_template,
         base_url=base_url,

@@ -15,14 +15,23 @@ $font-family: "Open Sans";
     height: 3px;
 }
 
+.amsterdam {
+    position: fixed;
+    bottom: 100%;
+    margin-bottom: 32px;
+    margin-left: 16px;
+    height: 64px;
+    z-index: -999;
+}
+
 .title-container {
     display: flex;
-    height: 100%;
     align-items: center;
     justify-content: center;
+    padding: 64px;
 
     h1 {
-        font-size: 36px;
+        font-size: 64px;
         font-weight: 600;
     }
 }
@@ -43,12 +52,20 @@ h6 {
     font-family: $font-family;
 }
 
-.logo {
-    height: 64px;
+.attachment-container {
+    width: 320px;
+    height: 320px;
+    padding: 32px;
+}
+
+.attachment {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 @page {
-    @bottom-right {
+    @bottom-left {
         border-top: 1px solid $red;
         content: "Pagina " counter(page) " van de " counter(pages);
         vertical-align: top;

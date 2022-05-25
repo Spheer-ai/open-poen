@@ -1,7 +1,8 @@
 <div class="title-container">
     <h1>{{ project.name }}</h1>
-    <img class="logo img-fluid" src="static/dist/images/logo-og.png" alt="Open Poen logo">
 </div>
+
+<img class="amsterdam" src="app/static/dist/images/amsterdam.png" alt="Amsterdam logo">
 
 <div class="new-page">
     <h1>Over initiatief</h1>
@@ -226,4 +227,98 @@
     <h4>Eind uitgaven:</h4>
     <p>{{ subproject.financial_summary["last_payment_date"] }}</p>
 </div>
+<div class="new-page">
+    <h1>Transactieoverzicht activiteit {{ subproject.name }}</h1>
+    {% if subproject.payments | list | length == 0 %}
+    <p>Deze activiteit heeft geen transacties.</p>
+    {% else %}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th scope="col">Bedrag:</th>
+                <th scope="col">Ontvanger:</th>
+                <th scope="col">Omschrijving:</th>
+                <th scope="col">Route:</th>
+                <th scope="col">Type:</th>
+                <th scope="col">Datum:</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for payment in subproject.payments | sort(attribute="booking_date", reverse=true) %}
+            <tr>
+                <td>{{ payment.get_formatted_currency() }}</td>
+                <td>{{ "niet ingevuld" if not payment.creditor_name else payment.creditor_name }}</td>
+                <td>{{ "niet ingevuld" if not payment.short_user_description else payment.short_user_description }}</td>
+                <td>{{ payment.route }}</td>
+                {% if payment.type == "MANUAL_PAYMENT" %}
+                <td>handmatige betaling</td>
+                {% elif payment.type == "MANUAL_TOPUP" %}
+                <td>handmatige topup</td>
+                {% else %}
+                <td>BNG</td>
+                {% endif %}
+                <td>{{ payment.booking_date.strftime('%d-%m-\'%y') }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+</div>
+{% endfor %}
+<div class="new-page">
+    <h1>Overzicht overige transacties</h1>
+    <p>Transacties worden vanuit de zogenoemde "hoofdactiviteit" toegewezen aan een activiteit. Transacties die nog niet
+        zijn toegewezen aan een activiteit, staan hieronder weergeven.</p>
+    {% if project.get_payments_without_subproject | list | length == 0 %}
+    <p>De "hoofdactiviteit" bevat geen transacties. Alle transacties zijn toegewezen aan een activiteit.</p>
+    {% else %}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th scope="col">Bedrag:</th>
+                <th scope="col">Ontvanger:</th>
+                <th scope="col">Omschrijving:</th>
+                <th scope="col">Route:</th>
+                <th scope="col">Type:</th>
+                <th scope="col">Datum:</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for payment in project.get_payments_without_subproject | sort(attribute="booking_date", reverse=true) %}
+            <tr>
+                <td>{{ payment.get_formatted_currency() }}</td>
+                <td>{{ "niet ingevuld" if not payment.creditor_name else payment.creditor_name }}</td>
+                <td>{{ "niet ingevuld" if not payment.short_user_description else payment.short_user_description }}</td>
+                <td>{{ payment.route }}</td>
+                {% if payment.type == "MANUAL_PAYMENT" %}
+                <td>handmatige betaling</td>
+                {% elif payment.type == "MANUAL_TOPUP" %}
+                <td>handmatige topup</td>
+                {% else %}
+                <td>BNG</td>
+                {% endif %}
+                <td>{{ payment.booking_date.strftime('%d-%m-\'%y') }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+</div>
+<div class="new-page">
+    <h1>Geüploade media</h1>
+    {% for row in project.get_all_attachments() | batch(3, none) %}
+    <div style="display: flex;">
+        {% for attachment in row %}
+        {% if attachment is not none and attachment.mimetype in ['image/jpeg', 'image/jpg', 'image/png'] %}
+        <div class="attachment-container">
+            <img class="attachment" src="upload/transaction-attachment/{{ attachment.filename }}">
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+    {% endfor %}
+</div>
+
+{% for row in items|batch(3, '-') -%}
+{% for column in row %} {{ column }} {% endfor %} |
 {% endfor %}

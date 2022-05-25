@@ -344,6 +344,10 @@ class Project(db.Model, DefaultCRUD, DefaultErrorMessages):
         )
         return list(set(debit_card_payments + other_payments))
 
+    @property
+    def get_payments_without_subproject(self):
+        return [x for x in self.get_all_payments() if x.subproject_id is None]
+
     def get_all_attachments(self):
         all_payments = self.get_all_payments()
 
