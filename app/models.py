@@ -507,6 +507,22 @@ class Subproject(db.Model, DefaultCRUD, DefaultErrorMessages):
     def has_at_least_one_payment(self):
         return len(self.payments.all()) > 0
 
+    @property
+    def format_status(self):
+        if self.justified:
+            return "verantwoord"
+        elif self.finished:
+            return "afgerond"
+        else:
+            return "lopend"
+
+    @property
+    def format_budget(self):
+        return "%s%s" % (
+            "€ ",
+            locale.format("%d", self.budget, grouping=True, monetary=True),
+        )
+
 
 class DebitCard(db.Model, DefaultCRUD, DefaultErrorMessages):
     id = db.Column(db.Integer, primary_key=True)
@@ -696,6 +712,10 @@ class Funder(db.Model, DefaultCRUD, DefaultErrorMessages):
             and not unfinished_subproject
             and not self.justified
         )
+
+    @property
+    def format_funder(self):
+        return f"{self.name}, {self.subsidy} - {self.subsidy_number}"
 
 
 class UserStory(db.Model):

@@ -2,6 +2,7 @@
     <h1>{{ project.name }}</h1>
     <img class="logo img-fluid" src="static/dist/images/logo-og.png" alt="Open Poen logo">
 </div>
+
 <div class="new-page">
     <h1>Over initiatief</h1>
     <h4>Beschrijving:</h4>
@@ -10,33 +11,74 @@
     <p>{{ project.purpose }}</p>
     <h4>Doelgroep:</h4>
     <p>{{ project.target_audience }}</p>
-    <!-- Subsidieregeling and beschikkingsnummer are not on project level. -->
     <h4>Sponsoren:</h4>
-    <ul>
-        <!-- TODO: Make this a table with all funder info. -->
-        {% for funder in project.funders %}
-        <li>{{ funder.name }}, {{ funder.subsidy }}, {{ funder.subsidy_number }}</li>
-        {% endfor %}
-    </ul>
-    <!-- No results on project level. -->
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th scope="col">Sponsor(s):</th>
+                <th scope="col">Subsidieregeling:</th>
+                <th scope="col">Beschikkingsnummer:</th>
+                <th scope="col">Budget:</th>
+                <th scope="col">Verantwoord:</th>
+                <th scope="col">Activiteiten:</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for funder in project.funders %}
+            <tr>
+                <!-- No need to check if the value is None, because it's a required field in the funder form. -->
+                <td>{{ funder.name }}</td>
+                <td>{{ funder.subsidy }}</td>
+                <td>{{ funder.subsidy_number }}</td>
+                <td>{{ funder.get_formatted_currency() }}</td>
+                <td>{{ "ja" if funder.justified else "nee" }}</td>
+                <td>
+                    {% if funder.subprojects | list | length == 0 %}
+                    geen
+                    {% else %}
+                    {% for subproject in funder.subprojects %}
+                    <p>{{ subproject.name }}</p>
+                    {% endfor %}
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
+
 <div class="new-page">
     <h1>Gegevens initiatief</h1>
     <h4>Beheerder initiatief:</h4>
     <p>{{ project.owner }}</p>
     <h4>Initiatiefnemer(s):</h4>
     {% if project.users | list | length == 0 %}
-    <i>Dit initiatief heeft geen initiatiefnemers.</i>
+    <p>Dit initiatief heeft geen initiatiefnemers.</p>
     {% else %}
-    <ul>
-        {% for project_owner in project.users %}
-        <li>{{ project_owner.first_name + " " + project_owner.last_name }}</li>
-        {% endfor %}
-    </ul>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th scope="col">Voornaam:</th>
+                <th scope="col">Achternaam:</th>
+                <th scope="col">Biografie:</th>
+                <th scope="col">E-mailadres:</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in project.users %}
+            <tr>
+                <td>{{ "niet ingevuld" if not user.first_name else user.first_name }}</td>
+                <td>{{ "niet ingevuld" if not user.last_name else user.last_name }}</td>
+                <td>{{ "niet ingevuld" if not user.biography else user.biography }}</td>
+                <td>{{ user.email }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
     {% endif %}
     <h4>Contactpersoon: </h4>
     <p>{{ project.owner }}</p>
-    <!-- There is no field for contactpersoon telefoonnummer -->
     <h4>Contactpersoon e-mail:</h4>
     <p>{{ project.owner_email }}</p>
     <h4>Adres aanvrager:</h4>
@@ -49,13 +91,37 @@
     {% if project.subprojects | list | length == 0 %}
     <p>Dit initiatief heeft geen activiteiten.</p>
     {% else %}
-    <ul>
-        {% for subproject in project.subprojects %}
-        <li>{{ subproject.name }}</li>
-        {% endfor %}
-    </ul>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th scope="col">Naam:</th>
+                <th scope="col">Budget:</th>
+                <th scope="col">Status:</th>
+                <th scope="col">Sponsoren:</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for subproject in project.subprojects %}
+            <tr>
+                <td>{{ subproject.name }}</td>
+                <td>{{ "niet ingevuld" if not subproject.budget else subproject.format_budget }}</td>
+                <td>{{ subproject.format_status }}</td>
+                <td>
+                    {% if subproject.funders | list | length == 0 %}
+                    geen
+                    {% else %}
+                    {% for funder in subproject.funders %}
+                    <p>{{ funder.format_funder }}</p>
+                    {% endfor %}
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
     {% endif %}
 </div>
+
 <div class="new-page">
     <h1>Financiën initiatief</h1>
     <h4>Totaal budget:</h4>

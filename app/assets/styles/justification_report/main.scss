@@ -2,6 +2,10 @@ $blue: #265ed4;
 $red: red;
 $font-family: "Open Sans";
 
+@import "~bootstrap/scss/_functions.scss";
+@import "~bootstrap/scss/_variables.scss";
+@import 'bootstrap';
+
 .new-page {
     page-break-before: always
 }
