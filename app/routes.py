@@ -92,8 +92,6 @@ def index():
 
     clearance = util.get_clearance()
 
-    # test()
-
     # ADMIN
     edit_admin_form = EditAdminForm(prefix="edit_admin_form")
     form_redirect = process_form(BaseHandler(edit_admin_form, User))

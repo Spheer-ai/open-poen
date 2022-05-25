@@ -1,5 +1,5 @@
 from app import app
-from app.populate import populate_db_with_test_data
+from app.populate import populate_db_with_test_data, add_subprojects, delete_test_data
 from app.models import User, Payment
 from flask import url_for
 from pprint import pprint
@@ -85,8 +85,17 @@ def create_user_invite_link(email):
 
 
 @database.command()
-def populate():
+@click.option("-s", "--subprojects", required=True)
+def populate(subprojects):
     """Populates the database with a couple of "fake" test projects.
     Useful for testing.
     """
     populate_db_with_test_data()
+    if subprojects:
+        add_subprojects()
+
+
+@database.command()
+def delete():
+    """Deletes the test project."""
+    delete_test_data()
