@@ -1,8 +1,9 @@
 <div class="title-container">
-    <h1>{{ project.name }}</h1>
+    <h1 id="project-name">{{ project.name }}</h1>
 </div>
+<h1 id="date-of-issue">{{ date_of_issue }}</h1>
 
-<img class="amsterdam" src="app/static/dist/images/amsterdam.png" alt="Amsterdam logo">
+<!-- <img class="amsterdam" src="app/static/dist/images/amsterdam.png" alt="Amsterdam logo"> -->
 
 <div class="new-page" id="index">
     <h1>Inhoudsopgave</h1>
@@ -32,6 +33,8 @@
     <p>{{ project.purpose }}</p>
     <h4>Doelgroep:</h4>
     <p>{{ project.target_audience }}</p>
+    <h4>Datum rapportage:</h4>
+    <!-- <p id="date-of-issue">{{ date_of_issue }}</p> -->
     <h4>Sponsoren:</h4>
     {% if project.funders | list | length == 0 %}
     <p>Dit initiatief heeft geen sponsoren.</p>

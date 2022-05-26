@@ -77,9 +77,30 @@ h6 {
     object-fit: cover;
 }
 
+#project-name {
+    string-set: project-name content();
+}
+
+#date-of-issue {
+    string-set: date-of-issue content();
+    visibility: hidden;
+    height: 0
+}
+
 @page {
+    margin-top: 64px;
+    margin-left: 64px;
+    margin-bottom: 64px;
+    margin-right: 64px;
+
     @bottom-left {
         content: "Pagina " counter(page) " van de " counter(pages);
+        vertical-align: top;
+        padding: 1em;
+    }
+
+    @bottom-right {
+        content: "Verantwoordingsrapportage " string(project-name);
         vertical-align: top;
         padding: 1em;
     }
@@ -88,5 +109,9 @@ h6 {
 @page :first {
     @bottom-left {
         content: "";
+    }
+
+    @bottom-right {
+        content: "Verstrekt op: " string(date-of-issue);
     }
 }

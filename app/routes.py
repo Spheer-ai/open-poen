@@ -1,3 +1,4 @@
+from datetime import datetime
 import json
 
 from flask import (
@@ -707,8 +708,13 @@ def justification_report(project_id):
         if attachment.mimetype in ["image/jpeg", "image/jpg", "image/png"]
     ]
 
+    date_of_issue = datetime.now().strftime("%d-%m-%Y")
+
     rendered_template = render_template(
-        "justification-rapport.html", project=project, thumbnail_paths=thumbnail_paths
+        "justification-rapport.html",
+        project=project,
+        thumbnail_paths=thumbnail_paths,
+        date_of_issue=date_of_issue,
     )
     base_url = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
     x = HTML(
