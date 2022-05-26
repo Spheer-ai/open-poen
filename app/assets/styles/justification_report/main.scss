@@ -18,10 +18,19 @@ $font-family: "Open Sans";
 .amsterdam {
     position: fixed;
     bottom: 100%;
-    margin-bottom: 32px;
+    margin-bottom: 16px;
     margin-left: 16px;
     height: 64px;
     z-index: -999;
+}
+
+#index ul li {
+    font-size: 24px;
+
+    a::after {
+        content: target-counter(attr(href), page);
+        float: right;
+    }
 }
 
 .title-container {
@@ -66,10 +75,8 @@ h6 {
 
 @page {
     @bottom-left {
-        border-top: 1px solid $red;
         content: "Pagina " counter(page) " van de " counter(pages);
         vertical-align: top;
-        width: 100%;
         padding: 1em;
     }
 }

@@ -4,8 +4,25 @@
 
 <img class="amsterdam" src="app/static/dist/images/amsterdam.png" alt="Amsterdam logo">
 
+<div class="new-page" id="index">
+    <h1>Inhoudsopgave</h1>
+    <ul>
+        <li><a href="#over-initiatief">Over initiatief</a></li>
+        <li><a href="#gegevens-initiatief">Gegevens initiatief</a></li>
+        <li><a href="#financiën-initiatief">Financiën initiatief</a></li>
+        {% for subproject in project.subprojects %}
+        <li><a href="#over-activiteit-{{subproject.id}}">Over activiteit {{ subproject.name }}</a></li>
+        <li><a href="#financiën-activiteit-{{subproject.id}}">Financiën activiteit {{ subproject.name }}</a></li>
+        <li><a href="#transactieoverzicht-activiteit-{{subproject.id}}">Transactieoverzicht activiteit {{
+                subproject.name }}</a></li>
+        {% endfor %}
+        <li><a href="#transactieoverzicht-overig">Overzicht overige transacties</a></li>
+        <li><a href="#geüploade-media">Geüploade media</a></li>
+    </ul>
+</div>
+
 <div class="new-page">
-    <h1>Over initiatief</h1>
+    <h1 id="over-initiatief">Over initiatief</h1>
     <h4>Beschrijving:</h4>
     <p>{{ project.description }}</p>
     <h4>Doel:</h4>
@@ -53,7 +70,7 @@
 </div>
 
 <div class="new-page">
-    <h1>Gegevens initiatief</h1>
+    <h1 id="gegevens-initiatief">Gegevens initiatief</h1>
     <h4>Beheerder initiatief:</h4>
     <p>{{ project.owner }}</p>
     <h4>Initiatiefnemer(s):</h4>
@@ -127,7 +144,7 @@
 </div>
 
 <div class="new-page">
-    <h1>Financiën initiatief</h1>
+    <h1 id="financiën-initiatief">Financiën initiatief</h1>
     <h4>Totaal budget:</h4>
     <p>{{ project.formatted_budget }}</p>
     <h4>Totaal inkomsten:</h4>
@@ -141,9 +158,11 @@
     <h4>Eind uitgaven:</h4>
     <p>{{ project.financial_summary["last_payment_date"] }}</p>
 </div>
+
 {% for subproject in project.subprojects %}
+
 <div class="new-page">
-    <h1>Over activiteit {{ subproject.name }}</h1>
+    <h1 id="over-activiteit-{{subproject.id}}">Over activiteit {{ subproject.name }}</h1>
     <h4>Status activiteit:</h4>
     <p>{{ subproject.format_status }}</p>
     <h4>Beschrijving:</h4>
@@ -212,8 +231,9 @@
     <p>Deze activiteit is nog niet afgerond. Om deze reden zijn de resultaten nog niet omschreven.</p>
     {% endif %}
 </div>
+
 <div class="new-page">
-    <h1>Financiën activiteit {{ subproject.name }}</h1>
+    <h1 id="financiën-activiteit-{{subproject.id}}">Financiën activiteit {{ subproject.name }}</h1>
     <h4>Totaal budget:</h4>
     <p>{{ subproject.formatted_budget }}</p>
     <h4>Totaal inkomsten:</h4>
@@ -227,8 +247,9 @@
     <h4>Eind uitgaven:</h4>
     <p>{{ subproject.financial_summary["last_payment_date"] }}</p>
 </div>
+
 <div class="new-page">
-    <h1>Transactieoverzicht activiteit {{ subproject.name }}</h1>
+    <h1 id="transactieoverzicht-activiteit-{{subproject.id}}">Transactieoverzicht activiteit {{ subproject.name }}</h1>
     {% if subproject.payments | list | length == 0 %}
     <p>Deze activiteit heeft geen transacties.</p>
     {% else %}
@@ -264,9 +285,11 @@
     </table>
     {% endif %}
 </div>
+
 {% endfor %}
+
 <div class="new-page">
-    <h1>Overzicht overige transacties</h1>
+    <h1 id="transactieoverzicht-overig">Overzicht overige transacties</h1>
     <p>Transacties worden vanuit de zogenoemde "hoofdactiviteit" toegewezen aan een activiteit. Transacties die nog niet
         zijn toegewezen aan een activiteit, staan hieronder weergeven.</p>
     {% if project.get_payments_without_subproject | list | length == 0 %}
@@ -304,12 +327,14 @@
     </table>
     {% endif %}
 </div>
+
 <div class="new-page">
-    <h1>Geüploade media</h1>
+    <h1 id="geüploade-media">Geüploade media</h1>
     {% for row in project.get_all_attachments() | batch(3, none) %}
     <div style="display: flex;">
         {% for attachment in row %}
         {% if attachment is not none and attachment.mimetype in ['image/jpeg', 'image/jpg', 'image/png'] %}
+        <!-- TODO: resize images with flask-resize -->
         <div class="attachment-container">
             <img class="attachment" src="upload/transaction-attachment/{{ attachment.filename }}">
         </div>
@@ -318,7 +343,3 @@
     </div>
     {% endfor %}
 </div>
-
-{% for row in items|batch(3, '-') -%}
-{% for column in row %} {{ column }} {% endfor %} |
-{% endfor %}
