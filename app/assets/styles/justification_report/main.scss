@@ -17,11 +17,15 @@ $font-family: "Open Sans";
 
 .amsterdam {
     position: fixed;
-    bottom: 100%;
-    margin-bottom: 16px;
-    margin-left: 16px;
-    height: 64px;
-    z-index: -999;
+    bottom: 0;
+    right: 0;
+    z-index: 999;
+    padding: 1em;
+
+    img {
+        height: 64px;
+        opacity: 0.2;
+    }
 }
 
 #index ul li {
@@ -112,6 +116,6 @@ h6 {
     }
 
     @bottom-right {
-        content: "Verstrekt op: " string(date-of-issue);
+        content: "Verstrekt op " string(date-of-issue);
     }
 }
