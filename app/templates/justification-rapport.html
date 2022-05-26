@@ -7,15 +7,18 @@
 <div class="new-page" id="index">
     <h1>Inhoudsopgave</h1>
     <ul>
+        <li class="index-section">Initiatief</li>
         <li><a href="#over-initiatief">Over initiatief</a></li>
         <li><a href="#gegevens-initiatief">Gegevens initiatief</a></li>
         <li><a href="#financiën-initiatief">Financiën initiatief</a></li>
         {% for subproject in project.subprojects %}
+        <li class="index-section">{{ subproject.name }}</li>
         <li><a href="#over-activiteit-{{subproject.id}}">Over activiteit {{ subproject.name }}</a></li>
         <li><a href="#financiën-activiteit-{{subproject.id}}">Financiën activiteit {{ subproject.name }}</a></li>
         <li><a href="#transactieoverzicht-activiteit-{{subproject.id}}">Transactieoverzicht activiteit {{
                 subproject.name }}</a></li>
         {% endfor %}
+        <li class="index-section">Bijlagen</li>
         <li><a href="#transactieoverzicht-overig">Overzicht overige transacties</a></li>
         <li><a href="#geüploade-media">Geüploade media</a></li>
     </ul>
@@ -336,7 +339,7 @@
         {% if attachment is not none and attachment.mimetype in ['image/jpeg', 'image/jpg', 'image/png'] %}
         <!-- TODO: resize images with flask-resize -->
         <div class="attachment-container">
-            <img class="attachment" src="upload/transaction-attachment/{{ attachment.filename }}">
+            <img class="attachment" src="upload/transaction-attachment/{{ attachment.filename }}" height>
         </div>
         {% endif %}
         {% endfor %}

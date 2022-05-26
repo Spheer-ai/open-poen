@@ -31,6 +31,10 @@ $font-family: "Open Sans";
         content: target-counter(attr(href), page);
         float: right;
     }
+
+    &.index-section {
+        list-style: none;
+    }
 }
 
 .title-container {
@@ -78,5 +82,11 @@ h6 {
         content: "Pagina " counter(page) " van de " counter(pages);
         vertical-align: top;
         padding: 1em;
+    }
+}
+
+@page :first {
+    @bottom-left {
+        content: "";
     }
 }
