@@ -15,7 +15,7 @@ import app.exceptions as ex
 from app import app, db, login_manager
 from app.better_utils import format_flash
 from app.email import send_invite
-from psycopg2.errors import UniqueViolation
+from PIL import Image
 
 
 def format_currency_with_cents(amount):
@@ -786,6 +786,17 @@ def save_attachment(f, mediatype, db_object, folder):
         filename,
     )
     f.save(filepath)
+
+    if f.mimetype in ["image/jpeg", "image/jpg", "image/png"]:
+        try:
+            # TODO: Refactor.
+            im = Image.open(f)
+            im.thumbnail((320, 320), Image.ANTIALIAS)
+            thumbnail_filename = os.path.splitext(filepath)[0] + "_thumb.jpeg"
+            im.save(thumbnail_filename, "JPEG")
+        except Exception as e:
+            app.logger.error(repr(e))
+
     new_file = File(filename=filename, mimetype=f.headers[1][1], mediatype=mediatype)
     db.session.add(new_file)
     db.session.commit()

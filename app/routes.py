@@ -699,9 +699,16 @@ def profile_project(project_id):
 @app.route("/report/project/<project_id>", methods=["GET"])
 def justification_report(project_id):
     project = Project.query.get(project_id)
+
+    # TODO: Refactor this in combination with save_attachment.
+    thumbnail_paths = [
+        os.path.splitext(attachment.filename)[0] + "_thumb.jpeg"
+        for attachment in project.get_all_attachments()
+        if attachment.mimetype in ["image/jpeg", "image/jpg", "image/png"]
+    ]
+
     rendered_template = render_template(
-        "justification-rapport.html",
-        project=project,
+        "justification-rapport.html", project=project, thumbnail_paths=thumbnail_paths
     )
     base_url = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
     x = HTML(

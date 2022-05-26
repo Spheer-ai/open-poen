@@ -333,13 +333,12 @@
 
 <div class="new-page">
     <h1 id="geüploade-media">Geüploade media</h1>
-    {% for row in project.get_all_attachments() | batch(3, none) %}
+    {% for row in thumbnail_paths | batch(3, none) %}
     <div style="display: flex;">
-        {% for attachment in row %}
-        {% if attachment is not none and attachment.mimetype in ['image/jpeg', 'image/jpg', 'image/png'] %}
-        <!-- TODO: resize images with flask-resize -->
+        {% for thumbnail_path in row %}
+        {% if thumbnail_path is not none %}
         <div class="attachment-container">
-            <img class="attachment" src="upload/transaction-attachment/{{ attachment.filename }}" height>
+            <img class="attachment" src="upload/transaction-attachment/{{ thumbnail_path }}" height>
         </div>
         {% endif %}
         {% endfor %}
