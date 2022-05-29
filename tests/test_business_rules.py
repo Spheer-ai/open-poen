@@ -29,7 +29,7 @@ def test_business_rules_scenario_1(db):
 
     assert project_amounts["awarded"] == 10000
     assert project_amounts["spent"] == 5145.6
-    assert project_amounts["left_str"] == "€ 4.854"
+    assert project_amounts["left_str"] == "€ 4\u202f854"
 
 
 def test_business_rules_scenario_2(db):
@@ -76,15 +76,15 @@ def test_business_rules_scenario_2(db):
 
     assert project_amounts["awarded"] == 5500
     assert project_amounts["spent"] == 5145.6
-    assert project_amounts["left_str"] == "€ 15.854"
+    assert project_amounts["left_str"] == "€ 15\u202f854"
 
     assert subproject_1_amounts["awarded"] == 0
     assert subproject_1_amounts["spent"] == 5012.5
-    assert subproject_1_amounts["left_str"] == "€ 4.988"
+    assert subproject_1_amounts["left_str"] == "€ 4\u202f988"
 
     assert subproject_2_amounts["awarded"] == 5500
     assert subproject_2_amounts["spent"] == 133.1
-    assert subproject_2_amounts["left_str"] == "€ 10.867"
+    assert subproject_2_amounts["left_str"] == "€ 10\u202f867"
 
 
 def test_business_rules_scenario_3(db):
@@ -109,7 +109,7 @@ def test_business_rules_scenario_3(db):
 
     project_amounts["awarded"] == 35000
     project_amounts["spent"] == 5145.6
-    project_amounts["left_str"] == "€ 44.854"
+    project_amounts["left_str"] == "€ 44\u202f854"
 
 
 def test_business_rules_scenario_4(db):
@@ -156,10 +156,10 @@ def test_business_rules_scenario_4(db):
 
     assert project_amounts["awarded"] == 11000
     assert project_amounts["spent"] == 5145.6
-    assert project_amounts["left_str"] == "€ 15.854"
+    assert project_amounts["left_str"] == "€ 15\u202f854"
     assert subproject_1_amounts["awarded"] == 6000
     assert subproject_1_amounts["spent"] == 5012.5
-    assert subproject_1_amounts["left_str"] == "€ 4.988"
+    assert subproject_1_amounts["left_str"] == "€ 4\u202f988"
     assert subproject_2_amounts["awarded"] == 5000
     assert subproject_2_amounts["spent"] == 133.1
-    assert subproject_2_amounts["left_str"] == "€ 10.867"
+    assert subproject_2_amounts["left_str"] == "€ 10\u202f867"

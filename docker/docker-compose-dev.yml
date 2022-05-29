@@ -17,6 +17,7 @@ services:
     ports:
       - 5000:5000
       - 5678:5678
+      - 5679:5679
     restart: "no"
   db:
     restart: "no"
