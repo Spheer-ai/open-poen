@@ -179,12 +179,7 @@ def process_form(handler: BaseHandler) -> Union[None, Status]:
     app.logger.info(f"Form {str(handler.form)} for object {str(object)} is submitted.")
 
     if handler.delete:
-        try:
-            return handler.on_delete()
-        except Exception as e:
-            app.logger.error(repr(e))
-            db.session.rollback()
-            raise
+        return handler.on_delete()
 
     if not handler.form.validate_on_submit():
         app.logger.info(
@@ -205,10 +200,6 @@ def process_form(handler: BaseHandler) -> Union[None, Status]:
             db.session().rollback()
             flash(e.flash)
             return Status.failed_edit
-        except Exception as e:
-            app.logger.error(repr(e))
-            db.session().rollback()
-            raise
     elif handler.create:
         app.logger.info("Form is used to create a new entity.")
         try:
@@ -218,9 +209,5 @@ def process_form(handler: BaseHandler) -> Union[None, Status]:
             db.session().rollback()
             flash(e.flash)
             return Status.failed_create
-        except Exception as e:
-            app.logger.error(repr(e))
-            db.session().rollback()
-            raise
     else:
         raise AssertionError("Unaccounted for edge case in form handling.")

@@ -56,11 +56,7 @@ def redirects_from_keys(
         ],
         response,
     )
-    redirects[Status.not_found] = render_template(
-        "404.html",
-        use_square_borders=app.config["USE_SQUARE_BORDERS"],
-        footer=app.config["FOOTER"],
-    )
+    redirects[Status.not_found] = render_template("404.html")
     redirects[None] = None
     return redirects
 
