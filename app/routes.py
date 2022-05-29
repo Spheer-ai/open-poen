@@ -311,15 +311,6 @@ def project(project_id):
     modal_id = debit_card_controller.get_modal_ids(modal_id)
     debit_card_donuts = debit_card_controller.get_donuts()
 
-    # CATEGORY
-    category_controller = pc.Category(project)
-    controller_redirect = category_controller.process_forms()
-    if controller_redirect:
-        return controller_redirect
-    category_forms = category_controller.get_forms()
-    category_forms = list(zip(category_forms, category_controller.names))
-    modal_id = category_controller.get_modal_ids(modal_id)
-
     # Filled with all categories for each subproject; used by some JavaScript
     # to update the categories in the select field when the user selects
     # another subproject to add the new payment to.
@@ -354,9 +345,6 @@ def project(project_id):
         "hidden": project.hidden,
         "hidden_sponsors": project.hidden_sponsors,
         "amounts": amounts,
-        "contains_subprojects": project.contains_subprojects,
-        "category_forms": category_forms,
-        "category_form": category_controller.add_form,
     }
 
     budget = ""

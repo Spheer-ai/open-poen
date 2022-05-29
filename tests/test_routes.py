@@ -9,7 +9,6 @@ def test_add_project(db, client):
             "description": "A test.",
             "purpose": "To test.",
             "target_audience": "Developers.",
-            "contains_subprojects": True,
             "owner": "Mark de Wijk",
             "owner_email": "markdewijk@spheer.ai",
             "legal_entity": "Stichting",

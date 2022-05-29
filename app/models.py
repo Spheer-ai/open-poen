@@ -17,6 +17,7 @@ from app.better_utils import format_flash
 from app.email import send_invite
 from PIL import Image
 from werkzeug.datastructures import FileStorage
+from sqlalchemy_ev
 
 
 def format_currency_with_cents(amount):
@@ -268,7 +269,6 @@ class Project(db.Model, DefaultCRUD, DefaultErrorMessages):
     description = db.Column(db.Text)
     purpose = db.Column(db.Text)
     target_audience = db.Column(db.Text)
-    contains_subprojects = db.Column(db.Boolean, default=True)
     hidden = db.Column(db.Boolean, default=False)
     hidden_sponsors = db.Column(db.Boolean, default=False)
     owner = db.Column(db.String(120))
@@ -300,7 +300,6 @@ class Project(db.Model, DefaultCRUD, DefaultErrorMessages):
         order_by="Payment.transaction_id.desc()",
     )
     images = db.relationship("File", secondary=project_image, lazy="dynamic")
-    categories = db.relationship("Category", backref="project", lazy="dynamic")
     debit_cards = db.relationship("DebitCard", backref="project", lazy="dynamic")
 
     def __repr__(self):
@@ -309,10 +308,17 @@ class Project(db.Model, DefaultCRUD, DefaultErrorMessages):
     def has_user(self, user_id):
         return self.users.filter(project_user.c.user_id == user_id).count() > 0
 
+    def make_debit_card_select_options(self):
+        select_options = []
+        for debit_card in self.debit_cards.all():
+            select_options.append((debit_card.card_number, debit_card.card_number))
+        return select_options
+
     def make_category_select_options(self):
+        # Because categories are coupled to subprojects, not projects.
+        # It would be better to not show any category form at all for a payment
+        # that's coupled to a project.
         select_options = [("", "Geen")]
-        for category in self.categories.all():
-            select_options.append((str(category.id), category.name))
         return select_options
 
     def make_subproject_select_options(self, user_id=None):
@@ -323,12 +329,6 @@ class Project(db.Model, DefaultCRUD, DefaultErrorMessages):
             if subproject.finished:
                 continue
             select_options.append((str(subproject.id), subproject.name))
-        return select_options
-
-    def make_debit_card_select_options(self):
-        select_options = []
-        for debit_card in self.debit_cards.all():
-            select_options.append((debit_card.card_number, debit_card.card_number))
         return select_options
 
     def get_all_payments(self):
@@ -856,7 +856,6 @@ class Category(db.Model, DefaultCRUD, DefaultErrorMessages):
     subproject_id = db.Column(
         db.Integer, db.ForeignKey("subproject.id", ondelete="CASCADE")
     )
-    project_id = db.Column(db.Integer, db.ForeignKey("project.id", ondelete="CASCADE"))
     name = db.Column(db.String(120), index=True)
     payments = db.relationship("Payment", backref="category", lazy="dynamic")
 

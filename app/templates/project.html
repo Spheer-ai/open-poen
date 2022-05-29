@@ -149,12 +149,12 @@
               <h3 class="text-center totaal">ontvangen inkomsten {{ amounts.awarded_str }}</h3>
               {% endif %}
               <div class="project-modals-card">
-              <div class="text-center">
-              <a href="{{ url_for('profile_project', project_id=project.id) }}"><button type="button"
-                    class="btn btn-danger modal-button">
-                    initiatief bekijken
-              </button></a>
-              </div>
+                <div class="text-center">
+                  <a href="{{ url_for('profile_project', project_id=project.id) }}"><button type="button"
+                      class="btn btn-danger modal-button">
+                      initiatief bekijken
+                    </button></a>
+                </div>
               </div>
             </div>
 
@@ -322,33 +322,6 @@
                           <hr>
                           {% endif %}
 
-                          {% if not project_data['contains_subprojects'] %}
-                          <b>Categoriën</b>
-                          <br>
-                          <br>
-                          <!-- Button trigger modal -->
-                          <button type="button" class="btn button-poen-small bg-grey" data-toggle="modal"
-                            data-target="#categorie-toevoegen">
-                            categorie toevoegen
-                          </button>
-                          <br>
-                          <br>
-
-                          {% for category_form, category_name in project_data.category_forms %}
-                          <!-- Button trigger modal -->
-                          <div>
-                            <button type="button" class="btn button-poen-small bg-grey-blue" data-toggle="modal"
-                              data-target="#categorie-beheren-{{ category_form.id.data }}">
-                              categorie beheren
-                            </button>
-                            {{ category_name }}
-                          </div>
-                          <br>
-                          {% endfor %}
-
-                          <hr>
-                          {% endif %}
-
                           <b>Algemene initiatiefinstellingen</b>
                           <br>
                           <br>
@@ -452,7 +425,6 @@
           </div>
 
           <div class="lead-side-col col-6 col-lg-3 col-xxl-4 order-9 d-flex flex-column justify-content-between">
-            {% if project.contains_subprojects %}
             <div class="button-poen-small bg-grey-blue mx-auto">activiteiten</div>
 
             <div class="card-small bg-white mx-auto d-flex">
@@ -533,7 +505,6 @@
             </div>
             {% else %}
             <div class="d-none d-lg-block button-poen-small-hidden bg-blue mx-auto"></div>
-            {% endif %}
             {% endif %}
           </div>
         </div>
@@ -724,9 +695,7 @@
                   {# Hidden field required to make search work with the detailed view; NOTE: the id should always be the
                   first column of the table #}
                   <th data-force-hide="true" class="d-none">id</th>
-                  {% if project.contains_subprojects %}
                   <th data-sortable="true" data-field="activiteit">activiteit</th>
-                  {% endif %}
                   <th data-force-hide="true" data-sortable="true" data-field="bedrag" data-sorter="customSort">bedrag €
                   </th>
                   <th data-sortable="true" data-field="betaalpas" class="d-none d-xl-table-cell">betaalpas</th>
@@ -776,7 +745,6 @@
                       {{ payment.id }}
                     </div>
                   </td>
-                  {% if project.contains_subprojects %}
                   <td>
                     <div class="cell">
                       {% if payment.subproject is not none %}
@@ -787,7 +755,6 @@
                       {% endif %}
                     </div>
                   </td>
-                  {% endif %}
                   <td>
                     <div class="cell justify-content-end">
                       {% if payment.transaction_amount >= 0 %}
@@ -1175,106 +1142,7 @@
   {% endfor %}
   {% endif %}
 
-  {% if not project_data['contains_subprojects'] and permissions.PROJECT_OWNER %}
-  <!-- Modal for 'Categorie toevoegen' -->
-  <div class="modal fade" id="categorie-toevoegen" tabindex="-1" role="dialog" aria-labelledby="categorieToevoegenLabel"
-    aria-hidden="true">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <form method="POST">
-          <div class="modal-header">
-            <h5 class="modal-title" id="categorieToevoegenLabel">Categorie Toevoegen</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <div>
-              {{ project_data.category_form.csrf_token }}
-              {{ wtf.form_field(project_data.category_form.name, class="form-control") }}
-              {{ project_data.category_form.project_id }}
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
-            {{ project_data.category_form.submit }}
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  {% for category_form, category_name in project_data.category_forms %}
-  <!-- Modal for categorie beheren -->
-  <div class="modal fade" id="categorie-beheren-{{ category_form.id.data }}" tabindex="-1" role="dialog"
-    aria-labelledby="categoriebeherenLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <form method="POST">
-          <div class="modal-header">
-            <h5 class="modal-title" id="categoriebeherenLabel">Categorie beheren</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <div>
-              {{ category_form.csrf_token }}
-
-              {% for f in category_form %}
-              {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' %}
-              {{ wtf.form_field(f, class="form-control") }}
-              {% endif %}
-              {% endfor %}
-            </div>
-          </div>
-          <div class="modal-footer">
-            {{ category_form.id }}
-            {{ category_form.project_id }}
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
-            <!-- Button trigger modal -->
-            <button type="button" class="btn btn-danger" data-toggle="modal"
-              data-target="#categorie-verwijder-{{ category_form.id.data }}">
-              Verwijderen
-            </button>
-
-            {{ category_form.submit }}
-
-            <!-- Modal -->
-            <div class="modal fade" id="categorie-verwijder-{{ category_form.id.data }}" tabindex="-1" role="dialog"
-              aria-labelledby="categorieVerwijderLabel" aria-hidden="true">
-              <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                  <form method="POST">
-                    <div class="modal-header">
-                      <h5 class="modal-title" id="categorieVerwijderLabel">Categorie Verwijderen</h5>
-                      <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
-                        <span aria-hidden="true">&times;</span>
-                      </button>
-                    </div>
-                    <div class="modal-body">
-                      <div>
-                        <p>Weet u zeker dat u categorie "<b>{{ category_name }}</b>" wilt verwijderen? Hiermee
-                          wordt deze categorie ook weggehaald bij alle transacties waar de categorie aan toegevoegd is!
-                        </p>
-                      </div>
-                    </div>
-                    <div class="modal-footer">
-                      <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
-                      {{ category_form.remove }}
-                    </div>
-                  </form>
-                </div>
-              </div>
-            </div>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-  {% endfor %}
-  {% endif %}
-
+  {% if permissions.PROJECT_OWNER %}
   {% for funder_form, funder_object in funder_forms %}
   <!-- Modal voor sponsor beheren -->
   <div class="modal fade" id="sponsor-beheren-{{ funder_form.id.data }}" tabindex="-1" role="dialog"
@@ -1325,6 +1193,7 @@
   </div>
   {% endfor %}
 
+  {% endif %}
   {% endif %}
   {% endblock %}
 

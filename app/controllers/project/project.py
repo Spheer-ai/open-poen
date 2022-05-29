@@ -24,10 +24,6 @@ ALLOWED_EXTENSIONS = [".pdf", ".xls", ".xlsx"]
 class BaseForm(FlaskForm):
     name = StringField("Naam", validators=[DataRequired(), Length(max=120)])
     description = TextAreaField("Beschrijving", validators=[DataRequired()])
-    contains_subprojects = BooleanField(
-        "Uitgaven van dit initiatief worden geregistreerd op activiteiten",
-        render_kw={"checked": "", "value": "y"},
-    )
     id = IntegerField(widget=HiddenInput())
     project_id = IntegerField(widget=HiddenInput())
     submit = SubmitField("Opslaan", render_kw={"class": "btn btn-info"})
@@ -70,8 +66,6 @@ class ProjectController(Controller):
         self.clearance = clearance
         self.form_class = self.form_permissions[clearance]
         self.form = self.form_class(prefix="project_form")
-        # Because it's not allowed to change this property after instantiation.
-        self.form.contains_subprojects.data = project.contains_subprojects
         self.redirects = create_redirects_for_project_or_subproject(
             self.project.id, None
         )
@@ -86,8 +80,6 @@ class ProjectController(Controller):
             form = self.form
         else:
             form = self.form_class(prefix="project_form", **self.project.__dict__)
-        # Make the user unable to change this property in the UI.
-        form.contains_subprojects.render_kw = {"disabled": ""}
         return form
 
     def process_forms(self):

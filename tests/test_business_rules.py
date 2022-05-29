@@ -9,7 +9,7 @@ def payment(r, av, sad):
 
 
 def test_business_rules_scenario_1(db):
-    project = Project(name="Scenario 1", budget=10000, contains_subprojects=False)
+    project = Project(name="Scenario 1", budget=10000)
 
     payments = [
         payment("inkomsten", 10000, "subsidie"),
@@ -33,7 +33,7 @@ def test_business_rules_scenario_1(db):
 
 
 def test_business_rules_scenario_2(db):
-    project = Project(name="Scenario 2", budget=21000, contains_subprojects=True)
+    project = Project(name="Scenario 2", budget=21000)
     subproject_1, subproject_2 = [
         Subproject(**x)
         for x in [
@@ -88,7 +88,7 @@ def test_business_rules_scenario_2(db):
 
 
 def test_business_rules_scenario_3(db):
-    project = Project(name="Scenario 3", budget=50000, contains_subprojects=False)
+    project = Project(name="Scenario 3", budget=50000)
 
     payments = [
         payment("inkomsten", 25000, "ontvangen subsidie"),
@@ -113,7 +113,7 @@ def test_business_rules_scenario_3(db):
 
 
 def test_business_rules_scenario_4(db):
-    project = Project(name="Scenario 4", budget=21000, contains_subprojects=True)
+    project = Project(name="Scenario 4", budget=21000)
     subproject_1, subproject_2 = [
         Subproject(**x)
         for x in [

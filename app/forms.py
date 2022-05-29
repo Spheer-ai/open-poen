@@ -511,7 +511,6 @@ class EditProjectProfileForm(FlaskForm):
 class CategoryForm(FlaskForm):
     name = StringField("Naam", validators=[DataRequired(), Length(max=120)])
     id = IntegerField(widget=HiddenInput())
-    project_id = IntegerField(widget=HiddenInput())
     subproject_id = IntegerField(widget=HiddenInput())
 
     submit = SubmitField("Opslaan", render_kw={"class": "btn btn-info"})

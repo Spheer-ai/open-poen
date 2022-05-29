@@ -59,10 +59,6 @@ class ProjectForm(FlaskForm):
     purpose = TextAreaField("Doel", validators=[DataRequired()])
     target_audience = TextAreaField("Doelgroep", validators=[DataRequired()])
     hidden = BooleanField("Initiatief verbergen")
-    contains_subprojects = BooleanField(
-        "Uitgaven van dit initiatief worden geregistreerd op activiteiten",
-        default="checked",
-    )
     funders = FieldList(
         FormField(FunderForm), min_entries=0, max_entries=None, validators=[]
     )

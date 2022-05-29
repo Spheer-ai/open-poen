@@ -40,7 +40,6 @@ def populate_db_with_test_data():
         "description": "Buurtborrel / -BBQ voor de Oranjebuurt in Groningen.",
         "purpose": "Creëren van saamhorigheid/gemeenschapsgevoel in de Oranjebuurt",
         "target_audience": "40+ en jonger dan 18.",
-        "contains_subprojects": True,
         "owner": "Jaap Koen Bijma",
         "owner_email": "jaapkoenbijma@amsterdam.nl",
         "legal_entity": "Stichting",
