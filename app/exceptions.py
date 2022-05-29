@@ -59,7 +59,7 @@ class DuplicateCategoryName(BaseException):
 
     def __str__(self):
         return (
-            f"Categorie '{self.name}' is niet goevoegd, omdat er al een "
+            f"Categorie '{self.name}' is niet toegevoegd, omdat er al een "
             "categorie bestaat met deze naam."
         )
 
@@ -70,8 +70,8 @@ class DuplicateProjectName(BaseException):
 
     def __str__(self):
         return (
-            f"Project '{self.name}' is niet goevoegd, omdat er al een "
-            "project bestaat met deze naam."
+            f"Initiatief '{self.name}' is niet toegevoegd, omdat er al een "
+            "initiatief bestaat met deze naam."
         )
 
 

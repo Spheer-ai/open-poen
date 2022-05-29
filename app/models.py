@@ -3,7 +3,7 @@ import os
 from datetime import datetime
 from os import urandom
 from time import time
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Union
 
 import jwt
 from flask_login import UserMixin
@@ -16,6 +16,7 @@ from app import app, db, login_manager
 from app.better_utils import format_flash
 from app.email import send_invite
 from PIL import Image
+from werkzeug.datastructures import FileStorage
 
 
 def format_currency_with_cents(amount):
@@ -278,6 +279,7 @@ class Project(db.Model, DefaultCRUD, DefaultErrorMessages):
     project_location = db.Column(db.String(120))
     # TODO: budget_file
     budget = db.Column(db.Integer)
+    budget_file = db.Column(db.Integer, db.ForeignKey("file.id", ondelete="SET NULL"))
     image = db.Column(db.Integer, db.ForeignKey("file.id", ondelete="SET NULL"))
 
     subprojects = db.relationship(
@@ -388,7 +390,16 @@ class Project(db.Model, DefaultCRUD, DefaultErrorMessages):
             raise ex.DuplicateProjectName(kwargs["name"])
 
         for project_owner in project_owners:
-            User.add_user(project_owner["email"], project_id=project.id)
+            try:
+                User.add_user(project_owner["email"], project_id=project.id)
+            except ex.UserIsAlreadyPresentInProject as e:
+                app.logger.info(
+                    "Duplicate email addresses on project creation. Skipping these."
+                )
+                app.logger.info(repr(e))
+
+        if budget_file:
+            save_attachment(budget_file, "", project, "project-attachment", budget=True)
 
         return project
 
@@ -774,7 +785,14 @@ class UserStory(db.Model):
     images = db.relationship("File", secondary=user_story_image, lazy="dynamic")
 
 
-def save_attachment(f, mediatype, db_object, folder):
+def save_attachment(
+    f: FileStorage,
+    mediatype: str,
+    db_object: Union[User, Project, Subproject, Payment],
+    folder: str,
+    budget: bool = False,
+):
+    # TODO: Refactor.
     filename = secure_filename(f.filename)
     filename = "%s_%s" % (datetime.now(app.config["TZ"]).isoformat()[:19], filename)
     filepath = os.path.join(
@@ -800,8 +818,11 @@ def save_attachment(f, mediatype, db_object, folder):
 
     # Link attachment to payment in the database
     # If the db object is a User, then save as FK and store the id
-    if isinstance(db_object, (User, Project, Subproject)):
+    if isinstance(db_object, (User, Project, Subproject)) and not budget:
         db_object.image = new_file.id
+        db.session.commit()
+    elif isinstance(db_object, Project) and budget:
+        db_object.budget_file = new_file.id
         db.session.commit()
     # Elif this is a Payment, then save as many-to-many and we need to append
     elif isinstance(db_object, Payment):
