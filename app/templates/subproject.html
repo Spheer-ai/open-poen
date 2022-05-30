@@ -89,9 +89,8 @@
           <div class="col-12 col-lg-6 col-xxl-4 order-1 order-lg-4">
             <div class="amounts-card bg-white">
               {% if subproject.hidden %}
-              <p><i>Deze activiteit is verborgen en dus niet te zien door het publiek</i>
-              <p>
-                {% endif %}
+              <p class="text-center"><i>Deze activiteit is verborgen en dus niet te zien door het publiek.</i></p>
+              {% endif %}
               <div class="amounts-card-title">
                 <h1 class="text-center">{{ subproject.name }}</h1>
               </div>
@@ -111,6 +110,7 @@
               </div>
               {% if budget %}
               <h3 class="text-center totaal">budget {{ budget }}</h3>
+              <p class="text-center">waarvan reeds ontvangen {{ amounts.awarded_str }}</p>
               {% else %}
               <h3 class="text-center totaal">ontvangen inkomsten {{ amounts.awarded_str }}</h3>
               {% endif %}
@@ -223,7 +223,7 @@
 
                   <a href="{{ url_for('profile_subproject', subproject_id=subproject.id) }}">
                     <button type="button" class="btn btn-danger modal-button">
-                      activiteit bekijken
+                      {{ "afgeronde" if subproject.finished }} activiteit bekijken
                     </button>
                   </a>
 
