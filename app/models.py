@@ -17,7 +17,6 @@ from app.better_utils import format_flash
 from app.email import send_invite
 from PIL import Image
 from werkzeug.datastructures import FileStorage
-from sqlalchemy_ev
 
 
 def format_currency_with_cents(amount):
