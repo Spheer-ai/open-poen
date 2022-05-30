@@ -98,6 +98,16 @@ class PaymentHandler(BaseHandler):
         flash(instance.on_succesful_create)
         return Status.succesful_create
 
+    def on_update(self) -> Status:
+        instance = self.object.query.get(self.form.id.data)
+        if instance is None:
+            return Status.not_found
+        if self.data["subproject_id"] != str(instance.subproject_id):
+            self.data["category_id"] = None
+        instance.update(self.data)
+        flash(instance.on_succesful_edit)
+        return Status.succesful_edit
+
 
 class PaymentController(Controller):
     def __init__(self, project: Project, clearance: Clearance):

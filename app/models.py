@@ -276,7 +276,6 @@ class Project(db.Model, DefaultCRUD, DefaultErrorMessages):
     address_applicant = db.Column(db.String(120))
     registration_kvk = db.Column(db.String(120))
     project_location = db.Column(db.String(120))
-    # TODO: budget_file
     budget = db.Column(db.Integer)
     budget_file = db.Column(db.Integer, db.ForeignKey("file.id", ondelete="SET NULL"))
     image = db.Column(db.Integer, db.ForeignKey("file.id", ondelete="SET NULL"))
