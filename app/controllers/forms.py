@@ -19,7 +19,7 @@ class FunderForm(FlaskForm):
         "Beschikkingsnummer", validators=[DataRequired(), Length(max=120)]
     )
     budget = IntegerField(
-        "Budget voor deze sponsor", validators=[DataRequired(), validate_budget]
+        "Budget van deze sponsor", validators=[DataRequired(), validate_budget]
     )
 
 
