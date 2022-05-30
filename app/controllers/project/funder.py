@@ -64,7 +64,10 @@ class FunderController(Controller):
 
         # If a funder has previously been edited with an error, we have to insert it.
         if len(self.edit_form.errors) > 0:
-            forms[self.get_id_of_submitted_form] = self.edit_form
+            forms[self.get_id_of_submitted_form] = (
+                self.edit_form,
+                Funder.query.get(self.get_id_of_submitted_form),
+            )
 
         return forms.values()
 

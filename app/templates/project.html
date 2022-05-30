@@ -61,38 +61,6 @@
                       sponsor toevoegen
                     </button>
 
-                    <!-- Modal -->
-                    <div class="modal fade" id="sponsor-toevoegen" tabindex="-1" role="dialog"
-                      aria-labelledby="sponsorToevoegenLabel" aria-hidden="true">
-                      <div class="modal-dialog" role="document">
-                        <div class="modal-content">
-                          <form method="POST">
-                            <div class="modal-header">
-                              <h5 class="modal-title" id="sponsorToevoegenLabel">Sponsor Toevoegen</h5>
-                              <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
-                                <span aria-hidden="true">&times;</span>
-                              </button>
-                            </div>
-                            <div class="modal-body">
-                              <div>
-                                {{ new_funder_form.csrf_token }}
-
-                                {% for f in new_funder_form %}
-                                {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' %}
-                                {{ wtf.form_field(f, class="form-control") }}
-                                {% endif %}
-                                {% endfor %}
-                              </div>
-                            </div>
-                            <div class="modal-footer">
-                              <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
-                              {{ new_funder_form.submit }}
-                            </div>
-                          </form>
-                        </div>
-                      </div>
-                    </div>
-
                     <hr>
 
                     {% for funder_form, funder_object in funder_forms %}
@@ -1007,7 +975,7 @@
   {% endfor %}
   {% endif %}
 
-  {% if project_data and permissions.PROJECT_OWNER %}
+  {% if permissions.PROJECT_OWNER %}
   <!-- Modal for 'Project owner toevoegen' -->
   <div class="modal fade" id="project-owner-toevoegen" tabindex="-1" role="dialog"
     aria-labelledby="projectOwnerToevoegenLabel" aria-hidden="true">
@@ -1039,6 +1007,7 @@
       </div>
     </div>
   </div>
+  {% endif %}
 
   {% if permissions.PROJECT_OWNER %}
   {% for edit_project_owner_form, project_owner_email in project_owners %}
@@ -1142,7 +1111,7 @@
   {% endfor %}
   {% endif %}
 
-  {% if permissions.PROJECT_OWNER %}
+  {% if not project_data.hidden_sponsors and permissions.PROJECT_OWNER %}
   {% for funder_form, funder_object in funder_forms %}
   <!-- Modal voor sponsor beheren -->
   <div class="modal fade" id="sponsor-beheren-{{ funder_form.id.data }}" tabindex="-1" role="dialog"
@@ -1192,9 +1161,42 @@
     </div>
   </div>
   {% endfor %}
+  {% endif %}
 
+  {% if not project_data.hidden_sponsors and permissions.PROJECT_OWNER %}
+  <!-- Modal -->
+  <div class="modal fade" id="sponsor-toevoegen" tabindex="-1" role="dialog" aria-labelledby="sponsorToevoegenLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <form method="POST">
+          <div class="modal-header">
+            <h5 class="modal-title" id="sponsorToevoegenLabel">Sponsor Toevoegen</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div>
+              {{ new_funder_form.csrf_token }}
+
+              {% for f in new_funder_form %}
+              {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' %}
+              {{ wtf.form_field(f, class="form-control") }}
+              {% endif %}
+              {% endfor %}
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
+            {{ new_funder_form.submit }}
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
   {% endif %}
-  {% endif %}
+
   {% endblock %}
 
   {% block scripts %}
