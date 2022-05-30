@@ -62,8 +62,8 @@
 {% macro payment_info_left_manual_payment(form, payment) %}
 {{ info_unit("Type", "Handmatig toegevoegde betaling.") }}
 {{ render_booking_date(form, payment) }}
-{{ render_form_or_info("Verzender", payment.debtor_name, form, "debtor_name") }}
-{{ render_form_or_info("Verzender IBAN", payment.debtor_account, form, "debtor_account") }}
+{{ render_form_or_info("Betaler", payment.debtor_name, form, "debtor_name") }}
+{{ render_form_or_info("Betaler IBAN", payment.debtor_account, form, "debtor_account") }}
 {{ render_form_or_info("Ontvanger", payment.creditor_name, form, "creditor_name") }}
 {{ render_form_or_info("Ontvanger IBAN", payment.creditor_account, form, "creditor_account") }}
 {{ render_form_or_info("Bedrag €", format_currency(payment), form, "transaction_amount") }}

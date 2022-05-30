@@ -274,8 +274,8 @@ class NewPaymentForm(FlaskForm):
         "Bedrag (begin met een - als het een uitgave is)"
     )
     booking_date = DateField("Datum (notatie: dd-mm-jjjj)", format="%d-%m-%Y")
-    debtor_name = StringField("Verstuurder naam", validators=[Length(max=120)])
-    debtor_account = StringField("Verstuurder IBAN", validators=[Length(max=120)])
+    debtor_name = StringField("Betaler naam", validators=[Length(max=120)])
+    debtor_account = StringField("Betaler IBAN", validators=[Length(max=120)])
     creditor_name = StringField("Ontvanger naam", validators=[Length(max=120)])
     creditor_account = StringField("Ontvanger IBAN", validators=[Length(max=120)])
     short_user_description = StringField(
@@ -468,7 +468,7 @@ class EditProfileForm(FlaskForm):
     first_name = StringField("Voornaam", validators=[DataRequired(), Length(max=120)])
     last_name = StringField("Achternaam", validators=[DataRequired(), Length(max=120)])
     biography = TextAreaField(
-        "Beschrijving", validators=[DataRequired(), Length(max=1000)]
+        "Vertel iets over jezelf", validators=[DataRequired(), Length(max=1000)]
     )
 
     allowed_extensions = ["jpg", "jpeg", "png"]

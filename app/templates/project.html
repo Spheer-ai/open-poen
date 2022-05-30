@@ -679,6 +679,8 @@
                   <th class="d-none">lange omschrijving</th>
                   <th class="d-none">bedrag €</th>
                   <th class="d-none">categorie</th>
+                  <th class="d-none">betaler</th>
+                  <th class="d-none">bankrekening betaler</th>
                   <th class="d-none">bankrekening ontvanger</th>
                   <th class="d-none">route</th>
                   <th class="d-none">type</th>
@@ -806,6 +808,20 @@
                   <td>
                     <div class="cell">
                       {{ payment.category.name }}
+                    </div>
+                  </td>
+                  <td>
+                    <div class="cell">
+                      {% if payment.debtor_name %}
+                      {{ payment.debtor_name }}
+                      {% endif %}
+                    </div>
+                  </td>
+                  <td>
+                    <div class="cell">
+                      {% if payment.debtor_account %}
+                      {{ payment.debtor_account }}
+                      {% endif %}
                     </div>
                   </td>
                   <td>

@@ -85,8 +85,8 @@ class ManualPaymentOrTopup(ImportedBNGPayment):
 
 
 class ProjectOwnerPayment(ManualPaymentOrTopup):
-    debtor_name = StringField("Verzender", validators=[Length(max=128)])
-    debtor_account = StringField("Verzender IBAN", validators=[Length(max=22)])
+    debtor_name = StringField("Betaler", validators=[Length(max=128)])
+    debtor_account = StringField("Betaler IBAN", validators=[Length(max=22)])
     creditor_name = StringField("Ontvanger", validators=[Length(max=128)])
     creditor_account = StringField("Ontvanger IBAN", validators=[Length(max=22)])
     remove = SubmitField("Verwijderen", render_kw={"class": "btn btn-danger"})
