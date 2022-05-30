@@ -132,7 +132,7 @@ class ProjectFormHandler(BaseHandler):
 class ProjectController(Controller):
     def __init__(self, clearance: Clearance):
         self.clearance = clearance
-        self.form = ProjectForm()
+        self.form = ProjectForm(prefix="create_project_form")
         if not form_in_request(self.form, request):
             self.form.card_numbers.append_entry()
             self.form.funders.append_entry()

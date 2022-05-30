@@ -107,74 +107,6 @@
                             financial toevoegen
                           </button>
 
-                          <!-- Modal -->
-                          <div class="modal fade" id="admin-toevoegen" tabindex="-1" role="dialog"
-                            aria-labelledby="adminToevoegenLabel" aria-hidden="true">
-                            <div class="modal-dialog" role="document">
-                              <div class="modal-content">
-                                <form method="POST">
-                                  <div class="modal-header">
-                                    <h5 class="modal-title" id="adminToevoegenLabel">Admin Toevoegen</h5>
-                                    <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
-                                      <span aria-hidden="true">&times;</span>
-                                    </button>
-                                  </div>
-                                  <div class="modal-body">
-                                    <p>Als er nog geen gebruiker bestaat met dit e-mailadres dan krijgt deze een
-                                      uitnodigingsmail met daarin een link om een wachtwoord aan te maken. Als er wel al
-                                      een gebruiker bestaat met dit e-mailadres dan krijgt deze gebruiker admin-rechten
-                                      (er wordt daar geen e-mail over verstuurd).</p>
-                                    <div>
-                                      {{ add_user_form.csrf_token }}
-
-                                      {{ wtf.form_field(add_user_form.email, class="form-control") }}
-                                      {{ add_user_form.admin(**{'value': 1}) }}
-                                    </div>
-                                  </div>
-                                  <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary"
-                                      data-dismiss="modal">Annuleren</button>
-                                    {{ add_user_form.submit }}
-                                  </div>
-                                </form>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div class="modal fade" id="financial-toevoegen" tabindex="-1" role="dialog"
-                            aria-labelledby="financialToevoegenLabel" aria-hidden="true">
-                            <div class="modal-dialog" role="document">
-                              <div class="modal-content">
-                                <form method="POST">
-                                  <div class="modal-header">
-                                    <h5 class="modal-title" id="financialToevoegenLabel">Financial Toevoegen</h5>
-                                    <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
-                                      <span aria-hidden="true">&times;</span>
-                                    </button>
-                                  </div>
-                                  <div class="modal-body">
-                                    <p>Als er nog geen gebruiker bestaat met dit e-mailadres dan krijgt deze een
-                                      uitnodigingsmail met daarin een link om een wachtwoord aan te maken. Als er wel al
-                                      een gebruiker bestaat met dit e-mailadres dan krijgt deze gebruiker
-                                      financial-rechten
-                                      (er wordt daar geen e-mail over verstuurd).</p>
-                                    <div>
-                                      {{ add_user_form.csrf_token }}
-
-                                      {{ wtf.form_field(add_user_form.email, class="form-control") }}
-                                      {{ add_user_form.financial(**{'value': 1}) }}
-                                    </div>
-                                  </div>
-                                  <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary"
-                                      data-dismiss="modal">Annuleren</button>
-                                    {{ add_user_form.submit }}
-                                  </div>
-                                </form>
-                              </div>
-                            </div>
-                          </div>
-
                           <hr>
 
                           {% for admin, edit_admin_form in edit_admin_forms %}
@@ -185,40 +117,6 @@
                               {{ "admin beheren" if admin.admin else "financial beheren" }}
                             </button>
                             {{ admin.email }}
-
-                            <!-- Modal -->
-                            <div class="modal fade" id="admin-beheren-{{ admin.id }}" tabindex="-1" role="dialog"
-                              aria-labelledby="adminbeherenLabel" aria-hidden="true">
-                              <div class="modal-dialog" role="document">
-                                <div class="modal-content">
-                                  <form method="POST">
-                                    <div class="modal-header">
-                                      <h5 class="modal-title" id="adminbeherenLabel">{{ "Admin beheren" if admin.admin
-                                        else "Financial beheren" }}</h5>
-                                      <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
-                                        <span aria-hidden="true">&times;</span>
-                                      </button>
-                                    </div>
-                                    <div class="modal-body">
-                                      <div>
-                                        {{ edit_admin_form.csrf_token }}
-                                        {% for f in edit_admin_form %}
-                                        {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' %}
-                                        {{ wtf.form_field(f, class="form-control") }}
-                                        {% endif %}
-                                        {% endfor %}
-                                      </div>
-                                    </div>
-                                    <div class="modal-footer">
-                                      <button type="button" class="btn btn-secondary"
-                                        data-dismiss="modal">Annuleren</button>
-                                      {{ edit_admin_form.id }}
-                                      {{ edit_admin_form.submit }}
-                                    </div>
-                                  </form>
-                                </div>
-                              </div>
-                            </div>
                           </div>
                           <br>
                           {% endfor %}
@@ -488,7 +386,112 @@
       </div>
     </div>
   </div>
+
+  {% if current_user.admin %}
+  <div class="modal fade" id="admin-toevoegen" tabindex="-1" role="dialog" aria-labelledby="adminToevoegenLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <form method="POST">
+          <div class="modal-header">
+            <h5 class="modal-title" id="adminToevoegenLabel">Admin Toevoegen</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <p>Als er nog geen gebruiker bestaat met dit e-mailadres dan krijgt deze een
+              uitnodigingsmail met daarin een link om een wachtwoord aan te maken. Als er wel al
+              een gebruiker bestaat met dit e-mailadres dan krijgt deze gebruiker admin-rechten
+              (er wordt daar geen e-mail over verstuurd).</p>
+            <div>
+              {{ add_user_form.csrf_token }}
+
+              {{ wtf.form_field(add_user_form.email, class="form-control") }}
+              {{ add_user_form.admin(**{'value': 1}) }}
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
+            {{ add_user_form.submit }}
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
+  {% endif %}
+
+  {% if current_user.admin %}
+  <div class="modal fade" id="financial-toevoegen" tabindex="-1" role="dialog" aria-labelledby="financialToevoegenLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <form method="POST">
+          <div class="modal-header">
+            <h5 class="modal-title" id="financialToevoegenLabel">Financial Toevoegen</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <p>Als er nog geen gebruiker bestaat met dit e-mailadres dan krijgt deze een
+              uitnodigingsmail met daarin een link om een wachtwoord aan te maken. Als er wel al
+              een gebruiker bestaat met dit e-mailadres dan krijgt deze gebruiker
+              financial-rechten
+              (er wordt daar geen e-mail over verstuurd).</p>
+            <div>
+              {{ add_user_form.csrf_token }}
+
+              {{ wtf.form_field(add_user_form.email, class="form-control") }}
+              {{ add_user_form.financial(**{'value': 1}) }}
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
+            {{ add_user_form.submit }}
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if current_user.admin %}
+  {% for admin, edit_admin_form in edit_admin_forms %}
+  <div class="modal fade" id="admin-beheren-{{ admin.id }}" tabindex="-1" role="dialog"
+    aria-labelledby="adminbeherenLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <form method="POST">
+          <div class="modal-header">
+            <h5 class="modal-title" id="adminbeherenLabel">{{ "Admin beheren" if admin.admin
+              else "Financial beheren" }}</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div>
+              {{ edit_admin_form.csrf_token }}
+              {% for f in edit_admin_form %}
+              {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' %}
+              {{ wtf.form_field(f, class="form-control") }}
+              {% endif %}
+              {% endfor %}
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
+            {{ edit_admin_form.id }}
+            {{ edit_admin_form.submit }}
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+  {% endif %}
+
   {% endblock %}
   {% block scripts %}
   {% if modal_id is not none %}

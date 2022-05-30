@@ -103,7 +103,7 @@ def index():
     admin_forms = [
         EditAdminForm(obj=admin, prefix="edit_admin_form") for admin in admins
     ]
-    edit_admin_forms = zip(admins, admin_forms)
+    edit_admin_forms = list(zip(admins, admin_forms))
 
     # AddUserForm is a misleading name, because it is rendered in index.html with a flag
     # for admin = True, so users submitted here are always added as an admin.

@@ -18,6 +18,9 @@ create_project_post = {
     "card_numbers-1-card_number": "6731924673192111112",
     "card_numbers-2-card_number": "6731924673192111113",
 }
+# Adding the form's prefix.
+form_prefix = "create_project_form-"
+create_project_post = {form_prefix + k: v for k, v in create_project_post.items()}
 
 
 def test_add_project(client):
@@ -35,7 +38,10 @@ def test_add_project(client):
 def test_duplicate_project_owners(client):
     response = client.post(
         "/",
-        data={**create_project_post, "project_owners-1-email": "markdewijk@spheer.ai"},
+        data={
+            **create_project_post,
+            form_prefix + "project_owners-1-email": "markdewijk@spheer.ai",
+        },
         follow_redirects=True,
     )
     assert response.status_code == 200
