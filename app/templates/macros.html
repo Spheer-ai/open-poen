@@ -35,7 +35,7 @@
 
 <!-- PAYMENT -->
 {% macro payment_info_left_manual_topup(form, payment) %}
-{{ info_unit("Type", "(Handmatige) topup naar betaalpas.") }}
+{{ info_unit("Type", "(Handmatige) storting naar betaalpas.") }}
 {{ render_booking_date(form, payment) }}
 {{ info_unit("Betaalpas", payment.debit_card.card_number) }}
 {{ info_unit("Ontvanger", "Betaalpas") }}
@@ -43,7 +43,7 @@
 {% endmacro %}
 
 {% macro payment_info_left_automatic_topup(form, payment) %}
-{{ info_unit("Type", "(Automatische) topup naar betaalpas.") }}
+{{ info_unit("Type", "(Automatische) storting naar betaalpas.") }}
 {{ render_booking_date(form, payment) }}
 {{ info_unit("Betaalpas", payment.debit_card.card_number) }}
 {{ info_unit("Ontvanger", "Betaalpas") }}

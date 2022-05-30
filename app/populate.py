@@ -6,6 +6,7 @@ from app import app, db
 PROJECT_NAME = "Buurtborrel Oranjebuurt"
 FIRST_FUNDER_NAME = "Gemeente Amsterdam"
 SECOND_FUNDER_NAME = "Gemeente Groningen"
+LAST_DEBIT_CARD = "6731924673192111116"
 
 
 bank_fields = {
@@ -82,7 +83,7 @@ def populate_db_with_test_data():
         {"card_number": "6731924673192111113"},
         {"card_number": "6731924673192111114"},
         {"card_number": "6731924673192111115"},
-        {"card_number": "6731924673192111116"},
+        {"card_number": LAST_DEBIT_CARD},
     ]
     debit_cards = [DebitCard(**x) for x in debit_cards]
     project.debit_cards.extend(debit_cards)
@@ -308,6 +309,8 @@ def add_subprojects():
     ]
     first_subproject_payments = [Payment(**x) for x in first_subproject_payments]
     subprojects[0].payments.extend(first_subproject_payments)
+    debit_card = DebitCard.query.filter(DebitCard.card_number == LAST_DEBIT_CARD).one()
+    debit_card.payments.extend(first_subproject_payments)
     project.payments.extend(first_subproject_payments)
 
     second_subproject_payments = [
@@ -334,12 +337,14 @@ def add_subprojects():
     ]
     second_subproject_payments = [Payment(**x) for x in second_subproject_payments]
     subprojects[1].payments.extend(second_subproject_payments)
+    debit_card.payments.extend(second_subproject_payments)
     project.payments.extend(second_subproject_payments)
 
     try:
         db.session.add(project)
         db.session.add(first_funder)
         db.session.add(second_funder)
+        db.session.add(debit_card)
         db.session.commit()
         app.logger.info("Succesfully added subprojects to the test project.")
     except Exception as e:

@@ -515,7 +515,9 @@
                   </td>
                   <td>
                     <div class="cell">
+                      {% if payment.remittance_information_structured %}
                       {{ payment.remittance_information_structured }}
+                      {% endif %}
                     </div>
                   </td>
                   <td>
@@ -566,7 +568,7 @@
                       {% if payment.type == "MANUAL_PAYMENT" %}
                       handmatige betaling
                       {% elif payment.type == "MANUAL_TOPUP" %}
-                      handmatige topup
+                      handmatige storting naar betaalpas
                       {% else %}
                       BNG
                       {% endif %}

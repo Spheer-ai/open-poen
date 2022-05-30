@@ -102,7 +102,7 @@ def validate_topup_amount(form, field):
         return
     if field.data <= 0:
         raise ValidationError(
-            f"{field.data} is niet een positief bedrag. Topups moeten meer dan 0 € zijn."
+            f"{field.data} is niet een positief bedrag. Stortingen naar een betaalpas moeten meer dan 0 € zijn."
         )
 
 
@@ -224,51 +224,6 @@ class FlexibleDecimalField(DecimalField):
         return super(FlexibleDecimalField, self).process_formdata(valuelist)
 
 
-# Add a new payment manually
-class NewTopupForm(FlaskForm):
-    transaction_amount = FlexibleDecimalField(
-        "Bedrag (moet positief zijn voor topups.)", validators=[validate_topup_amount]
-    )
-    booking_date = DateField("Datum (notatie: dd-mm-jjjj)", format="%d-%m-%Y")
-    card_number = StringField(
-        "Pasnummer",
-        validators=[DataRequired(), validate_card_number],
-        filters=[trim_whitespace],
-    )
-    short_user_description = StringField(
-        "Korte beschrijving", validators=[Length(max=50)]
-    )
-    long_user_description = TextAreaField(
-        "Lange beschrijving", validators=[Length(max=2000)]
-    )
-    hidden = BooleanField("Transactie verbergen")
-    data_file = FileField(
-        "Bestand",
-        validators=[
-            FileAllowed(
-                allowed_extensions,
-                (
-                    "bestandstype niet toegstaan. Enkel de volgende "
-                    "bestandstypen worden geaccepteerd: %s"
-                    % ", ".join(allowed_extensions)
-                ),
-            ),
-            Optional(),
-        ],
-    )
-    mediatype = RadioField(
-        "Media type",
-        choices=[("media", "media"), ("bon", "bon")],
-        default="bon",
-        validators=[Optional()],
-    )
-    project_id = IntegerField(widget=HiddenInput())
-    subproject_id = IntegerField(widget=HiddenInput())
-    type = StringField(widget=HiddenInput())
-
-    submit = SubmitField("Opslaan", render_kw={"class": "btn btn-info"})
-
-
 class NewPaymentForm(FlaskForm):
     transaction_amount = FlexibleDecimalField(
         "Bedrag (begin met een - als het een uitgave is)"
@@ -314,7 +269,7 @@ class NewPaymentForm(FlaskForm):
 
 class NewTopupForm(FlaskForm):
     transaction_amount = FlexibleDecimalField(
-        "Bedrag (Topups moeten meer dan 0,00 euro bedragen.)",
+        "Bedrag (Stortingen naar een betaalpas moeten meer dan 0,00 euro bedragen.)",
         validators=[validate_topup_amount],
     )
     booking_date = DateField("Datum (notatie: dd-mm-jjjj)", format="%d-%m-%Y")

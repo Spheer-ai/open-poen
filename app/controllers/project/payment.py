@@ -56,7 +56,7 @@ class ImportedBNGPayment(FlaskForm):
             self.transaction_amount.errors.append(
                 (
                     f"{self.transaction_amount.data} is niet een positief bedrag. "
-                    "Topups moeten meer dan 0 € zijn."
+                    "Stortingen naar betaalpassen moeten meer dan 0 € zijn."
                 )
             )
             return False
