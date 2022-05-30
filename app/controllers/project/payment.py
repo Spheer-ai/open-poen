@@ -85,6 +85,10 @@ class ManualPaymentOrTopup(ImportedBNGPayment):
 
 
 class ProjectOwnerPayment(ManualPaymentOrTopup):
+    debtor_name = StringField("Verzender", validators=[Length(max=128)])
+    debtor_account = StringField("Verzender IBAN", validators=[Length(max=22)])
+    creditor_name = StringField("Ontvanger", validators=[Length(max=128)])
+    creditor_account = StringField("Ontvanger IBAN", validators=[Length(max=22)])
     remove = SubmitField("Verwijderen", render_kw={"class": "btn btn-danger"})
 
     def __init__(self, *args, **kwargs):
@@ -220,7 +224,8 @@ class PaymentController(Controller):
             return ManualPaymentOrTopup
         elif (
             payment.type in ("MANUAL_PAYMENT", "MANUAL_TOPUP")
-            and self.clearance >= Clearance.PROJECT_OWNER
+            and self.clearance
+            >= Clearance.PROJECT_OWNER  # TODO: Should this be financial?
         ):
             return ProjectOwnerPayment
         else:
