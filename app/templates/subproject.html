@@ -266,7 +266,7 @@
         <div class="row">
           <div class="col-12">
             <div id="toolbar">
-              {% if permissions.FINANCIAL and not subproject.finished %}
+              {% if permissions.FINANCIAL %}
               <button type="button" class="btn button-poen-small button-toolbar bg-grey-blue mx-auto"
                 data-toggle="modal" data-target="#modal-betaling-toevoegen">
                 + betaling
@@ -284,8 +284,8 @@
                         </button>
                       </div>
                       <div class="modal-body">
+                        {% if not subproject.finished %}
                         {{ new_payment_form.csrf_token }}
-
                         {% for f in new_payment_form %}
                         {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' and f.name !=
                         "new_payment_form-booking_date" %}
@@ -296,10 +296,14 @@
                         {% endif %}
                         {% endfor %}
                         {{ new_payment_form.project_id }}
+                        {% else %}
+                        <p>Het is niet mogelijk om een betaling toe te voegen aan deze activiteit, omdat deze reeds is
+                          afgerond.</p>
+                        {% endif %}
                       </div>
                       <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
-                        {{ new_payment_form.submit() }}
+                        {{ new_payment_form.submit() if not subproject.finished }}
                       </div>
                     </form>
                   </div>
