@@ -99,17 +99,11 @@ def index():
     if form_redirect:
         return redirect(url_for("index"))
 
-    edit_admin_forms = {}
-    admins = (
-        db.session.query(User)
-        .filter(or_(User.admin, User.financial))
-        .order_by("email")
-        .all()
-    )
-    for admin in admins:
-        edit_admin_forms[admin.email] = EditAdminForm(
-            prefix="edit_admin_form", **admin.__dict__
-        )
+    admins = User.query.filter(or_(User.admin, User.financial)).order_by("email").all()
+    admin_forms = [
+        EditAdminForm(obj=admin, prefix="edit_admin_form") for admin in admins
+    ]
+    edit_admin_forms = zip(admins, admin_forms)
 
     # AddUserForm is a misleading name, because it is rendered in index.html with a flag
     # for admin = True, so users submitted here are always added as an admin.

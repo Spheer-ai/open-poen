@@ -177,23 +177,24 @@
 
                           <hr>
 
-                          {% for admin_email, edit_admin_form in edit_admin_forms.items() %}
+                          {% for admin, edit_admin_form in edit_admin_forms %}
                           <div>
                             <!-- Button trigger modal -->
                             <button type="button" class="btn button-poen-small bg-grey-blue" data-toggle="modal"
-                              data-target="#admin-beheren-{{ edit_admin_form.id.data }}">
-                              admin beheren
+                              data-target="#admin-beheren-{{ admin.id }}">
+                              {{ "admin beheren" if admin.admin else "financial beheren" }}
                             </button>
-                            {{ admin_email }}
+                            {{ admin.email }}
 
                             <!-- Modal -->
-                            <div class="modal fade" id="admin-beheren-{{ edit_admin_form.id.data }}" tabindex="-1"
-                              role="dialog" aria-labelledby="adminbeherenLabel" aria-hidden="true">
+                            <div class="modal fade" id="admin-beheren-{{ admin.id }}" tabindex="-1" role="dialog"
+                              aria-labelledby="adminbeherenLabel" aria-hidden="true">
                               <div class="modal-dialog" role="document">
                                 <div class="modal-content">
                                   <form method="POST">
                                     <div class="modal-header">
-                                      <h5 class="modal-title" id="adminbeherenLabel">Admin beheren</h5>
+                                      <h5 class="modal-title" id="adminbeherenLabel">{{ "Admin beheren" if admin.admin
+                                        else "Financial beheren" }}</h5>
                                       <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
                                         <span aria-hidden="true">&times;</span>
                                       </button>
@@ -201,7 +202,6 @@
                                     <div class="modal-body">
                                       <div>
                                         {{ edit_admin_form.csrf_token }}
-
                                         {% for f in edit_admin_form %}
                                         {% if f.widget.input_type != 'hidden' and f.widget.input_type != 'submit' %}
                                         {{ wtf.form_field(f, class="form-control") }}
