@@ -37,7 +37,7 @@
 {% macro payment_info_left_manual_topup(form, payment) %}
 {{ info_unit("Type", "(Handmatige) storting naar betaalpas.") }}
 {{ render_booking_date(form, payment) }}
-{{ info_unit("Betaalpas", payment.debit_card.card_number) }}
+{{ render_form_or_info("Betaalpas", payment.debit_card.card_number, form, "card_number") }}
 {{ info_unit("Ontvanger", "Betaalpas") }}
 {{ render_form_or_info("Bedrag €", format_currency(payment), form, "transaction_amount") }}
 {% endmacro %}

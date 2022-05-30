@@ -9,9 +9,9 @@ from app.models import Payment, Subproject
 from datetime import date
 from app.controllers.util import Status
 from app.controllers.project.payment import (
-    ImportedBNGPayment,
-    ManualPaymentOrTopup,
-    ProjectOwnerPayment,
+    PaymentSubprojectOwner,
+    ManualPaymentFinancial,
+    ManualTopupFinancial,
     PaymentHandler,
 )
 from app.util import Clearance, form_in_request
@@ -35,9 +35,9 @@ class PaymentController(Controller):
         )
 
         self.edit_forms = [
-            ImportedBNGPayment(),
-            ManualPaymentOrTopup(),
-            ProjectOwnerPayment(),
+            PaymentSubprojectOwner(),
+            ManualTopupFinancial(),
+            ManualPaymentFinancial(),
         ]
         self.redirects = create_redirects_for_project_or_subproject(
             self.subproject.project.id, self.subproject.id
@@ -62,12 +62,16 @@ class PaymentController(Controller):
             form.subproject_id.choices = payment.make_subproject_select_options(
                 self.subproject_owner_id
             )
+            if isinstance(form, ManualTopupFinancial):
+                form.card_number.choices = (
+                    self.subproject.project.make_debit_card_select_options()
+                )
 
         status = process_form(PaymentHandler(form, Payment))
         return self.redirects[status]
 
     def get_forms(self):
-        forms: Dict[int, ImportedBNGPayment] = {}
+        forms: Dict[int, PaymentSubprojectOwner] = {}
         for payment in self.subproject.payments:
             data = payment.__dict__
             id = data["id"]
@@ -77,6 +81,10 @@ class PaymentController(Controller):
             form.subproject_id.choices = payment.make_subproject_select_options(
                 self.subproject_owner_id
             )
+            if isinstance(form, ManualTopupFinancial):
+                form.card_number.choices = (
+                    self.subproject.project.make_debit_card_select_options()
+                )
             forms[id] = form
 
         # If a payment has previously been edited with an error, we have to insert it.
@@ -106,18 +114,13 @@ class PaymentController(Controller):
             if len(form.errors) > 0:
                 return form.id.data
 
-    def get_right_form(self, payment: Payment) -> Type[ImportedBNGPayment]:
-        if payment.type == "BNG":
-            return ImportedBNGPayment
-        elif (
-            payment.type in ("MANUAL_PAYMENT", "MANUAL_TOPUP")
-            and self.clearance < Clearance.PROJECT_OWNER
-        ):
-            return ManualPaymentOrTopup
-        elif (
-            payment.type in ("MANUAL_PAYMENT", "MANUAL_TOPUP")
-            and self.clearance >= Clearance.PROJECT_OWNER
-        ):
-            return ProjectOwnerPayment
+    def get_right_form(self, payment: Payment) -> Type[PaymentSubprojectOwner]:
+        if self.clearance < Clearance.PROJECT_OWNER:
+            return PaymentSubprojectOwner
+        elif payment.type == "MANUAL_TOPUP" and self.clearance >= Clearance.FINANCIAL:
+            return ManualTopupFinancial
+        elif payment.type == "MANUAL_PAYMENT" and self.clearance >= Clearance.FINANCIAL:
+            return ManualPaymentFinancial
         else:
-            raise ValueError("Unaccounted for edge case in form selection for payment.")
+            # Default to the form with the least amount of options.
+            return PaymentSubprojectOwner

@@ -26,7 +26,7 @@ from wtforms.validators import Length, Optional
 from wtforms.widgets import HiddenInput
 
 
-class ImportedBNGPayment(FlaskForm):
+class PaymentSubprojectOwner(FlaskForm):
     short_user_description = StringField(
         "Korte beschrijving", validators=[Length(max=50)]
     )
@@ -64,7 +64,20 @@ class ImportedBNGPayment(FlaskForm):
         return True
 
 
-class ManualPaymentOrTopup(ImportedBNGPayment):
+class ManualTopupFinancial(PaymentSubprojectOwner):
+    booking_date = DateField("Datum (notatie: dd-mm-jjjj)", format="%d-%m-%Y")
+    transaction_amount = FlexibleDecimalField(
+        "Bedrag (Stortingen naar een betaalpas moeten meer dan 0,00 euro bedragen.)"
+    )
+    card_number = SelectField("Betaalpas", choices=[])
+    remove = SubmitField("Verwijderen", render_kw={"class": "btn btn-danger"})
+
+    def __init__(self, *args, **kwargs):
+        kwargs["prefix"] = "manual_topup_financial"
+        super(PaymentSubprojectOwner, self).__init__(*args, **kwargs)
+
+
+class ManualPaymentFinancial(PaymentSubprojectOwner):
     route = SelectField(
         "Route",
         validators=[Optional()],
@@ -78,13 +91,6 @@ class ManualPaymentOrTopup(ImportedBNGPayment):
     transaction_amount = FlexibleDecimalField(
         'Bedrag (begin met een "-" als het een uitgave is)'
     )
-
-    def __init__(self, *args, **kwargs):
-        kwargs["prefix"] = "manual_payment_or_topup"
-        super(ImportedBNGPayment, self).__init__(*args, **kwargs)
-
-
-class ProjectOwnerPayment(ManualPaymentOrTopup):
     debtor_name = StringField("Betaler", validators=[Length(max=128)])
     debtor_account = StringField("Betaler IBAN", validators=[Length(max=22)])
     creditor_name = StringField("Ontvanger", validators=[Length(max=128)])
@@ -93,7 +99,7 @@ class ProjectOwnerPayment(ManualPaymentOrTopup):
 
     def __init__(self, *args, **kwargs):
         kwargs["prefix"] = "project_owner"
-        super(ImportedBNGPayment, self).__init__(*args, **kwargs)
+        super(PaymentSubprojectOwner, self).__init__(*args, **kwargs)
 
 
 class PaymentHandler(BaseHandler):
@@ -106,6 +112,7 @@ class PaymentHandler(BaseHandler):
         instance = self.object.query.get(self.form.id.data)
         if instance is None:
             return Status.not_found
+        # Categories belong to only one subproject, so should be reset when changed.
         if self.data["subproject_id"] != str(instance.subproject_id):
             self.data["category_id"] = None
         instance.update(self.data)
@@ -137,9 +144,9 @@ class PaymentController(Controller):
             project.make_debit_card_select_options()
         )
         self.edit_forms = [
-            ImportedBNGPayment(),
-            ManualPaymentOrTopup(),
-            ProjectOwnerPayment(),
+            PaymentSubprojectOwner(),
+            ManualPaymentFinancial(),
+            ManualTopupFinancial(),
         ]
         self.redirects = create_redirects_for_project_or_subproject(
             self.project.id, None
@@ -164,12 +171,14 @@ class PaymentController(Controller):
             form.subproject_id.choices = payment.make_subproject_select_options(
                 self.subproject_owner_id
             )
+            if isinstance(form, ManualTopupFinancial):
+                form.card_number.choices = self.project.make_debit_card_select_options()
 
         status = process_form(PaymentHandler(form, Payment))
         return self.redirects[status]
 
     def get_forms(self):
-        forms: Dict[int, Type[ImportedBNGPayment]] = {}
+        forms: Dict[int, Type[PaymentSubprojectOwner]] = {}
         for payment in self.project.get_all_payments():
             data = payment.__dict__
             id = data["id"]
@@ -179,6 +188,8 @@ class PaymentController(Controller):
             form.subproject_id.choices = payment.make_subproject_select_options(
                 self.subproject_owner_id
             )
+            if isinstance(form, ManualTopupFinancial):
+                form.card_number.choices = self.project.make_debit_card_select_options()
             forms[id] = form
 
         # If a payment has previously been edited with an error, we have to insert it.
@@ -214,19 +225,13 @@ class PaymentController(Controller):
             if len(form.errors) > 0:
                 return form.id.data
 
-    def get_right_form(self, payment: Payment) -> Type[ImportedBNGPayment]:
-        if payment.type == "BNG":
-            return ImportedBNGPayment
-        elif (
-            payment.type in ("MANUAL_PAYMENT", "MANUAL_TOPUP")
-            and self.clearance < Clearance.PROJECT_OWNER
-        ):
-            return ManualPaymentOrTopup
-        elif (
-            payment.type in ("MANUAL_PAYMENT", "MANUAL_TOPUP")
-            and self.clearance
-            >= Clearance.PROJECT_OWNER  # TODO: Should this be financial?
-        ):
-            return ProjectOwnerPayment
+    def get_right_form(self, payment: Payment) -> Type[PaymentSubprojectOwner]:
+        if self.clearance < Clearance.PROJECT_OWNER:
+            return PaymentSubprojectOwner
+        elif payment.type == "MANUAL_TOPUP" and self.clearance >= Clearance.FINANCIAL:
+            return ManualTopupFinancial
+        elif payment.type == "MANUAL_PAYMENT" and self.clearance >= Clearance.FINANCIAL:
+            return ManualPaymentFinancial
         else:
-            raise ValueError("Unaccounted for edge case in form selection for payment.")
+            # Default to the form with the least amount of options.
+            return PaymentSubprojectOwner

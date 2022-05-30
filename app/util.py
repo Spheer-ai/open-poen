@@ -169,7 +169,7 @@ def get_clearance(
                 for subproject in project.subprojects.all()
             ]
         )
-    ) or (subproject is not None and subproject.project.has_user(current_user.id)):
+    ) or (subproject is not None and subproject.has_user(current_user.id)):
         return Clearance.SUBPROJECT_OWNER
     else:
         return Clearance.ANONYMOUS
