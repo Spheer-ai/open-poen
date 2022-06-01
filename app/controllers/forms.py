@@ -13,7 +13,7 @@ class FunderForm(FlaskForm):
     name = StringField("Naam", validators=[DataRequired(), Length(max=120)])
     url = StringField("URL", validators=[DataRequired(), URL(), Length(max=2000)])
     subsidy = StringField(
-        "Subsidieregeling", validators=[DataRequired(), Length(max=120)]
+        "(Subsidie-)regeling", validators=[DataRequired(), Length(max=120)]
     )
     subsidy_number = StringField(
         "Beschikkingsnummer / referentie", validators=[DataRequired(), Length(max=120)]
