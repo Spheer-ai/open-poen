@@ -16,7 +16,7 @@ class FunderForm(FlaskForm):
         "Subsidieregeling", validators=[DataRequired(), Length(max=120)]
     )
     subsidy_number = StringField(
-        "Beschikkingsnummer", validators=[DataRequired(), Length(max=120)]
+        "Beschikkingsnummer / referentie", validators=[DataRequired(), Length(max=120)]
     )
     budget = IntegerField(
         "Budget van deze sponsor", validators=[DataRequired(), validate_budget]
