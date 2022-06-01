@@ -64,13 +64,15 @@
                     <hr>
 
                     {% for funder_form, funder_object in funder_forms %}
-                    <div>
+                    <div style="display: flex">
                       <!-- Button trigger modal -->
                       <button type="button" class="btn button-poen-small bg-grey-blue mx-auto" data-toggle="modal"
                         data-target="#sponsor-beheren-{{ funder_form.id.data }}">
                         beheren
                       </button>
-                      {{ funder_form.name.data }}
+                      <div style="padding: 0.5em;" class="text-center">
+                        <p>{{ funder_object.formatted_name }}</p>
+                      </div>
                     </div>
                     <br>
                     {% endfor %}

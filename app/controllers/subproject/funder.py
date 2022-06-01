@@ -59,7 +59,6 @@ class FunderController(Controller):
         self.redirects = create_redirects_for_project_or_subproject(
             self.subproject.project.id, self.subproject.id
         )
-        self.funder_info: Dict[int, Dict] = {}
 
     def add(self):
         status = process_form(FunderFormHandler(self.add_form, Funder))
@@ -74,18 +73,21 @@ class FunderController(Controller):
         for funder in self.subproject.funders:
             data = funder.__dict__
             id = data["id"]
-            forms[id] = EditFunderForm(
+            form = EditFunderForm(
                 prefix=f"edit_funder_form_{id}",
                 **data,
                 subproject_id=self.subproject.id,
             )
-            self.funder_info[id] = {"name": funder.name}
+            forms[id] = (form, funder)
 
         # If a funder has previously been edited with an error, we have to insert it.
         if len(self.edit_form.errors) > 0:
-            forms[self.get_id_of_submitted_form] = self.edit_form
+            forms[self.get_id_of_submitted_form] = (
+                self.edit_form,
+                Funder.query.get(self.get_id_of_submitted_form),
+            )
 
-        return list(forms.values())
+        return forms.values()
 
     def process_forms(self):
         redirect = self.add()

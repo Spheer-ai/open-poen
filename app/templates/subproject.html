@@ -43,6 +43,7 @@
               data-target="#sponsoren-beheren">
               sponsoren beheren >
             </button>
+
             <div class="modal fade" id="sponsoren-beheren" tabindex="-1" role="dialog"
               aria-labelledby="sponsorenbeherenLabel" aria-hidden="true">
               <div class="modal-dialog" role="document">
@@ -62,16 +63,18 @@
 
                     <hr>
 
-                    {% for funder_form in funder_forms %}
-                    <div>
+                    {% for funder_form, funder_object in funder_forms %}
+                    <div style="display: flex">
                       <!-- Button trigger modal -->
                       <button type="button" class="btn button-poen-small bg-grey-blue mx-auto" data-toggle="modal"
                         data-target="#sponsor-ontkoppelen-{{ funder_form.id.data }}">
                         ontkoppelen
                       </button>
-                      {{ funder_info[funder_form.id.data]["name"] }}
+                      <div style="padding: 0.5em;" class="text-center">
+                        <p>{{ funder_object.formatted_name }}</p>
+                      </div>
+                      <br>
                     </div>
-                    <br>
                     {% endfor %}
                   </div>
                   <div class="modal-footer">
@@ -192,7 +195,8 @@
                                 <div class="modal-content">
                                   <form method="POST">
                                     <div class="modal-header">
-                                      <h5 class="modal-title" id="subprojectVerwijderLabel">Activiteit Verwijderen</h5>
+                                      <h5 class="modal-title" id="subprojectVerwijderLabel">Activiteit Verwijderen
+                                      </h5>
                                       <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
                                         <span aria-hidden="true">&times;</span>
                                       </button>
@@ -201,7 +205,8 @@
                                       <div>
                                         <p>Weet u zeker dat u activiteit "<b>{{ subproject['name'] }}</b>" wilt
                                           verwijderen?
-                                          Als u een activiteit niet wilt tonen aan het publiek kunt u de activiteit ook
+                                          Als u een activiteit niet wilt tonen aan het publiek kunt u de activiteit
+                                          ook
                                           'verbergen' in plaats van verwijderen.</p>
                                       </div>
                                     </div>
@@ -856,7 +861,7 @@
     </div>
   </div>
 
-  {% for funder_form in funder_forms %}
+  {% for funder_form, funder_object in funder_forms %}
   <!-- Modal -->
   <div class="modal fade" id="sponsor-ontkoppelen-{{ funder_form.id.data }}" tabindex="-1" role="dialog"
     aria-labelledby="sponsorontkoppelenLabel" aria-hidden="true">
