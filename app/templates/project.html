@@ -318,42 +318,6 @@
                             data-target="#project-verwijder-{{ project_data['id'] }}">
                             Verwijderen
                           </button>
-
-                          <!-- Modal -->
-                          <div class="modal fade" id="project-verwijder-{{ project_data['id'] }}" tabindex="-1"
-                            role="dialog" aria-labelledby="projectVerwijderLabel" aria-hidden="true">
-                            <div class="modal-dialog" role="document">
-                              <div class="modal-content">
-                                <form method="POST">
-                                  <div class="modal-header">
-                                    <h5 class="modal-title" id="projectVerwijderLabel">Initiatief Verwijderen</h5>
-                                    <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
-                                      <span aria-hidden="true">&times;</span>
-                                    </button>
-                                  </div>
-                                  <div class="modal-body">
-                                    <div>
-                                      <p>Weet u zeker dat u initiatief "<b>{{ project_data['name'] }}</b>" wilt
-                                        verwijderen? Hiermee
-                                        worden alle transacties van de bijbehorende bankrekening en de door de
-                                        gebruikers
-                                        toegevoegde beschrijvingen en plaatjes uit de database van Open Poen verwijderd!
-                                        Ook worden
-                                        alle activiteiten die onder dit initiatief vallen verwijderd! Als u een
-                                        initiatief niet wilt tonen
-                                        aan het publiek kunt u het initiatief ook 'verbergen' in plaats van verwijderen.
-                                      </p>
-                                    </div>
-                                  </div>
-                                  <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary"
-                                      data-dismiss="modal">Annuleren</button>
-                                    {{ project_form.remove }}
-                                  </div>
-                                </form>
-                              </div>
-                            </div>
-                          </div>
                           {% endif %}
                         </div>
                       </form>
@@ -1131,7 +1095,7 @@
   {% if not project_data.hidden_sponsors and permissions.PROJECT_OWNER %}
   {% for funder_form, funder_object in funder_forms %}
   <!-- Modal voor sponsor beheren -->
-  <div class="modal fade" id="sponsor-beheren-{{ funder_form.id.data }}" tabindex="-1" role="dialog"
+  <div class="modal fade" id="sponsor-beheren-{{ funder_object.id }}" tabindex="-1" role="dialog"
     aria-labelledby="sponsorbeherenLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
@@ -1168,7 +1132,10 @@
             <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
             {% if not funder_object.justified %}
             {% if not funder_object.has_at_least_one_subproject %}
-            {{ funder_form.remove }}
+            <button type="button" class="btn btn-danger" data-toggle="modal"
+              data-target="#sponsor-verwijder-{{ funder_object.id }}">
+              Verwijderen
+            </button>
             {% endif %}
             {{ funder_form.submit }}
             {% endif %}
@@ -1177,6 +1144,41 @@
       </div>
     </div>
   </div>
+  {% endfor %}
+  {% endif %}
+
+  {% if not project_data.hidden_sponsors and permissions.PROJECT_OWNER %}
+  {% for funder_form, funder_object in funder_forms %}
+  {% if not funder_object.justified and not funder_object.has_at_least_one_subproject %}
+  <div class="modal fade" id="sponsor-verwijder-{{ funder_object.id }}" tabindex="-1" role="dialog"
+    aria-labelledby="sponsorVerwijderLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <form method="POST">
+          <div class="modal-header">
+            <h5 class="modal-title" id="sponsorVerwijderLabel">Sponsor Verwijderen</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div>
+              <p>Weet u zeker dat u sponsor "<b>{{ funder_object.name }}</b>" wilt
+                verwijderen? Dit kan niet worden teruggedraaid!
+              </p>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
+            {{ funder_form.csrf_token }}
+            {{ funder_form.id }}
+            {{ funder_form.remove }}
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endif %}
   {% endfor %}
   {% endif %}
 
@@ -1207,6 +1209,45 @@
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
             {{ new_funder_form.submit }}
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+
+  {% if permissions.ADMIN %}
+  <div class="modal fade" id="project-verwijder-{{ project_data['id'] }}" tabindex="-1" role="dialog"
+    aria-labelledby="projectVerwijderLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <form method="POST">
+          <div class="modal-header">
+            <h5 class="modal-title" id="projectVerwijderLabel">Initiatief Verwijderen</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Annuleren">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div>
+              <p>Weet u zeker dat u initiatief "<b>{{ project_data['name'] }}</b>" wilt
+                verwijderen? Hiermee
+                worden alle transacties van de bijbehorende bankrekening en de door de
+                gebruikers
+                toegevoegde beschrijvingen en plaatjes uit de database van Open Poen verwijderd!
+                Ook worden
+                alle activiteiten die onder dit initiatief vallen verwijderd! Als u een
+                initiatief niet wilt tonen
+                aan het publiek kunt u het initiatief ook 'verbergen' in plaats van verwijderen.
+              </p>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuleren</button>
+            {{ project_form.csrf_token }}
+            {{ project_form.id }}
+            {{ project_form.remove }}
           </div>
         </form>
       </div>
