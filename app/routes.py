@@ -8,7 +8,7 @@ from flask import (
     request,
     send_from_directory,
     url_for,
-    make_response,
+    send_file,
 )
 from flask_login import current_user, login_required, login_user, logout_user
 from sqlalchemy import or_
@@ -687,11 +687,10 @@ def profile_project(project_id):
 def justification_report(project_id):
     project = Project.query.get(project_id)
 
-    import logging
-
-    logger = logging.getLogger("weasyprint")
-    logger.handlers = []  # Remove the default stderr handler
-    logger.addHandler(logging.FileHandler("./weasyprint.log"))
+    # import logging
+    # logger = logging.getLogger("weasyprint")
+    # logger.handlers = []  # Remove the default stderr handler
+    # logger.addHandler(logging.FileHandler("./weasyprint.log"))
 
     # TODO: Refactor this in combination with save_attachment.
     thumbnail_paths = [
@@ -702,7 +701,7 @@ def justification_report(project_id):
 
     date_of_issue = datetime.now().strftime("%d-%m-%Y")
 
-    reported_funder = Funder.query.get(72)
+    reported_funder = Funder.query.get(47)
 
     rendered_template = render_template(
         "justification-rapport.html",
@@ -724,8 +723,11 @@ def justification_report(project_id):
         base_url=base_url,
         font_config=font_config,
     )
-    x.write_pdf("./test.pdf", stylesheets=[y], font_config=font_config)
-    return "work in progress"
+    loc = os.path.join(base_url, "test.pdf")
+    x.write_pdf(loc, stylesheets=[y], font_config=font_config)
+    # return "work in progress"
+    # with open("./test.pdf", "rb") as static_file:
+    return send_file(loc, attachment_filename="rapportage.pdf")
 
 
 @app.route("/profiel/subproject/<subproject_id>", methods=["GET", "POST"])
