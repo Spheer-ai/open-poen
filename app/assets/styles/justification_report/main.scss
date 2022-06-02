@@ -21,14 +21,13 @@ $red: red;
 
 .amsterdam {
     position: fixed;
-    bottom: 0;
-    right: 0;
+    top: 0;
+    left: 3%;
     z-index: 999;
     padding: 1em;
 
     img {
-        height: 64px;
-        opacity: 0.2;
+        height: 128px;
     }
 }
 
@@ -96,10 +95,18 @@ h6 {
 }
 
 @page {
-    margin-top: 64px;
+    margin-top: 128px + 48px * 2;
     margin-left: 64px;
     margin-bottom: 64px;
     margin-right: 64px;
+
+    @top-left {
+        content: "";
+        width: 100%;
+        height: 100%;
+        background: url(app/static/dist/images/amsterdam.png) no-repeat 0px 48px;
+        background-size: auto 128px;
+    }
 
     @bottom-left {
         content: "Pagina " counter(page) " van de " counter(pages);
