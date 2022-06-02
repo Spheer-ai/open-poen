@@ -109,12 +109,14 @@ h6 {
     }
 
     @bottom-left {
+        font-family: Avenir, Arial, Helvetica, sans-serif;
         content: "Pagina " counter(page) " van de " counter(pages);
         vertical-align: top;
         padding: 1em;
     }
 
     @bottom-right {
+        font-family: Avenir, Arial, Helvetica, sans-serif;
         content: string(report-type) " " string(project-name);
         vertical-align: top;
         padding: 1em;
