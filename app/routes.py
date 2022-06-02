@@ -8,9 +8,11 @@ from flask import (
     request,
     send_from_directory,
     url_for,
+    make_response,
 )
 from flask_login import current_user, login_required, login_user, logout_user
 from sqlalchemy import or_
+import weasyprint
 
 import app.controllers.index as ic
 import app.controllers.project as pc
@@ -43,7 +45,9 @@ from app.models import (
     UserStory,
     save_attachment,
 )
-from flask_weasyprint import HTML, render_pdf, CSS
+
+from weasyprint import HTML, CSS
+from weasyprint.fonts import FontConfiguration
 import os
 
 
@@ -682,6 +686,12 @@ def profile_project(project_id):
 def justification_report(project_id):
     project = Project.query.get(project_id)
 
+    import logging
+
+    logger = logging.getLogger("weasyprint")
+    logger.handlers = []  # Remove the default stderr handler
+    logger.addHandler(logging.FileHandler("./weasyprint.log"))
+
     # TODO: Refactor this in combination with save_attachment.
     thumbnail_paths = [
         os.path.splitext(attachment.filename)[0] + "_thumb.jpeg"
@@ -698,14 +708,18 @@ def justification_report(project_id):
         date_of_issue=date_of_issue,
     )
     base_url = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+    font_config = FontConfiguration()
     x = HTML(
         string=rendered_template,
         base_url=base_url,
     )
     y = CSS(
-        filename="./app/static/dist/styles/justification_report.css", base_url=base_url
+        filename="./app/static/dist/styles/justification_report.css",
+        base_url=base_url,
+        font_config=font_config,
     )
-    return render_pdf(x, stylesheets=[y])
+    x.write_pdf("./test.pdf", stylesheets=[y], font_config=font_config)
+    return "work in progress"
 
 
 @app.route("/profiel/subproject/<subproject_id>", methods=["GET", "POST"])

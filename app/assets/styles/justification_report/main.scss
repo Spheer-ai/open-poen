@@ -1,10 +1,14 @@
 $blue: #265ed4;
 $red: red;
-$font-family: "Open Sans";
 
 @import "~bootstrap/scss/_functions.scss";
 @import "~bootstrap/scss/_variables.scss";
 @import 'bootstrap';
+
+@font-face {
+    font-family: Avenir;
+    src: url(app/static/dist/styles/files/avenir.otf);
+}
 
 .new-page {
     page-break-before: always
@@ -66,7 +70,7 @@ h6 {
 }
 
 * {
-    font-family: $font-family;
+    font-family: Avenir, Arial, Helvetica, sans-serif;
 }
 
 .attachment-container {

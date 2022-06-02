@@ -21,6 +21,7 @@ mix.sass('styles/justification_report/main.scss', '../static/dist/styles/justifi
 
 mix.copy('node_modules/@openfonts/lexend-deca_latin/files/', '../static/dist/styles/files/');
 mix.copy('node_modules/@openfonts/dosis_latin/files/', '../static/dist/styles/files/');
+mix.copy('fonts/avenir.otf', '../static/dist/styles/files/');
 
 mix.imagemin('images/*');
 
