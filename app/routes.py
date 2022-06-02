@@ -44,6 +44,7 @@ from app.models import (
     User,
     UserStory,
     save_attachment,
+    Funder,
 )
 
 from weasyprint import HTML, CSS
@@ -701,12 +702,17 @@ def justification_report(project_id):
 
     date_of_issue = datetime.now().strftime("%d-%m-%Y")
 
+    reported_funder = Funder.query.get(72)
+
     rendered_template = render_template(
         "justification-rapport.html",
         project=project,
         thumbnail_paths=thumbnail_paths,
         date_of_issue=date_of_issue,
+        reported_funder=reported_funder,
+        concept=True,
     )
+
     base_url = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
     font_config = FontConfiguration()
     x = HTML(

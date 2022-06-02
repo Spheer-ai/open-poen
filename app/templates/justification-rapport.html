@@ -1,7 +1,18 @@
 <div class="title-container">
+
     <h1 id="project-name">{{ project.name }}</h1>
+
+    <h3 id="report-type">{{ "Tussentijdse Rapportage" if concept else "Verantwoordingsrapportage" }}</h3>
+
+    <h3>t.b.v.</h3>
+
+    <h3>{{ reported_funder.formatted_name }}</h3>
+
+    <h3>op</h3>
+
+    <h3>{{ date_of_issue }}</h3>
+
 </div>
-<h1 id="date-of-issue">{{ date_of_issue }}</h1>
 
 <div class="new-page" id="index">
     <h1>Inhoudsopgave</h1>

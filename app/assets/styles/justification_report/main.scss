@@ -45,14 +45,16 @@ $red: red;
 }
 
 .title-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
     padding: 64px;
 
     h1 {
         font-size: 64px;
         font-weight: 600;
+        text-align: center;
+    }
+
+    h3 {
+        text-align: center;
     }
 }
 
@@ -88,10 +90,8 @@ h6 {
     string-set: project-name content();
 }
 
-#date-of-issue {
-    string-set: date-of-issue content();
-    visibility: hidden;
-    height: 0
+#report-type {
+    string-set: report-type content();
 }
 
 @page {
@@ -115,7 +115,7 @@ h6 {
     }
 
     @bottom-right {
-        content: "Verantwoordingsrapportage " string(project-name);
+        content: string(report-type) " " string(project-name);
         vertical-align: top;
         padding: 1em;
     }
@@ -133,10 +133,10 @@ h6 {
     }
 
     @bottom-left {
-        content: "";
+        content: ""
     }
 
     @bottom-right {
-        content: "Verstrekt op " string(date-of-issue);
+        content: ""
     }
 }
