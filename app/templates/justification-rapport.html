@@ -110,39 +110,6 @@
     <p>{{ project.legal_entity }}</p>
     <h4>Inschrijving KvK:</h4>
     <p>{{ project.registration_kvk }}</p>
-    <h4>Activiteiten van dit initiatief:</h4>
-    {% if project.subprojects | list | length == 0 %}
-    <p>Dit initiatief heeft geen activiteiten.</p>
-    {% else %}
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th scope="col">Naam:</th>
-                <th scope="col">Budget:</th>
-                <th scope="col">Status:</th>
-                <th scope="col">Sponsoren:</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for subproject in project.subprojects %}
-            <tr>
-                <td>{{ subproject.name }}</td>
-                <td>{{ "niet ingevuld" if not subproject.budget else subproject.formatted_budget }}</td>
-                <td>{{ subproject.format_status }}</td>
-                <td>
-                    {% if subproject.funders | list | length == 0 %}
-                    geen
-                    {% else %}
-                    {% for funder in subproject.funders %}
-                    <p>{{ funder.formatted_name }}</p>
-                    {% endfor %}
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% endif %}
 </div>
 
 <div class="new-page">
