@@ -107,7 +107,8 @@ class ProjectForm(FlaskForm):
         ],
     )
     budget = IntegerField(
-        "Totaal budget initiatief", validators=[Optional(), validate_budget]
+        "Totaal budget initiatief (Format: 1000,00)",
+        validators=[Optional(), validate_budget],
     )
 
     id = IntegerField(widget=HiddenInput())

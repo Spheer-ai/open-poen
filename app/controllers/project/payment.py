@@ -67,7 +67,7 @@ class PaymentSubprojectOwner(FlaskForm):
 class ManualTopupFinancial(PaymentSubprojectOwner):
     booking_date = DateField("Datum (notatie: dd-mm-jjjj)", format="%d-%m-%Y")
     transaction_amount = FlexibleDecimalField(
-        "Bedrag (Stortingen naar een betaalpas moeten meer dan 0,00 euro bedragen.)"
+        "Bedrag (Stortingen naar een betaalpas moeten meer dan 0,00 euro bedragen. Format: 1000,00)"
     )
     card_number = SelectField("Betaalpas", choices=[])
     remove = SubmitField("Verwijderen", render_kw={"class": "btn btn-danger"})
@@ -89,7 +89,7 @@ class ManualPaymentFinancial(PaymentSubprojectOwner):
     )
     booking_date = DateField("Datum (notatie: dd-mm-jjjj)", format="%d-%m-%Y")
     transaction_amount = FlexibleDecimalField(
-        'Bedrag (begin met een "-" als het een uitgave is)'
+        'Bedrag (Begin met een "-" als het een uitgave is. Format: 1000,00)'
     )
     debtor_name = StringField("Betaler", validators=[Length(max=128)])
     debtor_account = StringField("Betaler IBAN", validators=[Length(max=22)])

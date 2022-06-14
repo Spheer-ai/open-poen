@@ -43,7 +43,10 @@ class FunderForm(FlaskForm):
 
     id = IntegerField(widget=HiddenInput(), validators=[Optional()])
     name = StringField("Naam", validators=[DataRequired(), Length(max=120)])
-    url = StringField("URL", validators=[DataRequired(), URL(), Length(max=2000)])
+    url = StringField(
+        "URL (format: http(s)://voorbeeld.com)",
+        validators=[DataRequired(), URL(), Length(max=2000)],
+    )
     subsidy = StringField(
         "(Subsidie-)regeling", validators=[DataRequired(), Length(max=120)]
     )
@@ -51,7 +54,8 @@ class FunderForm(FlaskForm):
         "Beschikkingsnummer / referentie", validators=[DataRequired(), Length(max=120)]
     )
     budget = IntegerField(
-        "Budget van deze sponsor", validators=[DataRequired(), validate_budget]
+        "Budget van deze sponsor (Format: 1000,00)",
+        validators=[DataRequired(), validate_budget],
     )
 
 
@@ -62,5 +66,6 @@ class SubprojectBaseForm(FlaskForm):
     purpose = TextAreaField("Doel", validators=[DataRequired()])
     target_audience = TextAreaField("Doelgroep", validators=[DataRequired()])
     budget = IntegerField(
-        "Budget voor deze activiteit", validators=[Optional(), validate_budget]
+        "Budget voor deze activiteit (Format: 1000,00)",
+        validators=[Optional(), validate_budget],
     )

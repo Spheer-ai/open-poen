@@ -166,11 +166,6 @@ class LoginForm(FlaskForm):
     submit = SubmitField("Inloggen", render_kw={"class": "btn btn-info"})
 
 
-class NewProjectFunderForm(FlaskForm):
-    name = StringField("Naam", validators=[DataRequired(), Length(max=120)])
-    url = StringField("URL", validators=[DataRequired(), URL(), Length(max=2000)])
-
-
 class EditDebitCardForm(FlaskForm):
     remove_from_project = BooleanField("Ontkoppel betaalpas van dit initiatief")
     id = IntegerField(widget=HiddenInput(), validators=[Optional()])
@@ -198,7 +193,8 @@ class SubprojectForm(FlaskForm):
     target_audience = TextAreaField("Doelgroep", validators=[DataRequired()])
     hidden = BooleanField("Activiteit verbergen")
     budget = IntegerField(
-        "Budget voor deze activiteit", validators=[Optional(), validate_budget]
+        "Budget voor deze activiteit (Format: 1000,00)",
+        validators=[Optional(), validate_budget],
     )
     project_id = IntegerField(widget=HiddenInput())
     id = IntegerField(widget=HiddenInput())
@@ -226,7 +222,7 @@ class FlexibleDecimalField(DecimalField):
 
 class NewPaymentForm(FlaskForm):
     transaction_amount = FlexibleDecimalField(
-        "Bedrag (begin met een - als het een uitgave is)"
+        "Bedrag (Begin met een - als het een uitgave is. Format: 1000,00)"
     )
     booking_date = DateField("Datum (notatie: dd-mm-jjjj)", format="%d-%m-%Y")
     debtor_name = StringField("Betaler naam", validators=[Length(max=120)])
@@ -269,7 +265,7 @@ class NewPaymentForm(FlaskForm):
 
 class NewTopupForm(FlaskForm):
     transaction_amount = FlexibleDecimalField(
-        "Bedrag (Stortingen naar een betaalpas moeten meer dan 0,00 euro bedragen.)",
+        "Bedrag (Stortingen naar een betaalpas moeten meer dan 0,00 euro bedragen. Format: 1000,00)",
         validators=[validate_topup_amount],
     )
     booking_date = DateField("Datum (notatie: dd-mm-jjjj)", format="%d-%m-%Y")
@@ -317,7 +313,7 @@ class PaymentForm(FlaskForm):
         "Lange beschrijving", validators=[Length(max=2000)]
     )
     transaction_amount = FlexibleDecimalField(
-        'Bedrag (begin met een "-" als het een uitgave is)'
+        'Bedrag (Begin met een "-" als het een uitgave is. Format: 1000,00)'
     )
     booking_date = DateField("Datum (notatie: dd-mm-jjjj)", format="%d-%m-%Y")
     hidden = BooleanField("Transactie verbergen")

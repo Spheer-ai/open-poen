@@ -53,7 +53,8 @@ class Admin(BaseForm):
     )
     # TODO: Budget file.
     budget = IntegerField(
-        "Budget voor dit initiatief", validators=[Optional(), validate_budget]
+        "Budget voor dit initiatief (Format: 1000,00)",
+        validators=[Optional(), validate_budget],
     )
     remove = SubmitField("Verwijderen", render_kw={"class": "btn btn-danger"})
 
