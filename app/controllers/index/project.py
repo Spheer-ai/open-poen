@@ -1,5 +1,5 @@
 from app.controllers.util import Controller
-from app.controllers.forms import FunderForm, SubprojectBaseForm
+from app.controllers.forms import FunderForm, LEGAL_ENTITIES, validate_kvk
 from app.form_processing import process_form, BaseHandler, Status
 from app.forms import (
     trim_whitespace,
@@ -21,7 +21,12 @@ from wtforms import (
     TextAreaField,
 )
 from wtforms.fields.core import FieldList, FormField
-from wtforms.validators import URL, DataRequired, Email, Length, Optional
+from wtforms.validators import (
+    DataRequired,
+    Email,
+    Length,
+    Optional,
+)
 from wtforms.widgets import HiddenInput
 
 ALLOWED_EXTENSIONS = ["pdf", "xls", "xlsx"]
@@ -76,14 +81,12 @@ class ProjectForm(FlaskForm):
         min_entries=0,
         max_entries=None,
     )
-    legal_entity = SelectField(
-        "Rechtsvorm", choices=[("Stichting", "Stichting"), ("Vereniging", "Vereniging")]
-    )
+    legal_entity = SelectField("Rechtsvorm", choices=LEGAL_ENTITIES)
     address_applicant = StringField(
         "Adres aanvrager", validators=[DataRequired(), Length(max=120)]
     )
     registration_kvk = StringField(
-        "Inschrijving KvK", validators=[DataRequired(), Length(max=120)]
+        "Inschrijving KvK", validators=[validate_kvk, Length(max=120)]
     )
     project_location = StringField(
         "Locatie initiatief", validators=[DataRequired(), Length(max=120)]

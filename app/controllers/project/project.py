@@ -1,4 +1,5 @@
 from typing import Dict, Type
+from app.controllers.forms import LEGAL_ENTITIES, validate_kvk
 
 from app.controllers.util import Controller, create_redirects_for_project_or_subproject
 from app.form_processing import Status, process_form, BaseHandler
@@ -39,14 +40,12 @@ class Admin(BaseForm):
     owner_email = StringField(
         "E-mailadres", validators=[DataRequired(), Email(), Length(max=120)]
     )
-    legal_entity = SelectField(
-        "Rechtsvorm", choices=[("Stichting", "Stichting"), ("Vereniging", "Vereniging")]
-    )
+    legal_entity = SelectField("Rechtsvorm", choices=LEGAL_ENTITIES)
     address_applicant = StringField(
         "Adres aanvrager", validators=[DataRequired(), Length(max=120)]
     )
     registration_kvk = StringField(
-        "Inschrijving KvK", validators=[DataRequired(), Length(max=120)]
+        "Inschrijving KvK", validators=[validate_kvk, Length(max=120)]
     )
     project_location = StringField(
         "Locatie initiatief", validators=[DataRequired(), Length(max=120)]

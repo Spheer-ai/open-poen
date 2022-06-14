@@ -272,7 +272,7 @@ class Project(db.Model, DefaultCRUD, DefaultErrorMessages):
     hidden_sponsors = db.Column(db.Boolean, default=False)
     owner = db.Column(db.String(120))
     owner_email = db.Column(db.String(120))
-    legal_entity = db.Column(db.String(20))
+    legal_entity = db.Column(db.String(64))
     address_applicant = db.Column(db.String(120))
     registration_kvk = db.Column(db.String(120))
     project_location = db.Column(db.String(120))
