@@ -10,9 +10,9 @@ LEGAL_ENTITIES = [
         "Stichting",
         "Vereniging",
         "Eenmanszaak",
-        "VOF (Vennootschap onder Firma)",
+        "Vennootschap onder Firma",
         "Maatschap",
-        "BV (Besloten Vennootschap)",
+        "Besloten Vennootschap",
         "Coöperatie",
         "Geen (Natuurlijk Persoon)",
     ]

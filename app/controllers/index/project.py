@@ -86,7 +86,8 @@ class ProjectForm(FlaskForm):
         "Adres aanvrager", validators=[DataRequired(), Length(max=120)]
     )
     registration_kvk = StringField(
-        "Inschrijving KvK", validators=[validate_kvk, Length(max=120)]
+        "Inschrijving KvK (Optioneel in het geval van een natuurlijk persoon.)",
+        validators=[validate_kvk, Length(max=120)],
     )
     project_location = StringField(
         "Locatie initiatief", validators=[DataRequired(), Length(max=120)]
