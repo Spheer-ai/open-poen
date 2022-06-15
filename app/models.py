@@ -412,26 +412,12 @@ class Project(db.Model, DefaultCRUD, DefaultErrorMessages):
 
         return project
 
-    def justify(self, funder, concept, send, **kwargs):
+    def justify(self, funder, justify, **kwargs):
         funder = Funder.query.get(funder)
-        if concept:
-            # TODO: Download the PDF-rapport.
-            pass
-        elif send:
+        if justify:
             funder.justified = True
             db.session.add(funder)
             db.session.commit()
-            # TODO: Send the PDF-rapport.
-        return self
-
-    def concept_justify(self, funder, concept, send, **kwargs):
-        funder = Funder.query.get(funder)
-        if concept:
-            # TODO: Download the PDF-rapport.
-            pass
-        elif send:
-            # TODO: Send the PDF-rapport.
-            pass
         return self
 
     @property

@@ -1,28 +1,32 @@
-from datetime import datetime
 import json
+import os
+from datetime import datetime
+from io import BytesIO
 
 from flask import (
     flash,
     redirect,
     render_template,
     request,
+    send_file,
     send_from_directory,
     url_for,
-    send_file,
 )
 from flask_login import current_user, login_required, login_user, logout_user
 from sqlalchemy import or_
-import weasyprint
+from weasyprint import CSS, HTML
+from weasyprint.fonts import FontConfiguration
 
 import app.controllers.index as ic
 import app.controllers.project as pc
-import app.controllers.subproject as subpc
 import app.controllers.projectprofile as ppc
+import app.controllers.subproject as subpc
 import app.controllers.subprojectprofile as subppc
 from app import app, db, util
+from app.better_utils import get_thumbnail_paths
 from app.bng import get_bng_info, process_bng_callback
 from app.email import send_password_reset_email
-from app.form_processing import process_bng_link_form, process_form, BaseHandler
+from app.form_processing import BaseHandler, process_bng_link_form, process_form
 from app.forms import (
     AddUserForm,
     BNGLinkForm,
@@ -39,17 +43,13 @@ from app.forms import (
 from app.models import (
     BNGAccount,
     File,
+    Funder,
     Project,
     Subproject,
     User,
     UserStory,
     save_attachment,
-    Funder,
 )
-
-from weasyprint import HTML, CSS
-from weasyprint.fonts import FontConfiguration
-import os
 
 
 # Add 'Cache-Control': 'private' header if users are logged in
@@ -750,32 +750,18 @@ def profile_subproject(subproject_id):
     )
 
 
-@app.route("/report/project/<project_id>", methods=["GET"])
-def justification_report(project_id):
+@app.route("/concept-report/project/<project_id>/funder/<funder_id>", methods=["GET"])
+def concept_justification_report(project_id, funder_id):
     project = Project.query.get(project_id)
-
-    # import logging
-    # logger = logging.getLogger("weasyprint")
-    # logger.handlers = []  # Remove the default stderr handler
-    # logger.addHandler(logging.FileHandler("./weasyprint.log"))
-
-    # TODO: Refactor this in combination with save_attachment.
-    thumbnail_paths = [
-        os.path.splitext(attachment.filename)[0] + "_thumb.jpeg"
-        for attachment in project.get_all_attachments()
-        if attachment.mimetype in ["image/jpeg", "image/jpg", "image/png"]
-    ]
-
+    funder = Funder.query.get(funder_id)
     date_of_issue = datetime.now().strftime("%d-%m-%Y")
-
-    reported_funder = Funder.query.get(47)
 
     rendered_template = render_template(
         "justification-rapport.html",
         project=project,
-        thumbnail_paths=thumbnail_paths,
+        thumbnail_paths=get_thumbnail_paths(project),
         date_of_issue=date_of_issue,
-        reported_funder=reported_funder,
+        reported_funder=funder,
         concept=True,
     )
 
@@ -790,11 +776,53 @@ def justification_report(project_id):
         base_url=base_url,
         font_config=font_config,
     )
-    loc = os.path.join(base_url, "test.pdf")
-    x.write_pdf(loc, stylesheets=[y], font_config=font_config)
-    # return "work in progress"
-    # with open("./test.pdf", "rb") as static_file:
-    return send_file(loc, attachment_filename="rapportage.pdf")
+
+    report = x.write_pdf(stylesheets=[y], font_config=font_config)
+
+    return send_file(
+        BytesIO(report),
+        mimetype="application/pdf",
+        as_attachment=True,
+        attachment_filename=f"Tussentijdse Rapportage {funder.formatted_name}.pdf",
+    )
+
+
+@app.route("/report/project/<project_id>/funder/<funder_id>", methods=["GET"])
+def justification_report(project_id, funder_id):
+    project = Project.query.get(project_id)
+    funder = Funder.query.get(funder_id)
+    date_of_issue = datetime.now().strftime("%d-%m-%Y")
+
+    rendered_template = render_template(
+        "justification-rapport.html",
+        project=project,
+        thumbnail_paths=get_thumbnail_paths(project),
+        date_of_issue=date_of_issue,
+        reported_funder=funder,
+        concept=False,
+    )
+
+    base_url = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+    font_config = FontConfiguration()
+    x = HTML(
+        string=rendered_template,
+        base_url=base_url,
+    )
+    y = CSS(
+        filename="./app/static/dist/styles/justification_report.css",
+        base_url=base_url,
+        font_config=font_config,
+    )
+
+    # loc = os.path.join(base_url, "test.pdf")
+    report = x.write_pdf(stylesheets=[y], font_config=font_config)
+
+    return send_file(
+        BytesIO(report),
+        mimetype="application/pdf",
+        as_attachment=True,
+        attachment_filename=f"Verantwoordingsrapportage {funder.formatted_name}.pdf",
+    )
 
 
 @app.route("/profiel-bewerken", methods=["GET", "POST"])

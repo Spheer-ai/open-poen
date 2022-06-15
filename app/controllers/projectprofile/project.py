@@ -42,7 +42,14 @@ class JustifyProjectFormHandler(BaseHandler):
             return Status.not_found
         instance.justify(**self.data)
         if self.data["justify"]:
-            formatted_flash("Gefeliciteerd! De sponsor is verantwoord.", color="green")
+            formatted_flash(
+                (
+                    "Gefeliciteerd! De sponsor is verantwoord. De "
+                    "verantwoordingsrapportage vindt u in de sponsorentabel op deze "
+                    "pagina."
+                ),
+                color="green",
+            )
         return Status.succesful_edit
 
     def on_create(self) -> Status:
@@ -50,17 +57,11 @@ class JustifyProjectFormHandler(BaseHandler):
 
 
 class ConceptJustifyProjectFormHandler(BaseHandler):
-    # Not filtering submit fields because we use those for programming logic.
-    fields_to_filter = ["CSRFTokenField"]
-
     def on_delete(self):
         raise NotImplementedError
 
     def on_update(self):
-        instance = self.object.query.get(self.form.id.data)
-        if instance is None:
-            return Status.not_found
-        instance.concept_justify(**self.data)
+        # No state change needed.
         return Status.succesful_edit
 
     def on_create(self) -> Status:
@@ -118,12 +119,28 @@ class JustifyProjectController(Controller):
 
     def justify(self):
         status = process_form(JustifyProjectFormHandler(self.justify_form, Project))
+        if status == Status.succesful_edit and self.justify_form.concept.data:
+            return redirect(
+                url_for(
+                    "concept_justification_report",
+                    project_id=self.project.id,
+                    funder_id=self.justify_form.funder.data,
+                )
+            )
         return self.redirects[status]
 
     def concept_justify(self):
         status = process_form(
             ConceptJustifyProjectFormHandler(self.concept_justify_form, Project)
         )
+        if status == Status.succesful_edit:
+            return redirect(
+                url_for(
+                    "concept_justification_report",
+                    project_id=self.project.id,
+                    funder_id=self.concept_justify_form.funder.data,
+                )
+            )
         return self.redirects[status]
 
     def get_forms(self):
