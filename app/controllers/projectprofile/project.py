@@ -12,9 +12,9 @@ class JustifyProjectForm(FlaskForm):
     id = IntegerField(widget=HiddenInput())
     funder = RadioField(choices=[])
     concept = SubmitField(
-        "Conceptversie downloaden", render_kw={"class": "btn btn-danger"}
+        "Conceptversie bekijken", render_kw={"class": "btn btn-danger"}
     )
-    send = SubmitField("Verantwoording versturen", render_kw={"class": "btn btn-info"})
+    justify = SubmitField("Verantwoorden", render_kw={"class": "btn btn-info"})
 
     has_errors = False
 
@@ -22,11 +22,8 @@ class JustifyProjectForm(FlaskForm):
 class ConceptJustifyProjectForm(FlaskForm):
     id = IntegerField(widget=HiddenInput())
     funder = RadioField(choices=[])
-    concept = SubmitField(
-        "Conceptversie downloaden", render_kw={"class": "btn btn-danger"}
-    )
-    send = SubmitField(
-        "Tussentijdse rapportage verzenden", render_kw={"class": "btn btn-info"}
+    download = SubmitField(
+        "Tussentijdse rapportage bekijken", render_kw={"class": "btn btn-danger"}
     )
 
     has_errors = False
@@ -44,10 +41,8 @@ class JustifyProjectFormHandler(BaseHandler):
         if instance is None:
             return Status.not_found
         instance.justify(**self.data)
-        if self.data["send"]:
-            formatted_flash(
-                "Gefeliciteerd! De verantwoording is verstuurd.", color="green"
-            )
+        if self.data["justify"]:
+            formatted_flash("Gefeliciteerd! De sponsor is verantwoord.", color="green")
         return Status.succesful_edit
 
     def on_create(self) -> Status:
@@ -66,10 +61,6 @@ class ConceptJustifyProjectFormHandler(BaseHandler):
         if instance is None:
             return Status.not_found
         instance.concept_justify(**self.data)
-        if self.data["send"]:
-            formatted_flash(
-                "Gefeliciteerd! De tussentijdse rapportage is verstuurd.", color="green"
-            )
         return Status.succesful_edit
 
     def on_create(self) -> Status:

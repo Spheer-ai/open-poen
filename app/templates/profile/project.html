@@ -275,23 +275,24 @@
                             <div class="interactive-unit">
                                 <p>U gaat uw initiatief verantwoorden. Let op: verantwoorden is een formele stap binnen
                                     het
-                                    proces van subsidieverstrekking. Als u uw verantwoording verstuurt naar uw
-                                    subsidieverstrekker, kunt u dit niet ongedaan maken. Daarnaast komen alle
+                                    proces van subsidieverstrekking. Als u uw initiatief verantwoordt, kunt u dit niet
+                                    ongedaan maken. Daarnaast komen alle
                                     activiteiten die gekoppeld zijn aan deze sponsor daarmee definitief op verantwoord
                                     te staan. Deze activiteiten zijn daarna nooit meer aan te passen en worden
                                     gearchiveerd.</p>
                                 <p>Wilt u dit nog niet doen en alleen
                                     uw verantwoording bekijken ter controle? Klik dan op de onderstaande knop om de
-                                    conceptversie te downloaden.</p>
+                                    conceptversie te bekijken.</p>
                                 <div class="form-action">
+                                    <!-- Open / Download tussentijds. -->
                                     {{ justify_project_form.concept }}
                                 </div>
                                 <br>
-                                <p>Als u wel uw initiatief definitief wil verantwoorden, klik dan op de onderstaande
-                                    knop.
+                                <p>Klik op de onderstaande knop als u wel uw initiatief definitief wilt verantwoorden.
                                 </p>
                                 <div class="form-action">
-                                    {{ justify_project_form.send }}
+                                    <!-- Open / Download and Set justified flag. -->
+                                    {{ justify_project_form.justify }}
                                 </div>
                             </div>
                             {% endif %}
@@ -373,8 +374,8 @@
                                     </li>
                                     {% endfor %}
                                 </ul>
-                                <div class="form-action">{{ concept_justify_project_form.concept }}</div>
-                                <div class="form-action">{{ concept_justify_project_form.send }}</div>
+                                <!-- Download tussentijdse rapportage. -->
+                                <div class="form-action">{{ concept_justify_project_form.download }}</div>
                             </div>
                             {% endif %}
                             {% if concept_justify_project_form.has_errors %}

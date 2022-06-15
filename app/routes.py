@@ -680,53 +680,6 @@ def profile_project(project_id):
     )
 
 
-@app.route("/report/project/<project_id>", methods=["GET"])
-def justification_report(project_id):
-    project = Project.query.get(project_id)
-
-    # import logging
-    # logger = logging.getLogger("weasyprint")
-    # logger.handlers = []  # Remove the default stderr handler
-    # logger.addHandler(logging.FileHandler("./weasyprint.log"))
-
-    # TODO: Refactor this in combination with save_attachment.
-    thumbnail_paths = [
-        os.path.splitext(attachment.filename)[0] + "_thumb.jpeg"
-        for attachment in project.get_all_attachments()
-        if attachment.mimetype in ["image/jpeg", "image/jpg", "image/png"]
-    ]
-
-    date_of_issue = datetime.now().strftime("%d-%m-%Y")
-
-    reported_funder = Funder.query.get(47)
-
-    rendered_template = render_template(
-        "justification-rapport.html",
-        project=project,
-        thumbnail_paths=thumbnail_paths,
-        date_of_issue=date_of_issue,
-        reported_funder=reported_funder,
-        concept=True,
-    )
-
-    base_url = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-    font_config = FontConfiguration()
-    x = HTML(
-        string=rendered_template,
-        base_url=base_url,
-    )
-    y = CSS(
-        filename="./app/static/dist/styles/justification_report.css",
-        base_url=base_url,
-        font_config=font_config,
-    )
-    loc = os.path.join(base_url, "test.pdf")
-    x.write_pdf(loc, stylesheets=[y], font_config=font_config)
-    # return "work in progress"
-    # with open("./test.pdf", "rb") as static_file:
-    return send_file(loc, attachment_filename="rapportage.pdf")
-
-
 @app.route("/profiel/subproject/<subproject_id>", methods=["GET", "POST"])
 def profile_subproject(subproject_id):
     modal_id = []
@@ -795,6 +748,53 @@ def profile_subproject(subproject_id):
         funders=controller.funders,
         permissions=util.get_permissions(clearance),
     )
+
+
+@app.route("/report/project/<project_id>", methods=["GET"])
+def justification_report(project_id):
+    project = Project.query.get(project_id)
+
+    # import logging
+    # logger = logging.getLogger("weasyprint")
+    # logger.handlers = []  # Remove the default stderr handler
+    # logger.addHandler(logging.FileHandler("./weasyprint.log"))
+
+    # TODO: Refactor this in combination with save_attachment.
+    thumbnail_paths = [
+        os.path.splitext(attachment.filename)[0] + "_thumb.jpeg"
+        for attachment in project.get_all_attachments()
+        if attachment.mimetype in ["image/jpeg", "image/jpg", "image/png"]
+    ]
+
+    date_of_issue = datetime.now().strftime("%d-%m-%Y")
+
+    reported_funder = Funder.query.get(47)
+
+    rendered_template = render_template(
+        "justification-rapport.html",
+        project=project,
+        thumbnail_paths=thumbnail_paths,
+        date_of_issue=date_of_issue,
+        reported_funder=reported_funder,
+        concept=True,
+    )
+
+    base_url = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+    font_config = FontConfiguration()
+    x = HTML(
+        string=rendered_template,
+        base_url=base_url,
+    )
+    y = CSS(
+        filename="./app/static/dist/styles/justification_report.css",
+        base_url=base_url,
+        font_config=font_config,
+    )
+    loc = os.path.join(base_url, "test.pdf")
+    x.write_pdf(loc, stylesheets=[y], font_config=font_config)
+    # return "work in progress"
+    # with open("./test.pdf", "rb") as static_file:
+    return send_file(loc, attachment_filename="rapportage.pdf")
 
 
 @app.route("/profiel-bewerken", methods=["GET", "POST"])
