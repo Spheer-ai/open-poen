@@ -22,16 +22,18 @@
 <div class="new-page" id="index">
     <h1>Inhoudsopgave</h1>
     <ul>
-        <li class="index-section">Initiatief</li>
-        <li><a href="#over-initiatief">Over initiatief</a></li>
-        <li><a href="#gegevens-initiatief">Gegevens initiatief</a></li>
-        <li><a href="#financiën-initiatief">Financiën initiatief</a></li>
+        <li class="index-section">Initiatief: {{ project.name }}</li>
+        <li><a href="#over-initiatief">Over initiatief {{project.name}}</a></li>
+        <li><a href="#gegevens-initiatief">Gegevens initiatief {{project.name}}</a></li>
+        <li><a href="#financiën-initiatief">Financiën initiatief {{project.name}}</a></li>
+        <br>
         {% for subproject in project.subprojects %}
-        <li class="index-section">{{ subproject.name }}</li>
+        <li class="index-section">Activiteit: {{ subproject.name }}</li>
         <li><a href="#over-activiteit-{{subproject.id}}">Over activiteit {{ subproject.name }}</a></li>
         <li><a href="#financiën-activiteit-{{subproject.id}}">Financiën activiteit {{ subproject.name }}</a></li>
         <li><a href="#transactieoverzicht-activiteit-{{subproject.id}}">Transactieoverzicht activiteit {{
                 subproject.name }}</a></li>
+        <br>
         {% endfor %}
         <li class="index-section">Bijlagen</li>
         <li><a href="#transactieoverzicht-overig">Overzicht overige transacties</a></li>
@@ -40,7 +42,7 @@
 </div>
 
 <div class="new-page">
-    <h1 id="over-initiatief">Over initiatief</h1>
+    <h1 id="over-initiatief">Over initiatief {{project.name}}</h1>
     <h4>Beschrijving:</h4>
     <p>{{ project.description }}</p>
     <h4>Doel:</h4>
@@ -88,7 +90,7 @@
 </div>
 
 <div class="new-page">
-    <h1 id="gegevens-initiatief">Gegevens initiatief</h1>
+    <h1 id="gegevens-initiatief">Gegevens initiatief {{project.name}}</h1>
     <h4>Beheerder initiatief:</h4>
     <p>{{ project.owner }}</p>
     <h4>Initiatiefnemer(s):</h4>
@@ -129,7 +131,7 @@
 </div>
 
 <div class="new-page">
-    <h1 id="financiën-initiatief">Financiën initiatief</h1>
+    <h1 id="financiën-initiatief">Financiën initiatief {{project.name}}</h1>
     <h4>Budget beschikbaar van sponsoren:</h4>
     <p>{{ project.budget_summary["funders"] }}</p>
     <h4>Ingevoerd budget:</h4>
