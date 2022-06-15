@@ -781,8 +781,6 @@ def profile_subproject(subproject_id):
     finish_subproject_form = controller.get_forms()
     modal_id = controller.get_modal_ids(modal_id)
 
-    financial_info = subproject.financial_summary
-
     if len(modal_id) == 0:
         modal_id = None
 
@@ -801,7 +799,6 @@ def profile_subproject(subproject_id):
         undo_finish_subproject_form=controller.undo_form,
         modal_id=modal_id,
         funders=controller.funders,
-        financial_info=financial_info,
         permissions=util.get_permissions(clearance),
     )
 

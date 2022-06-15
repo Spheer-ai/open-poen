@@ -694,14 +694,15 @@ def get_total_route_amount(payments: List[Payment], routes: Tuple[str, ...]):
 def financial_summary(payments: List[Payment]):
     payments = sorted(payments, key=lambda x: x.booking_date)
     return {
-        "awarded": format_currency_with_cents(
-            get_total_route_amount(payments, ("inkomsten",))
+        "awarded": "€ "
+        + format_currency_with_cents(get_total_route_amount(payments, ("inkomsten",))),
+        "insourcing": "€ "
+        + format_currency_with_cents(
+            get_total_route_amount(payments, ("inbesteding",)) * -1
         ),
-        "insourcing": format_currency_with_cents(
-            get_total_route_amount(payments, ("inbesteding",))
-        ),
-        "expenses": format_currency_with_cents(
-            get_total_route_amount(payments, ("uitgaven", "inbesteding"))
+        "expenses": "€ "
+        + format_currency_with_cents(
+            get_total_route_amount(payments, ("uitgaven", "inbesteding")) * -1
         ),
         "first_payment_date": payments[0].booking_date.strftime("%d-%m-%Y")
         if len(payments) != 0

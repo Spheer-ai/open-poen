@@ -113,11 +113,11 @@
         <div class="col-12 col-md-6">
             {{ macros.info_unit("Totaal budget:", total_funder_budget) }}
             {% if subproject.finished %}
-            {{ macros.info_unit("Totaal inkomsten:", financial_info["awarded"]) }}
-            {{ macros.info_unit("Totaal inbesteding:", financial_info["insourcing"]) }}
-            {{ macros.info_unit("Totaal besteed:", financial_info["expenses"]) }}
-            {{ macros.info_unit("Start uitgaven:", financial_info["first_payment_date"]) }}
-            {{ macros.info_unit("Eind uitgaven:", financial_info["last_payment_date"]) }}
+            {{ macros.info_unit("Totaal inkomsten:", subproject.financial_summary["awarded"]) }}
+            {{ macros.info_unit("Totaal inbesteding:", subproject.financial_summary["insourcing"]) }}
+            {{ macros.info_unit("Totaal besteed:", subproject.financial_summary["expenses"]) }}
+            {{ macros.info_unit("Start uitgaven:", subproject.financial_summary["first_payment_date"]) }}
+            {{ macros.info_unit("Eind uitgaven:", subproject.financial_summary["last_payment_date"]) }}
             {% endif %}
             <a href="{{ url_for('subproject', project_id=subproject.project.id, subproject_id=subproject.id) }}"><b>Activiteit
                     beheren</b></a>
