@@ -23,6 +23,17 @@ def format_currency_with_cents(amount):
     return locale.format("%.2f", amount, grouping=True, monetary=True)
 
 
+def format_currency_without_cents(amount):
+    return locale.format("%d", amount, grouping=True, monetary=True)
+
+
+def format_budget(budget):
+    if budget is None:
+        return "n.v.t."
+    else:
+        return "€ " + format_currency_without_cents(budget)
+
+
 class DefaultCRUD(object):
     def update(self, data: Dict):
         for key, value in data.items():
@@ -445,14 +456,25 @@ class Project(db.Model, DefaultCRUD, DefaultErrorMessages):
 
     @property
     def formatted_budget(self):
-        return "%s%s" % (
-            "€ ",
-            locale.format("%d", self.budget, grouping=True, monetary=True),
-        )
+        # TODO: Refactor
+        if self.budget is None:
+            return "geen"
+        else:
+            return format_budget(self.budget)
 
     @property
     def financial_summary(self):
         return financial_summary(self.get_all_payments())
+
+    @property
+    def budget_summary(self):
+        return {
+            "funders": format_budget(sum([x.budget for x in self.funders])),
+            "entered": self.formatted_budget,
+            "subprojects": format_budget(
+                sum([x.budget for x in self.subprojects if x is not None])
+            ),
+        }
 
 
 class Subproject(db.Model, DefaultCRUD, DefaultErrorMessages):
@@ -546,14 +568,22 @@ class Subproject(db.Model, DefaultCRUD, DefaultErrorMessages):
 
     @property
     def formatted_budget(self):
-        return "%s%s" % (
-            "€ ",
-            locale.format("%d", self.budget, grouping=True, monetary=True),
-        )
+        # TODO: Refactor
+        if self.budget is None:
+            return "geen"
+        else:
+            return format_budget(self.budget)
 
     @property
     def financial_summary(self):
         return financial_summary(self.payments.all())
+
+    @property
+    def budget_summary(self):
+        return {
+            "funders": format_budget(sum([x.budget for x in self.funders])),
+            "entered": self.formatted_budget,
+        }
 
 
 class DebitCard(db.Model, DefaultCRUD, DefaultErrorMessages):

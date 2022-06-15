@@ -178,7 +178,9 @@
         {% endif %}
         <br>
         <br>
-        {{ macros.info_unit("Totaal budget:", total_funder_budget) }}
+        {{ macros.info_unit("Budget beschikbaar van sponsoren:", project.budget_summary["funders"]) }}
+        {{ macros.info_unit("Ingevoerd budget:", project.budget_summary["entered"]) }}
+        {{ macros.info_unit("Budget toegewezen aan activiteiten:", project.budget_summary["subprojects"]) }}
         <a href="{{ url_for('project', project_id=project.id) }}"><b>Initiatief beheren</b></a>
         <br>
         <br>

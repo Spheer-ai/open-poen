@@ -111,7 +111,8 @@
     <br>
     <div class="row">
         <div class="col-12 col-md-6">
-            {{ macros.info_unit("Totaal budget:", total_funder_budget) }}
+            {{ macros.info_unit("Budget beschikbaar van sponsoren:", subproject.budget_summary["funders"]) }}
+            {{ macros.info_unit("Ingevoerd budget:", subproject.budget_summary["entered"]) }}
             {% if subproject.finished %}
             {{ macros.info_unit("Totaal inkomsten:", subproject.financial_summary["awarded"]) }}
             {{ macros.info_unit("Totaal inbesteding:", subproject.financial_summary["insourcing"]) }}

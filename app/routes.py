@@ -672,9 +672,6 @@ def profile_project(project_id):
         edit_project_profile_form=edit_project_profile_form,
         use_square_borders=app.config["USE_SQUARE_BORDERS"],
         footer=app.config["FOOTER"],
-        total_funder_budget=util.format_currency(
-            sum([x.budget for x in project.funders])
-        ),
         justify_project_form=justify_project_form,
         concept_justify_project_form=concept_justify_project_form,
         funder_info=controller.funder_info,
@@ -792,9 +789,6 @@ def profile_subproject(subproject_id):
         edit_project_profile_form=edit_project_profile_form,
         use_square_borders=app.config["USE_SQUARE_BORDERS"],
         footer=app.config["FOOTER"],
-        total_funder_budget=util.format_currency(
-            sum([x.budget for x in subproject.funders])
-        ),
         finish_subproject_form=finish_subproject_form,
         undo_finish_subproject_form=controller.undo_form,
         modal_id=modal_id,

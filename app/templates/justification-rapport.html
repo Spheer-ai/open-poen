@@ -125,8 +125,12 @@
 
 <div class="new-page">
     <h1 id="financiën-initiatief">Financiën initiatief</h1>
-    <h4>Totaal budget:</h4>
-    <p>{{ project.formatted_budget }}</p>
+    <h4>Budget beschikbaar van sponsoren:</h4>
+    <p>{{ project.budget_summary["funders"] }}</p>
+    <h4>Ingevoerd budget:</h4>
+    <p>{{ project.budget_summary["entered"] }}</p>
+    <h4>Budget toegewezen aan activiteiten:</h4>
+    <p>{{ project.budget_summary["subprojects"] }}</p>
     <h4>Totaal inkomsten:</h4>
     <p>{{ project.financial_summary["awarded"] }}</p>
     <h4>Totaal inbesteding:</h4>
@@ -214,8 +218,10 @@
 
 <div class="new-page">
     <h1 id="financiën-activiteit-{{subproject.id}}">Financiën activiteit {{ subproject.name }}</h1>
-    <h4>Totaal budget:</h4>
-    <p>{{ subproject.formatted_budget }}</p>
+    <h4>Budget beschikbaar van sponsoren:</h4>
+    <p>{{ subproject.budget_summary["funders"] }}</p>
+    <h4>Ingevoerd budget:</h4>
+    <p>{{ subproject.budget_summary["entered"] }}</p>
     <h4>Totaal inkomsten:</h4>
     <p>{{ subproject.financial_summary["awarded"] }}</p>
     <h4>Totaal inbesteding:</h4>
