@@ -792,7 +792,10 @@ def justification_report(project_id, funder_id):
     funder = Funder.query.get(funder_id)
 
     report = os.path.join(
-        "..", app.config["UPLOAD_FOLDER"], "reports", f"{project_id}_{funder_id}.pdf"
+        os.path.split(app.instance_path)[0],
+        app.config["UPLOAD_FOLDER"],
+        "reports",
+        f"{project_id}_{funder_id}.pdf",
     )
 
     if not os.path.exists(report):
