@@ -857,6 +857,7 @@ def save_attachment(
     if f.mimetype in ["image/jpeg", "image/jpg", "image/png"]:
         # TODO: Refactor.
         im = Image.open(f)
+        im = im.convert("RGB")
         im.thumbnail((320, 320), Image.ANTIALIAS)
         thumbnail_filename = os.path.splitext(filepath)[0] + "_thumb.jpeg"
         im.save(thumbnail_filename, "JPEG")

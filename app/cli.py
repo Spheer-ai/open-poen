@@ -6,6 +6,8 @@ from pprint import pprint
 import click
 from app.bng import get_bng_payments
 from sqlalchemy.exc import IntegrityError
+import os
+from PIL import Image
 
 
 @app.cli.group()
@@ -99,3 +101,21 @@ def populate(subprojects):
 def delete():
     """Deletes the test project."""
     delete_test_data()
+
+
+@database.command()
+def generate_thumbnails():
+    folder = os.path.join(
+        os.path.split(app.instance_path)[0],
+        app.config["UPLOAD_FOLDER"],
+        "transaction-attachment",
+    )
+    for attachment in os.listdir(folder):
+        if not attachment.endswith(("jpg", "jpeg", "png")) or "thumb" in attachment:
+            continue
+        im = Image.open(os.path.join(folder, attachment))
+        im = im.convert("RGB")
+        im.thumbnail((320, 320), Image.ANTIALIAS)
+        thumbnail_filename = os.path.splitext(attachment)[0] + "_thumb.jpeg"
+        im.save(os.path.join(folder, thumbnail_filename), "JPEG")
+        print(f"Created {thumbnail_filename}.")
