@@ -17,6 +17,10 @@ from app.better_utils import format_flash
 from app.email import send_invite
 from PIL import Image
 from werkzeug.datastructures import FileStorage
+from flask import render_template
+from app.better_utils import get_thumbnail_paths
+from weasyprint import HTML, CSS
+from weasyprint.fonts import FontConfiguration
 
 
 def format_currency_with_cents(amount):
@@ -418,6 +422,36 @@ class Project(db.Model, DefaultCRUD, DefaultErrorMessages):
             funder.justified = True
             db.session.add(funder)
             db.session.commit()
+
+            date_of_issue = datetime.now().strftime("%d-%m-%Y")
+
+            rendered_template = render_template(
+                "justification-rapport.html",
+                project=self,
+                thumbnail_paths=get_thumbnail_paths(self),
+                date_of_issue=date_of_issue,
+                reported_funder=funder,
+                concept=False,
+            )
+
+            base_url = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+            font_config = FontConfiguration()
+            x = HTML(
+                string=rendered_template,
+                base_url=base_url,
+            )
+            y = CSS(
+                filename="./app/static/dist/styles/justification_report.css",
+                base_url=base_url,
+                font_config=font_config,
+            )
+            x.write_pdf(
+                os.path.join(
+                    app.config["UPLOAD_FOLDER"], "reports", f"{self.id}_{funder.id}.pdf"
+                ),
+                stylesheets=[y],
+                font_config=font_config,
+            )
         return self
 
     @property

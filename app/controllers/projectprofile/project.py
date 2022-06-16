@@ -50,6 +50,11 @@ class JustifyProjectFormHandler(BaseHandler):
                 ),
                 color="green",
             )
+            formatted_flash(
+                "Vergeet niet deze rapportage te downloaden en op te sturen naar uw "
+                "sponsor!",
+                color="orange",
+            )
         return Status.succesful_edit
 
     def on_create(self) -> Status:

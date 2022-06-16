@@ -789,36 +789,21 @@ def concept_justification_report(project_id, funder_id):
 
 @app.route("/report/project/<project_id>/funder/<funder_id>", methods=["GET"])
 def justification_report(project_id, funder_id):
-    project = Project.query.get(project_id)
     funder = Funder.query.get(funder_id)
-    date_of_issue = datetime.now().strftime("%d-%m-%Y")
 
-    rendered_template = render_template(
-        "justification-rapport.html",
-        project=project,
-        thumbnail_paths=get_thumbnail_paths(project),
-        date_of_issue=date_of_issue,
-        reported_funder=funder,
-        concept=False,
+    report = os.path.join(
+        "..", app.config["UPLOAD_FOLDER"], "reports", f"{project_id}_{funder_id}.pdf"
     )
 
-    base_url = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-    font_config = FontConfiguration()
-    x = HTML(
-        string=rendered_template,
-        base_url=base_url,
-    )
-    y = CSS(
-        filename="./app/static/dist/styles/justification_report.css",
-        base_url=base_url,
-        font_config=font_config,
-    )
-
-    # loc = os.path.join(base_url, "test.pdf")
-    report = x.write_pdf(stylesheets=[y], font_config=font_config)
+    if not os.path.exists(report):
+        return render_template(
+            "404.html",
+            use_square_borders=app.config["USE_SQUARE_BORDERS"],
+            footer=app.config["FOOTER"],
+        )
 
     return send_file(
-        BytesIO(report),
+        report,
         mimetype="application/pdf",
         as_attachment=True,
         attachment_filename=f"Verantwoordingsrapportage {funder.formatted_name}.pdf",
