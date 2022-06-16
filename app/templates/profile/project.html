@@ -283,9 +283,11 @@
                                 <p>Wilt u dit nog niet doen en alleen
                                     uw verantwoording bekijken ter controle? Klik dan op de onderstaande knop om de
                                     conceptversie te bekijken.</p>
+                                <!-- The funder_id in the href tag is selectively replaced with some JS. -->
                                 <div class="form-action">
-                                    <!-- Open / Download tussentijds. -->
-                                    {{ justify_project_form.concept }}
+                                    <a type="button" class="report-link btn btn-danger"
+                                        href="/concept-report/project/{{ project.id }}/funder/{{ justify_project_form.funder.default }}"
+                                        value="facebook" target="_blank">Conceptversie bekijken</a>
                                 </div>
                                 <br>
                                 <p>Klik op de onderstaande knop als u wel uw initiatief definitief wilt verantwoorden.
@@ -374,8 +376,10 @@
                                     </li>
                                     {% endfor %}
                                 </ul>
-                                <!-- Download tussentijdse rapportage. -->
-                                <div class="form-action">{{ concept_justify_project_form.download }}</div>
+                                <!-- The funder_id in the href tag is selectively replaced with some JS. -->
+                                <div class="form-action"><a type="button" class="concept-report-link btn btn-danger"
+                                        href="/concept-report/project/{{ project.id }}/funder/{{ concept_justify_project_form.funder.default }}"
+                                        value="facebook" target="_blank">Tussentijdse rapportage bekijken</a></div>
                             </div>
                             {% endif %}
                             {% if concept_justify_project_form.has_errors %}
