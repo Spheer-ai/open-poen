@@ -23,4 +23,4 @@ RUN pip install -r requirements.txt
 
 ENV FLASK_APP=website.py
 # Use --lazy-apps otherwise some threads might end up with a bad database connection resulting in errors for some of your page loads
-CMD uwsgi --lazy-apps --socket 0.0.0.0:5000 --touch-reload=uwsgi-touch-reload --processes 8 -w website:app
+CMD uwsgi --lazy-apps --socket 0.0.0.0:5000 --touch-reload=uwsgi-touch-reload --processes 8 --wsgi-disable-file-wrapper -w website:app
