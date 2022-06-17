@@ -791,8 +791,9 @@ def concept_justification_report(project_id, funder_id):
 def justification_report(project_id, funder_id):
     funder = Funder.query.get(funder_id)
 
+    # TODO: This path is hard coded.
     report = os.path.join(
-        "opt",
+        "/opt",
         "poen",
         app.config["UPLOAD_FOLDER"],
         "reports",
