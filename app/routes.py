@@ -792,7 +792,8 @@ def justification_report(project_id, funder_id):
     funder = Funder.query.get(funder_id)
 
     report = os.path.join(
-        os.path.split(app.instance_path)[0],
+        "opt",
+        "poen",
         app.config["UPLOAD_FOLDER"],
         "reports",
         f"{project_id}_{funder_id}.pdf",
