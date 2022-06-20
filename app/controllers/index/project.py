@@ -107,7 +107,7 @@ class ProjectForm(FlaskForm):
         ],
     )
     budget = IntegerField(
-        "Totaal budget initiatief (Format: 1000,00)",
+        "Totaal budget initiatief (Format: 1000)",
         validators=[Optional(), validate_budget],
     )
 

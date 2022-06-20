@@ -24,7 +24,7 @@ class BaseForm(FlaskForm):
         "Beschikkingsnummer / referentie", validators=[DataRequired(), Length(max=120)]
     )
     budget = IntegerField(
-        "Budget voor deze sponsor (Format: 1000,00)",
+        "Budget voor deze sponsor (Format: 1000)",
         validators=[DataRequired(), validate_budget],
     )
     id = IntegerField(widget=HiddenInput())

@@ -15,7 +15,7 @@ class SubprojectForm(FlaskForm):
     target_audience = w.TextAreaField("Doelgroep", validators=[v.DataRequired()])
     hidden = w.BooleanField("Activiteit verbergen")
     budget = w.IntegerField(
-        "Budget voor deze activiteit (Format: 1000,00)",
+        "Budget voor deze activiteit (Format: 1000)",
         validators=[v.Optional(), validate_budget],
     )
     project_id = w.IntegerField(widget=HiddenInput())

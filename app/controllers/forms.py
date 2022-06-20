@@ -54,7 +54,7 @@ class FunderForm(FlaskForm):
         "Beschikkingsnummer / referentie", validators=[DataRequired(), Length(max=120)]
     )
     budget = IntegerField(
-        "Budget van deze sponsor (Format: 1000,00)",
+        "Budget van deze sponsor (Format: 1000)",
         validators=[DataRequired(), validate_budget],
     )
 
@@ -66,6 +66,6 @@ class SubprojectBaseForm(FlaskForm):
     purpose = TextAreaField("Doel", validators=[DataRequired()])
     target_audience = TextAreaField("Doelgroep", validators=[DataRequired()])
     budget = IntegerField(
-        "Budget voor deze activiteit (Format: 1000,00)",
+        "Budget voor deze activiteit (Format: 1000)",
         validators=[Optional(), validate_budget],
     )
