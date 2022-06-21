@@ -36,11 +36,11 @@ class DebitCardController(Controller):
         self.debit_cards: List[DebitCard] = []
 
     def add(self):
-        status = process_form(BaseHandler(self.add_form, DebitCard))
+        status = process_form(DebitCardHandler(self.add_form, DebitCard))
         return self.redirects[status]
 
     def edit(self):
-        status = process_form(BaseHandler(self.edit_form, DebitCard))
+        status = process_form(DebitCardHandler(self.edit_form, DebitCard))
         return self.redirects[status]
 
     def get_forms(self):
