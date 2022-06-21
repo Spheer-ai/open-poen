@@ -214,6 +214,10 @@ if ($(".add-payment-datepicker").length > 0) {
 if ($(".add-topup-datepicker").length > 0) {
   datepicker(".add-topup-datepicker", datepickerConfig)
 }
+if ($(".bng-datepicker").length > 0) {
+  datepicker(".bng-datepicker", datepickerConfig)
+}
+
 
 // addPaymentPicker = datepicker(".add-payment-datepicker", datepickerConfig)
 // addTopupPicker = datepicker(".add-topup-datepicker", datepickerConfig)
