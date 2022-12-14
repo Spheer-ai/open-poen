@@ -6,21 +6,20 @@ from time import time
 from typing import Dict, List, Tuple, Union
 
 import jwt
+from flask import render_template
 from flask_login import UserMixin
+from PIL import Image
 from sqlalchemy.exc import IntegrityError
+from weasyprint import CSS, HTML
+from weasyprint.fonts import FontConfiguration
+from werkzeug.datastructures import FileStorage
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 
 import app.exceptions as ex
 from app import app, db, login_manager
-from app.better_utils import format_flash
+from app.better_utils import format_flash, get_thumbnail_paths
 from app.email import send_invite
-from PIL import Image
-from werkzeug.datastructures import FileStorage
-from flask import render_template
-from app.better_utils import get_thumbnail_paths
-from weasyprint import HTML, CSS
-from weasyprint.fonts import FontConfiguration
 
 
 def format_currency_with_cents(amount):
@@ -492,7 +491,7 @@ class Project(db.Model, DefaultCRUD, DefaultErrorMessages):
             "funders": format_budget(sum([x.budget for x in self.funders])),
             "entered": self.formatted_budget,
             "subprojects": format_budget(
-                sum([x.budget for x in self.subprojects if x is not None])
+                sum([x.budget for x in self.subprojects if x.budget is not None])
             ),
         }
 
